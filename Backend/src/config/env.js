@@ -83,10 +83,10 @@ export const config = {
     uploadsRoot: path.isAbsolute(uploadPath)
         ? path.normalize(uploadPath)
         : path.resolve(backendRoot, uploadPath),
-    // Public origin baked into stored image URLs (nginx). No trailing slash.
+    // Public origin baked into stored image URLs. No trailing slash.
     assetBaseUrl: String(
         process.env.ASSET_BASE_URL ||
-        process.env.API_BASE_URL ||
+        (process.env.API_BASE_URL ? String(process.env.API_BASE_URL).replace(/\/api\/v1\/?$/i, '').replace(/\/api\/?$/i, '') : '') ||
         `http://localhost:${process.env.PORT || 5000}`
     ).replace(/\/+$/, ''),
     // Local/dev only: forward uploads to the live server instead of writing a local folder.

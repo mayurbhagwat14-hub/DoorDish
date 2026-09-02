@@ -31,7 +31,7 @@ export const validateConfig = () => {
             missing.push('UPLOAD_REMOTE_ORIGIN must not be set in production (this server writes /var/www/uploads)');
         }
         if (!assetBase) {
-            missing.push('ASSET_BASE_URL (e.g. https://omettofood.com — stored in every image URL)');
+            missing.push('ASSET_BASE_URL or API_BASE_URL (e.g. https://doordish-backend.onrender.com)');
         } else if (!/^https:\/\//i.test(assetBase)) {
             missing.push(`ASSET_BASE_URL must be an https:// origin (got "${assetBase}")`);
         } else if (/localhost|127\.0\.0\.1/i.test(assetBase)) {

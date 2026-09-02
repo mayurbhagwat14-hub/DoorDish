@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from "@food/api/config";
+import { normalizeImageUrl } from "@food/utils/common";
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, ChevronDown, Search, Mic, User } from 'lucide-react';
 import { useProfile } from "@food/context/ProfileContext";
@@ -38,12 +40,12 @@ export default function HomeHeader({
       try {
         const cached = getCachedSettings()
         if (cached) {
-          if (cached.logo?.url) setLogoUrl(cached.logo.url)
+          if (cached.logo?.url) setLogoUrl(normalizeImageUrl(cached.logo.url, API_BASE_URL))
           if (cached.companyName) setCompanyName(cached.companyName)
         } else {
           const settings = await loadBusinessSettings()
           if (settings) {
-            if (settings.logo?.url) setLogoUrl(settings.logo.url)
+            if (settings.logo?.url) setLogoUrl(normalizeImageUrl(settings.logo.url, API_BASE_URL))
             if (settings.companyName) setCompanyName(settings.companyName)
           }
         }
@@ -55,7 +57,7 @@ export default function HomeHeader({
     const handleSettingsUpdate = () => {
       const cached = getCachedSettings()
       if (cached) {
-        if (cached.logo?.url) setLogoUrl(cached.logo.url)
+        if (cached.logo?.url) setLogoUrl(normalizeImageUrl(cached.logo.url, API_BASE_URL))
         if (cached.companyName) setCompanyName(cached.companyName)
       }
     }

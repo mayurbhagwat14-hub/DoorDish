@@ -1,19 +1,35 @@
 import { API_BASE_URL } from "@food/api/config";
 
-const defaultBackendOrigin = (API_BASE_URL || "").replace(/\/api\/v1\/?$/i, "").replace(/\/api\/?$/i, "");
+const defaultBackendOrigin = (API_BASE_URL || "").replace(/\/api\/v1\/?$/i, "").replace(/\/api\/?$/i, "").replace(/\/+$/, "");
 const ASSET_BASE_URL = String(
-  (typeof import.meta !== "undefined" && import.meta.env?.VITE_ASSET_BASE_URL) ||
-    "https://omettofood.com"
-).replace(/\/$/, "");
+  (typeof import.meta !== "undefined" && import.meta.env?.VITE_ASSET_BASE_URL) || ""
+).replace(/\/+$/, "");
 
-const rewriteUploadsUrl = (absoluteUrl) => {
+const getActiveOrigin = (customOrigin = "") => {
+  if (customOrigin) return customOrigin.replace(/\/+$/, "");
+  if (ASSET_BASE_URL) return ASSET_BASE_URL;
+  if (defaultBackendOrigin) return defaultBackendOrigin;
+  if (typeof window !== "undefined" && window.location?.origin) {
+    return window.location.origin.replace(/\/+$/, "");
+  }
+  return "";
+};
+
+const rewriteUploadsUrl = (absoluteUrl, customOrigin = "") => {
   try {
     const parsed = new URL(absoluteUrl);
     const match = parsed.pathname.match(/\/uploads\/(.+)$/i);
     if (!match) return absoluteUrl;
     const filename = match[1];
     if (!filename || filename.includes("..")) return absoluteUrl;
-    return `${ASSET_BASE_URL}/uploads/${filename}${parsed.search || ""}`;
+
+    const activeOrigin = getActiveOrigin(customOrigin);
+    const isLegacyDomain = /ometto|localhost|127\.0\.0\.1/i.test(parsed.hostname);
+
+    if ((isLegacyDomain || ASSET_BASE_URL) && activeOrigin) {
+      return `${activeOrigin}/uploads/${filename}${parsed.search || ""}`;
+    }
+    return absoluteUrl;
   } catch {
     return absoluteUrl;
   }
@@ -32,30 +48,38 @@ export const normalizeImageUrl = (imageUrl, backendOrigin = "") => {
   if (!trimmed || /^data:/i.test(trimmed) || /^blob:/i.test(trimmed)) return trimmed;
 
   const appProtocol = typeof window !== "undefined" ? window.location?.protocol : "";
-  const originToUse = backendOrigin || defaultBackendOrigin || ASSET_BASE_URL;
+  const originToUse = getActiveOrigin(backendOrigin);
 
   let normalized = trimmed
     .replace(/\\/g, "/")
     .replace(/^(https?):\/(?!\/)/i, "$1://")
     .replace(/^(https?:\/\/)(https?:\/\/)/i, "$1");
 
+  // Strip legacy domains (e.g. omettofood.com, ometto.com, localhost) so the path resolves to active origin
+  if (/^https?:\/\/(www\.)?(omettofood\.com|ometto\.com|localhost|127\.0\.0\.1)(:\d+)?/i.test(normalized)) {
+    try {
+      const parsed = new URL(normalized);
+      normalized = parsed.pathname + (parsed.search || "");
+    } catch {}
+  }
+
   if (/^\/\//.test(normalized)) normalized = `${appProtocol || "https:"}${normalized}`;
 
   if (/^(https?:)?\/\//i.test(normalized)) {
-    return rewriteUploadsUrl(normalized);
+    return rewriteUploadsUrl(normalized, backendOrigin);
   }
 
   if (/uploads\//i.test(normalized) || normalized.startsWith("/uploads")) {
     const filename = normalized.replace(/^.*\/uploads\//i, "").replace(/^\/+/, "");
     if (filename && !filename.includes("..")) {
-      return `${ASSET_BASE_URL}/uploads/${filename}`;
+      return originToUse ? `${originToUse}/uploads/${filename}` : `/uploads/${filename}`;
     }
   }
 
   const absolutePath = normalized.startsWith("/")
     ? `${originToUse}${normalized}`
     : `${originToUse}/${normalized.replace(/^\.?\/*/, "")}`;
-  return rewriteUploadsUrl(absolutePath);
+  return rewriteUploadsUrl(absolutePath, backendOrigin);
 };
 
 /**

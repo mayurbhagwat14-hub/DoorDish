@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
+import { API_BASE_URL } from "@food/api/config"
+import { normalizeImageUrl } from "@food/utils/common"
 import { Search, Menu, ChevronRight, MapPin, X, Bell, HelpCircle } from "lucide-react"
 import { restaurantAPI } from "@food/api"
 import { formatRestaurantDisplayAddress } from "@food/utils/restaurantLocation"
@@ -107,12 +109,12 @@ export default function RestaurantNavbar({
       const cached = getCachedSettings()
       if (cached) {
         if (cached.companyName) setCompanyName(cached.companyName)
-        if (cached.logo?.url) setLogoUrl(cached.logo.url)
+        if (cached.logo?.url) setLogoUrl(normalizeImageUrl(cached.logo.url, API_BASE_URL))
       } else {
         const settings = await loadBusinessSettings()
         if (settings) {
           if (settings.companyName) setCompanyName(settings.companyName)
-          if (settings.logo?.url) setLogoUrl(settings.logo.url)
+          if (settings.logo?.url) setLogoUrl(normalizeImageUrl(settings.logo.url, API_BASE_URL))
         }
       }
     }
@@ -122,7 +124,7 @@ export default function RestaurantNavbar({
       const cached = getCachedSettings()
       if (cached) {
         if (cached.companyName) setCompanyName(cached.companyName)
-        if (cached.logo?.url) setLogoUrl(cached.logo.url)
+        if (cached.logo?.url) setLogoUrl(normalizeImageUrl(cached.logo.url, API_BASE_URL))
       }
     }
     window.addEventListener('businessSettingsUpdated', handleSettingsUpdate)
