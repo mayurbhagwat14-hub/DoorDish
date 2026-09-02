@@ -45,14 +45,10 @@ export default function Home() {
           <div className="flex justify-center mb-6">
             {logoUrl || companyName ? (
               <img
-                src={logoUrl || quickSpicyLogo}
+                src={logoUrl || "/assets/images/doordish-logo.png"}
                 alt={companyName || "Logo"}
                 className="h-16 w-auto object-contain"
-                onError={(e) => {
-                  if (e.target.src !== quickSpicyLogo) {
-                    e.target.src = quickSpicyLogo
-                  }
-                }}
+                onError={() => setLogoUrl(null)}
               />
             ) : (
               <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center">

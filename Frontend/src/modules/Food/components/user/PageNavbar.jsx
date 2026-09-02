@@ -1047,7 +1047,7 @@ export default function PageNavbar({
               </span>
             ) : (
               <img
-                src={quickSpicyLogo}
+                src="/assets/images/doordish-logo.png"
                 alt="Logo"
                 className="h-9 w-auto sm:h-12 md:h-14 object-contain scale-[1.6] sm:scale-[1.8] origin-left"
               />

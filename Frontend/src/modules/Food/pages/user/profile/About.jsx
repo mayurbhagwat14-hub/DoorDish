@@ -125,14 +125,10 @@ export default function About() {
                 <div className="relative">
                   <div className="relative bg-white dark:bg-gray-800 rounded-full p-4 md:p-6 shadow-[0_8px_30px_rgba(0,0,0,0.08)]">
                     <img
-                      src={logoUrl || quickSpicyLogo}
+                      src={logoUrl || "/assets/images/doordish-logo.png"}
                       alt={`${aboutData.appName} Logo`}
                       className="h-16 w-16 md:h-20 md:w-20 object-contain rounded-full"
-                      onError={(e) => {
-                        if (e.target.src !== quickSpicyLogo) {
-                          e.target.src = quickSpicyLogo
-                        }
-                      }}
+                      onError={() => setLogoUrl(null)}
                     />
                   </div>
                 </div>

@@ -207,16 +207,12 @@ export default function DesktopNavbar({ showLogo = true }) {
                             {/* Logo */}
                             {showLogo && (
                                 <Link to="/food/user" className="flex items-center justify-center flex-shrink-0">
-                                    {logoUrl || companyName ? (
-                                        <img
-                                            src={logoUrl || quickSpicyLogo}
-                                            alt={companyName || "Company Logo"}
-                                            className="h-10 w-auto md:h-14 lg:h-16 object-contain"
-                                            onError={(e) => { e.target.onerror = null; e.target.src = quickSpicyLogo }}
-                                        />
-                                    ) : (
-                                        <img src={quickSpicyLogo} alt={companyName || "Logo"} className="h-10 w-auto md:h-14 lg:h-16 object-contain" />
-                                    )}
+                                    <img
+                                        src={logoUrl || "/assets/images/doordish-logo.png"}
+                                        alt={companyName || "Doordish"}
+                                        className="h-10 w-auto md:h-14 lg:h-16 object-contain"
+                                        onError={() => setLogoUrl(null)}
+                                    />
                                 </Link>
                             )}
 

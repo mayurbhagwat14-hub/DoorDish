@@ -952,18 +952,18 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
                 <div className="w-24 h-12 rounded-lg flex items-center justify-center shadow-black/20">
                   {logoUrl ? (
                     <img
-                      src={logoUrl || quickSpicyLogo}
+                      src={logoUrl}
                       alt={companyName || "Company"}
                       className="w-24 h-10 object-contain"
                       loading="lazy"
-                      onError={(e) => { e.target.onerror = null; e.target.src = quickSpicyLogo }}
+                      onError={() => setLogoUrl(null)}
                     />
                   ) : companyName ? (
                     <span className="text-xs font-semibold text-white px-2 truncate">
                       {companyName}
                     </span>
                   ) : (
-                    <img src={quickSpicyLogo} alt="Company" className="w-24 h-10 object-contain" loading="lazy" />
+                    <img src="/assets/images/doordish-logo.png" alt="Company" className="w-24 h-10 object-contain" loading="lazy" />
                   )}
                 </div>
               </div>
@@ -971,16 +971,16 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
             {isCollapsed && (
               <div className="w-full flex items-center justify-center">
                 <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center shadow-lg shadow-black/20 ring-1 ring-white/10">
-                  {logoUrl || companyName ? (
+                  {logoUrl ? (
                     <img
-                      src={logoUrl || quickSpicyLogo}
+                      src={logoUrl}
                       alt={companyName || "Company"}
                       className="w-10 h-10 object-contain"
                       loading="lazy"
-                      onError={(e) => { e.target.onerror = null; e.target.src = quickSpicyLogo }}
+                      onError={() => setLogoUrl(null)}
                     />
                   ) : (
-                    <img src={quickSpicyLogo} alt="Company" className="w-10 h-10 object-contain" loading="lazy" />
+                    <img src="/assets/images/doordish-logo.png" alt="Company" className="w-10 h-10 object-contain" loading="lazy" />
                   )}
                 </div>
               </div>

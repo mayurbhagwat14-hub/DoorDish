@@ -75,11 +75,7 @@ export default function HomeHeader({
               src={logoUrl || "/assets/images/doordish-logo.png"}
               alt={companyName || "Doordish"}
               className="w-full h-full object-cover"
-              onError={(e) => {
-                if (e.target.src !== "/assets/images/doordish-logo.png") {
-                  e.target.src = "/assets/images/doordish-logo.png";
-                }
-              }}
+              onError={() => setLogoUrl(null)}
             />
           </div>
           <div className="flex flex-col justify-center">

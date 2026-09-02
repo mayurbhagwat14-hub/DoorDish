@@ -295,7 +295,7 @@ export default function AdminNavbar({ onMenuClick }) {
                     alt={businessSettings.companyName || "Company"}
                     className="w-24 h-10 object-contain"
                     loading="lazy"
-                    onError={(e) => { e.target.onerror = null; e.target.src = quickSpicyLogo }}
+                    onError={() => setBusinessSettings(null)}
                   />
                 ) : (
                   businessSettings?.companyName ? (
@@ -303,7 +303,7 @@ export default function AdminNavbar({ onMenuClick }) {
                       {businessSettings.companyName}
                     </span>
                   ) : (
-                    <img src={quickSpicyLogo} alt={businessSettings?.companyName || "Company"} className="w-24 h-10 object-contain" loading="lazy" />
+                    <img src="/assets/images/doordish-logo.png" alt={businessSettings?.companyName || "Company"} className="w-24 h-10 object-contain" loading="lazy" />
                   )
                 )}
               </div>

@@ -8,7 +8,7 @@ import quickSpicyLogo from "@food/assets/quicky-spicy-logo.png"
 export default function Footer() {
   const companyName = useCompanyName()
   const currentYear = new Date().getFullYear()
-  const [logoUrl, setLogoUrl] = useState(quickSpicyLogo)
+  const [logoUrl, setLogoUrl] = useState(null)
 
   // Load business settings logo
   useEffect(() => {
@@ -82,15 +82,10 @@ export default function Footer() {
             >
               <div className="flex items-center gap-2 mb-4">
                 <img
-                  src={logoUrl || quickSpicyLogo}
+                  src={logoUrl || "/assets/images/doordish-logo.png"}
                   alt="Company Logo"
                   className="h-10 w-10 rounded-full object-cover"
-                  crossOrigin="anonymous"
-                  onError={(e) => {
-                    if (e.target.src !== quickSpicyLogo) {
-                      e.target.src = quickSpicyLogo
-                    }
-                  }}
+                  onError={() => setLogoUrl(null)}
                 />
                 <span className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
                   {companyName}
