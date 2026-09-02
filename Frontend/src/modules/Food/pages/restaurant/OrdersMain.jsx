@@ -2820,29 +2820,19 @@ function OrdersMainInner() {
                     setTimeout(() => setIsTransitioning(false), 300);
                   }
                 }}
-                className={`shrink-0 px-6 py-3.5 rounded-full font-medium text-sm whitespace-nowrap relative overflow-hidden ${isActive ? "text-white" : "bg-white text-black"
+                className={`shrink-0 px-6 py-3 rounded-full font-bold text-sm whitespace-nowrap relative overflow-hidden transition-all ${isActive 
+                    ? "bg-orange-50/90 dark:bg-orange-950/30 text-[#FA5300] border-2 border-[#FA5300] shadow-xs" 
+                    : "bg-white dark:bg-[#181818] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-800 shadow-2xs hover:border-gray-300"
                   }`}
                 animate={{
-                  scale: isActive ? 1.05 : 1,
-                  opacity: isActive ? 1 : 0.7,
+                  scale: isActive ? 1.03 : 1,
+                  opacity: 1,
                 }}
                 transition={{
-                  duration: 0.3,
+                  duration: 0.2,
                   ease: [0.25, 0.1, 0.25, 1],
                 }}
                 whileTap={{ scale: 0.95 }}>
-                {isActive && (
-                  <motion.div
-                    layoutId="activeFilterBackground"
-                    className="absolute inset-0 bg-gradient-to-br from-[#FA5300] to-[#E54B00] rounded-full -z-10"
-                    initial={false}
-                    transition={{
-                      type: "spring",
-                      stiffness: 500,
-                      damping: 30,
-                    }}
-                  />
-                )}
                 <div className="flex items-center gap-2 relative z-10">
                   <span className="flex items-center gap-1.5">
                     {tab.label}
@@ -3005,13 +2995,10 @@ function OrdersMainInner() {
                     setActiveFilter('takeaway-orders');
                   }
                 }}
-                className={`flex-1 min-w-0 py-3 rounded-full font-bold text-sm whitespace-nowrap relative overflow-hidden shadow-sm border border-gray-200 transition-all text-center ${activeFilter === 'takeaway-orders' ? 'text-white' : 'bg-white text-black hover:bg-gray-50'
+                className={`flex-1 min-w-0 py-3 rounded-full font-bold text-sm whitespace-nowrap relative overflow-hidden transition-all text-center ${activeFilter === 'takeaway-orders' ? 'bg-orange-50 dark:bg-orange-950/30 text-[#FA5300] border-2 border-[#FA5300] shadow-xs' : 'bg-white dark:bg-[#181818] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-800 shadow-2xs hover:border-gray-300'
                   }`}
-                animate={{ scale: activeFilter === 'takeaway-orders' ? 1.05 : 1 }}
+                animate={{ scale: activeFilter === 'takeaway-orders' ? 1.03 : 1 }}
                 whileTap={{ scale: 0.95 }}>
-                {activeFilter === 'takeaway-orders' && (
-                  <div className="absolute inset-0 bg-gradient-to-br from-[#FA5300] to-[#E54B00] rounded-full -z-10" />
-                )}
                 <div className="flex items-center justify-center gap-2 relative z-10">
                   <span className="flex items-center gap-1.5">
                     Takeaway Orders
@@ -3037,13 +3024,10 @@ function OrdersMainInner() {
                     setActiveFilter('table-booking');
                   }
                 }}
-                className={`flex-1 min-w-0 py-3 rounded-full font-bold text-sm whitespace-nowrap relative overflow-hidden shadow-sm border border-gray-200 transition-all text-center ${activeFilter === 'table-booking' ? 'text-white' : 'bg-white text-black hover:bg-gray-50'
+                className={`flex-1 min-w-0 py-3 rounded-full font-bold text-sm whitespace-nowrap relative overflow-hidden transition-all text-center ${activeFilter === 'table-booking' ? 'bg-orange-50 dark:bg-orange-950/30 text-[#FA5300] border-2 border-[#FA5300] shadow-xs' : 'bg-white dark:bg-[#181818] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-800 shadow-2xs hover:border-gray-300'
                   }`}
-                animate={{ scale: activeFilter === 'table-booking' ? 1.05 : 1 }}
+                animate={{ scale: activeFilter === 'table-booking' ? 1.03 : 1 }}
                 whileTap={{ scale: 0.95 }}>
-                {activeFilter === 'table-booking' && (
-                  <div className="absolute inset-0 bg-gradient-to-br from-[#FA5300] to-[#E54B00] rounded-full -z-10" />
-                )}
                 <div className="flex items-center justify-center gap-2 relative z-10">
                   <span className="flex items-center gap-1.5">
                     Dining Booking

@@ -62,44 +62,43 @@ export default function BottomNavOrders({ activeTabOverride }) {
     <div className="fixed bottom-0 left-0 right-0 z-40 px-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
       <div className="mx-auto flex w-full max-w-md items-end gap-2">
         <div className="flex-1 min-w-0">
-          <div className="relative overflow-visible rounded-[30px] bg-gradient-to-br from-[#FA5300] to-[#E54B00] py-2 pl-3 pr-2 shadow-[0_16px_40px_rgba(126,56,102,0.35)]">
-            <div className="relative flex items-end justify-around gap-1">
+          <div className="relative overflow-hidden rounded-[30px] bg-white/95 dark:bg-[#181818]/95 border-2 border-[#FA5300] p-1.5 shadow-lg backdrop-blur-md">
+            <div className="relative flex items-center justify-around gap-1">
               {tabs.map((tab) => {
                 const Icon = tab.icon
                 const isActive = activeTab === tab.id
 
                 return (
-                  <motion.button
+                  <button
                     key={tab.id}
                     onClick={() => handleTabClick(tab)}
                     aria-current={isActive ? "page" : undefined}
-                    className="relative z-10 flex min-w-0 flex-1 flex-col items-center justify-center gap-1 overflow-visible rounded-full px-2 py-2"
-                    whileTap={{ scale: 0.95 }}
+                    className={`relative z-10 flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-full px-2 py-2 transition-all duration-200 ${
+                      isActive
+                        ? "bg-[#FA5300] text-white shadow-xs"
+                        : "text-gray-600 dark:text-gray-400 hover:text-gray-900"
+                    }`}
                   >
-                    {isActive && (
-                      <motion.div
-                        layoutId="bottomNavActive"
-                        className="absolute inset-0 -z-10 rounded-full bg-white/22"
-                        initial={false}
-                        transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                      />
-                    )}
                     <Icon
-                      className={`relative z-10 h-4.5 w-4.5 transition-colors duration-300 ease-in-out ${isActive ? "text-white" : "text-white/78"
-                        }`}
+                      className={`h-4.5 w-4.5 transition-colors duration-200 ${
+                        isActive ? "text-white" : "text-gray-500 dark:text-gray-400"
+                      }`}
                     />
                     {/* Notification Dot */}
                     {((tab.id === 'orders' && (newOrder || (DINING_ENABLED && newReservation))) ||
                       (tab.id === 'feedback' && unreadCount > 0)) && (
-                        <span className="absolute top-2 right-1/4 w-2 h-2 rounded-full bg-gradient-to-br from-[#FA5300] to-[#E54B00] border border-[#FA5300] z-20 animate-pulse" />
+                        <span className={`absolute top-1.5 right-1/4 w-2 h-2 rounded-full z-20 animate-pulse ${
+                          isActive ? "bg-white" : "bg-[#FA5300]"
+                        }`} />
                       )}
                     <span
-                      className={`relative z-10 whitespace-nowrap text-[11px] leading-none transition-colors duration-300 ease-in-out ${isActive ? "text-white" : "text-white/78"
-                        }`}
+                      className={`whitespace-nowrap text-[11px] leading-none transition-colors duration-200 ${
+                        isActive ? "text-white font-bold" : "text-gray-600 dark:text-gray-400 font-medium"
+                      }`}
                     >
                       {tab.label}
                     </span>
-                  </motion.button>
+                  </button>
                 )
               })}
             </div>

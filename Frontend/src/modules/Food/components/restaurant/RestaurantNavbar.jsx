@@ -248,7 +248,7 @@ export default function RestaurantNavbar({
 
   return (
     <>
-      <div className="w-full bg-gradient-to-br from-[#FF5A1F] to-[#E54B00] rounded-b-[35px] flex flex-col shadow-[0_10px_30px_rgba(184,11,61,0.25)] pb-2 relative z-10">
+      <div className="w-full bg-white dark:bg-[#181818] border-b-2 border-[#FF5A1F] rounded-b-[28px] flex flex-col shadow-sm pb-2 relative z-10">
         {/* Top Navbar */}
         <div className="px-4 py-3 flex items-center justify-between">
           {/* Left Side - Restaurant Info */}
@@ -256,14 +256,14 @@ export default function RestaurantNavbar({
             <div className="min-w-0">
               {/* Restaurant Name */}
               <div className="flex items-center gap-1.5 min-w-0">
-                <h1 className="text-[17px] font-bold text-white truncate tracking-tight leading-none">
+                <h1 className="text-[17px] font-extrabold text-gray-900 dark:text-white truncate tracking-tight leading-none">
                   {loading ? "Loading..." : (restaurantName || "Restaurant")}
                 </h1>
               </div>
               {!loading && restaurantAddress && restaurantAddress.trim() !== "" && (
-                <div className="flex items-center gap-1 mt-1.5 opacity-90">
-                  <MapPin className="w-2.5 h-2.5 text-white/80 shrink-0" />
-                  <p className="text-[11px] text-white/90 truncate font-medium" title={restaurantAddress}>
+                <div className="flex items-center gap-1 mt-1.5">
+                  <MapPin className="w-3 h-3 text-[#FF5A1F] shrink-0" />
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate font-medium" title={restaurantAddress}>
                     {restaurantAddress}
                   </p>
                 </div>
@@ -272,26 +272,26 @@ export default function RestaurantNavbar({
           </div>
 
           {/* Right Side - Interactive Elements */}
-          <div className="flex items-center gap-0.5 shrink-0">
+          <div className="flex items-center gap-1.5 shrink-0">
             {/* Offline/Online Status Tag */}
             {showOfflineOnlineTag && (
               <button
                 onClick={handleStatusClick}
-                className={`flex items-center gap-1 px-2 py-1 rounded-full transition-all duration-300 backdrop-blur-md border ${
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-full transition-all duration-300 border ${
                   status === "Online" 
-                    ? "bg-white/15 border-white/20 text-white" 
-                    : "bg-gradient-to-br from-[#FF5A1F] to-[#E54B00]/20 border-white/10 text-white/70"
-                } active:scale-95 shadow-sm hover:bg-white/25`}
+                    ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-400" 
+                    : "bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400"
+                } active:scale-95 shadow-2xs hover:shadow-xs`}
               >
                 <div className="relative flex items-center justify-center">
-                  <span className={`w-1.5 h-1.5 rounded-full ${
-                    status === "Online" ? "bg-emerald-400" : "bg-white/30"
+                  <span className={`w-2 h-2 rounded-full ${
+                    status === "Online" ? "bg-emerald-500" : "bg-gray-400"
                   }`}></span>
                   {status === "Online" && (
-                    <span className="absolute w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping opacity-60"></span>
+                    <span className="absolute w-2 h-2 rounded-full bg-emerald-400 animate-ping opacity-60"></span>
                   )}
                 </div>
-                <span className="text-[11px] font-bold tracking-tight px-0.5">
+                <span className="text-[11px] font-extrabold tracking-tight">
                   {status}
                 </span>
               </button>
@@ -301,12 +301,12 @@ export default function RestaurantNavbar({
             {showNotifications && (
               <button
                 onClick={handleNotificationsClick}
-                className="relative p-2.5 hover:bg-white/10 rounded-full transition-colors group"
+                className="relative p-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-[#FF5A1F] rounded-full transition-all group active:scale-95"
                 aria-label="Notifications"
               >
-                <Bell className="w-5 h-5 text-white" />
+                <Bell className="w-4.5 h-4.5 text-gray-700 dark:text-gray-200 group-hover:text-[#FF5A1F] transition-colors" />
                 {unreadCount > 0 && (
-                  <span className="absolute top-2 right-2.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#FF5A1F] shadow-[0_0_8px_rgba(52,211,153,0.4)]" />
+                  <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-[#FF5A1F] border-2 border-white dark:border-gray-800" />
                 )}
               </button>
             )}

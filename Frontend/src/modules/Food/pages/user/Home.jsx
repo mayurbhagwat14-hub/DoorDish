@@ -2909,26 +2909,26 @@ export default function Home({ homeMode = null, isTabActive = true }) {
                       </AnimatePresence>
 
                       {/* Categories Slider (Increased Icon Size) */}
-                      <div className="flex overflow-x-auto gap-5 py-3 pb-2 scrollbar-hide px-4 mask-edge-fade">
+                      <div className="flex overflow-x-auto gap-3.5 py-2 pb-1.5 scrollbar-hide px-4 mask-edge-fade">
                         {displayCategories.slice(0, 12).map((category, index) => (
                           <Link
                             key={`sticky-${category.id || index}`}
                             to={`/food/user/category/${category.slug}`}
                             onClick={rememberLeaveForCategory}
-                            className="flex-shrink-0 flex flex-col items-center gap-1.5 group w-[74px]"
+                            className="flex-shrink-0 flex flex-col items-center gap-1 group w-[54px] sm:w-[60px]"
                           >
-                            <div className="w-16 h-16 rounded-[16px] overflow-hidden border border-gray-100 dark:border-white/10 shadow-sm bg-white dark:bg-[#1a1a1a] flex items-center justify-center transition-transform group-active:scale-95">
+                            <div className="w-12 h-12 sm:w-13 sm:h-13 rounded-[12px] sm:rounded-[14px] overflow-hidden border border-gray-100 dark:border-white/10 shadow-xs bg-white dark:bg-[#1a1a1a] flex items-center justify-center transition-transform group-active:scale-95">
                               <OptimizedImage
                                 src={category.image}
                                 alt={category.name}
-                                className="w-full h-full object-cover rounded-[16px]"
-                                sizes="64px"
+                                className="w-full h-full object-cover rounded-[12px] sm:rounded-[14px]"
+                                sizes="52px"
                                 priority={index < 6}
                                 responsive={false}
                                 placeholder="empty"
                               />
                             </div>
-                            <span className="text-[10px] font-bold text-gray-800 dark:text-gray-200 text-center truncate w-full tracking-tight">
+                            <span className="text-[9px] sm:text-[10px] font-bold text-gray-800 dark:text-gray-200 text-center truncate w-full tracking-tight">
                               {category.name}
                             </span>
                           </Link>
@@ -2939,12 +2939,12 @@ export default function Home({ homeMode = null, isTabActive = true }) {
                           <Link
                             to="/food/user/categories"
                             state={{ from: '/food/user' }}
-                            className="flex-shrink-0 flex flex-col items-center gap-1.5 group w-[74px]"
+                            className="flex-shrink-0 flex flex-col items-center gap-1 group w-[54px] sm:w-[60px]"
                           >
-                            <div className="w-16 h-16 rounded-[16px] overflow-hidden border border-red-100 dark:border-red-950/30 bg-red-50/60 dark:bg-red-950/20 flex items-center justify-center transition-transform group-active:scale-95">
-                              <UtensilsCrossed className="w-6 h-6 text-[#FF5A1F]" />
+                            <div className="w-12 h-12 sm:w-13 sm:h-13 rounded-[12px] sm:rounded-[14px] overflow-hidden border border-red-100 dark:border-red-950/30 bg-red-50/60 dark:bg-red-950/20 flex items-center justify-center transition-transform group-active:scale-95">
+                              <UtensilsCrossed className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-[#FF5A1F]" />
                             </div>
-                            <span className="text-[10px] font-bold text-[#FF5A1F] text-center truncate w-full tracking-tight flex items-center justify-center gap-0.5">
+                            <span className="text-[9px] sm:text-[10px] font-bold text-[#FF5A1F] text-center truncate w-full tracking-tight flex items-center justify-center gap-0.5">
                               More
                             </span>
                           </Link>
