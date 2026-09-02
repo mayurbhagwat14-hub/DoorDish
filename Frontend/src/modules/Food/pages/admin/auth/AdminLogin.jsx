@@ -84,12 +84,12 @@ export default function AdminLogin() {
             {/* Logo */}
             <div className="inline-flex flex-col items-start select-none">
               <div className="flex items-baseline gap-1">
-                <span className="text-3xl font-black tracking-tight text-[#111827]">Door</span>
-                <span className="text-3xl font-black tracking-tight text-[#FA5300] relative">
-                  D<span className="relative">i<span className="absolute -top-0.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-[#8CC63F]" /></span>sh
+                <span className="text-3xl sm:text-4xl font-black tracking-tight text-[#111827]">Door</span>
+                <span className="text-3xl sm:text-4xl font-black tracking-tight text-white relative">
+                  D<span className="relative">i<span className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-[#8CC63F]" /></span>sh
                 </span>
               </div>
-              <div className="w-12 h-1 bg-white rounded-full mt-0.5" />
+              <div className="w-14 h-1 bg-white rounded-full mt-1" />
             </div>
 
             {/* Main Headline */}
