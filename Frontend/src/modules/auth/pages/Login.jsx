@@ -5,6 +5,7 @@ import { Phone, Loader2, X, User, Pencil, ArrowRight } from "lucide-react"
 import { toast } from "sonner"
 import { authAPI, userAPI } from "@food/api"
 import { API_BASE_URL } from "@food/api/config"
+import { normalizeImageUrl } from "@food/utils/common"
 import { setAuthData } from "@food/utils/auth"
 import {
   Dialog,
@@ -46,7 +47,7 @@ export default function UnifiedOTPFastLogin() {
       .then(res => res.json())
       .then(json => {
         if (json.data?.logo?.url) {
-          setLogoUrl(json.data.logo.url)
+          setLogoUrl(normalizeImageUrl(json.data.logo.url, API_BASE_URL))
         }
       })
       .catch(console.error)
