@@ -13,7 +13,7 @@ import {
 } from "@food/utils/firebaseMessaging"
 
 const DELIVERY_PRIMARY_BTN =
-  "h-12 w-full rounded-full text-base font-semibold bg-gradient-to-r from-[#0E4B9C] to-[#021024] hover:from-[#1157b5] hover:to-[#041630] text-white shadow-[0_8px_20px_rgba(14,75,156,0.25)] active:scale-[0.98] transition-all duration-300"
+  "h-12 w-full rounded-full text-base font-semibold bg-gradient-to-r from-[#FA5300] to-[#E54B00] hover:from-[#1157b5] hover:to-[#041630] text-white shadow-[0_8px_20px_rgba(14,75,156,0.25)] active:scale-[0.98] transition-all duration-300"
 
 const DELIVERY_OUTLINE_BTN =
   "h-12 w-full rounded-full text-base font-semibold border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 active:scale-[0.98] transition-all duration-300"
@@ -161,7 +161,7 @@ export default function VerificationPending() {
               <div className="flex items-center justify-center my-2 select-none">
                 <div className="relative flex items-center" style={{ height: "36px" }}>
                   <div
-                    className="bg-[#0E4B9C] text-white pl-8 pr-10 py-1.5 rounded-l-md font-black uppercase tracking-widest text-[13px] flex items-center justify-center shadow-[0_4px_10px_rgba(14,75,156,0.3)]"
+                    className="bg-[#FA5300] text-white pl-8 pr-10 py-1.5 rounded-l-md font-black uppercase tracking-widest text-[13px] flex items-center justify-center shadow-[0_4px_10px_rgba(14,75,156,0.3)]"
                     style={{
                       clipPath: "polygon(0% 0%, 82% 0%, 100% 50%, 82% 100%, 0% 100%)",
                       height: "100%",
@@ -172,7 +172,7 @@ export default function VerificationPending() {
                     </span>
                   </div>
                   <div
-                    className="absolute left-[-16px] top-1/2 -translate-y-1/2 w-8 h-8 bg-[#0E4B9C] border-[3px] border-white rotate-45 flex items-center justify-center shadow-lg"
+                    className="absolute left-[-16px] top-1/2 -translate-y-1/2 w-8 h-8 bg-[#FA5300] border-[3px] border-white rotate-45 flex items-center justify-center shadow-lg"
                     style={{ zIndex: 10 }}
                   >
                     <X className="w-4 h-4 text-white" style={{ transform: "rotate(-45deg)" }} strokeWidth={4} />
@@ -238,7 +238,7 @@ export default function VerificationPending() {
                 </>
               ) : (
                 <>
-                  <ShieldCheck className="mt-0.5 h-5 w-5 text-[#0E4B9C]" />
+                  <ShieldCheck className="mt-0.5 h-5 w-5 text-[#FA5300]" />
                   <div className="text-sm text-slate-700">
                     <p className="font-semibold text-slate-900">What happens next</p>
                     <p className="mt-1">We will notify you by email and push notification once verification is approved.</p>

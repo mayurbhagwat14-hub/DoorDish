@@ -248,7 +248,7 @@ export default function RestaurantNavbar({
 
   return (
     <>
-      <div className="w-full bg-gradient-to-br from-[#FF5A1F] to-[#66001D] rounded-b-[35px] flex flex-col shadow-[0_10px_30px_rgba(184,11,61,0.25)] pb-2 relative z-10">
+      <div className="w-full bg-gradient-to-br from-[#FF5A1F] to-[#E54B00] rounded-b-[35px] flex flex-col shadow-[0_10px_30px_rgba(184,11,61,0.25)] pb-2 relative z-10">
         {/* Top Navbar */}
         <div className="px-4 py-3 flex items-center justify-between">
           {/* Left Side - Restaurant Info */}
@@ -280,7 +280,7 @@ export default function RestaurantNavbar({
                 className={`flex items-center gap-1 px-2 py-1 rounded-full transition-all duration-300 backdrop-blur-md border ${
                   status === "Online" 
                     ? "bg-white/15 border-white/20 text-white" 
-                    : "bg-gradient-to-br from-[#FF5A1F] to-[#66001D]/20 border-white/10 text-white/70"
+                    : "bg-gradient-to-br from-[#FF5A1F] to-[#E54B00]/20 border-white/10 text-white/70"
                 } active:scale-95 shadow-sm hover:bg-white/25`}
               >
                 <div className="relative flex items-center justify-center">
@@ -367,7 +367,7 @@ export default function RestaurantNavbar({
                   clearNewReservation();
                   navigate("/food/restaurant/dining-reservations");
                 }}
-                className="flex-1 h-10 bg-gradient-to-r from-[#FF5A1F] to-[#66001D] text-white text-xs font-bold rounded-xl uppercase tracking-widest shadow-lg shadow-red-100"
+                className="flex-1 h-10 bg-gradient-to-r from-[#FF5A1F] to-[#E54B00] text-white text-xs font-bold rounded-xl uppercase tracking-widest shadow-lg shadow-red-100"
               >
                 View Request
               </button>

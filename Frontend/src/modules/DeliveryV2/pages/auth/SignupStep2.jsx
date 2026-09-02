@@ -415,7 +415,7 @@ export default function SignupStep2() {
             disabled={isSubmitting || !allDocumentsUploaded}
             className={`w-full py-4 rounded-lg font-bold text-white text-base transition-all mt-6 active:scale-[0.98] ${isSubmitting || !allDocumentsUploaded
               ? "bg-gray-400 cursor-not-allowed shadow-none"
-              : "bg-gradient-to-r from-[#0E4B9C] to-[#021024] hover:from-[#1157b5] hover:to-[#041630] shadow-[0_8px_20px_rgba(14,75,156,0.3)]"
+              : "bg-gradient-to-r from-[#FA5300] to-[#E54B00] hover:from-[#1157b5] hover:to-[#041630] shadow-[0_8px_20px_rgba(14,75,156,0.3)]"
               }`}
           >
             {isSubmitting ? "Submitting..." : "Complete Signup"}

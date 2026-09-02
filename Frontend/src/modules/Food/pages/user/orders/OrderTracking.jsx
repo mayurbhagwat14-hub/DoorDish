@@ -427,7 +427,7 @@ const DiningAnimation = memo(({ order }) => {
             </div>
             
             {/* Plate Base */}
-            <div className="w-24 h-2 bg-gradient-to-r from-red-400 to-[#B80B3D] dark:from-red-900 dark:to-rose-950 rounded-full shadow-md shadow-red-500/20" />
+            <div className="w-24 h-2 bg-gradient-to-r from-red-400 to-[#FA5300] dark:from-red-900 dark:to-rose-950 rounded-full shadow-md shadow-red-500/20" />
           </div>
 
           {/* Knife */}

@@ -214,9 +214,9 @@ export default function OutletTimings() {
           {/* Appzeto delivery Section Header */}
           <div className="mb-6">
             <div className="text-center mb-2">
-              <h2 className="text-base font-semibold text-[#B80B3D]">{companyName} delivery</h2>
+              <h2 className="text-base font-semibold text-[#FA5300]">{companyName} delivery</h2>
             </div>
-            <div className="h-0.5 bg-gradient-to-br from-[#B80B3D] to-[#66001D]"></div>
+            <div className="h-0.5 bg-gradient-to-br from-[#FA5300] to-[#E54B00]"></div>
           </div>
 
           {/* Day-wise Accordion */}
