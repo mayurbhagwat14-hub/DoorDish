@@ -85,6 +85,7 @@ const isAllowedOrigin = (origin) => {
 
     try {
         const { hostname } = new URL(origin);
+        if (hostname.endsWith('.onrender.com')) return true;
         return allowedHostnames.has(hostname.toLowerCase());
     } catch {
         return false;
@@ -128,18 +129,15 @@ app.use((req, _res, next) => {
 });
 app.use(xssClean());
 
-// Uploads are served by nginx straight off disk in production (see deploy/nginx/ometto.conf).
-// This static mount is the dev fallback only — SERVE_UPLOADS_FROM_NODE=true forces it on.
-if (config.serveUploadsFromNode) {
-    app.use(
-        '/uploads',
-        express.static(config.uploadsRoot, {
-            maxAge: '30d',
-            index: false,
-            dotfiles: 'ignore'
-        })
-    );
-}
+// Serve static uploads (handles /uploads, /api/uploads, and /api/v1/uploads)
+app.use(
+    ['/uploads', '/api/uploads', '/api/v1/uploads'],
+    express.static(config.uploadsRoot, {
+        maxAge: '30d',
+        index: false,
+        dotfiles: 'ignore'
+    })
+);
 
 
 // Rate limit: public free · auth routes use authRateLimiter · private = user+IP

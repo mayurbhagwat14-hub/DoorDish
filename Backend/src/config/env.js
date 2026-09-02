@@ -8,8 +8,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Backend/ — the base a relative UPLOAD_PATH is resolved against.
 const backendRoot = path.resolve(__dirname, '..', '..');
 
-const uploadPath = process.env.UPLOAD_PATH
-    || (process.env.NODE_ENV === 'production' ? '/var/www/uploads' : 'uploads/');
+const uploadPath = process.env.UPLOAD_PATH || 'uploads/';
 
 export const config = {
     // Basic server config
