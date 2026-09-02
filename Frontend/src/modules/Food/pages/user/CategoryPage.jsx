@@ -206,7 +206,18 @@ export default function CategoryPage({
     { delay: 60, minDuration: 120 },
   )
   const deferredSearchQuery = useDeferredValue(searchQuery)
-  const BACKEND_ORIGIN = useMemo(() => API_BASE_URL.replace(/\/api\/?$/, ""), [])
+  const BACKEND_ORIGIN = useMemo(() => {
+    const raw = API_BASE_URL.replace(/\/api\/?$/, "").replace(/\/api\/v\d+\/?$/, "").replace(/\/+$/, "");
+    // If baked-in API_BASE_URL points at localhost but browser is on a real domain,
+    // use browser origin so images load from the live server.
+    if (/^https?:\/\/(localhost|127\.0\.0\.1)/i.test(raw) && typeof window !== "undefined") {
+      const browserHost = window.location?.hostname;
+      if (browserHost && browserHost !== "localhost" && browserHost !== "127.0.0.1") {
+        return window.location.origin;
+      }
+    }
+    return raw;
+  }, [])
   const slugify = (value) => String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")
   const normalizeCategoryToken = (value) =>
     String(value || "")

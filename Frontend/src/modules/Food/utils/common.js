@@ -5,9 +5,35 @@ const ASSET_BASE_URL = String(
   (typeof import.meta !== "undefined" && import.meta.env?.VITE_ASSET_BASE_URL) || ""
 ).replace(/\/+$/, "");
 
+/**
+ * Returns the best origin to use for /uploads/ asset URLs.
+ * If the baked-in API_BASE_URL points at localhost but the browser
+ * is on a real domain (e.g. onrender.com), we ignore the baked-in
+ * value and use the browser's own origin instead.
+ */
+const isLocalhostOrigin = (origin) =>
+  /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i.test(origin);
+
 const getActiveOrigin = (customOrigin = "") => {
   if (customOrigin) return customOrigin.replace(/\/+$/, "");
   if (ASSET_BASE_URL) return ASSET_BASE_URL;
+
+  // If the baked-in backend origin is localhost but we're deployed on a real
+  // domain, fall back to the browser's origin so images load from the live server.
+  if (defaultBackendOrigin && typeof window !== "undefined") {
+    const onLocalhost = isLocalhostOrigin(defaultBackendOrigin);
+    const browserOnLocalhost =
+      window.location?.hostname === "localhost" ||
+      window.location?.hostname === "127.0.0.1";
+
+    if (!onLocalhost || browserOnLocalhost) {
+      // Either the baked-in origin is a real domain, OR both are localhost (dev)
+      return defaultBackendOrigin;
+    }
+    // Baked-in is localhost but browser is on a real domain → use browser origin
+    return window.location.origin.replace(/\/+$/, "");
+  }
+
   if (defaultBackendOrigin) return defaultBackendOrigin;
   if (typeof window !== "undefined" && window.location?.origin) {
     return window.location.origin.replace(/\/+$/, "");

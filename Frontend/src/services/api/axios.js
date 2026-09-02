@@ -10,10 +10,20 @@ import axios from "axios";
 
 // Prefer explicit env. If not set, default to /api/v1 so the Vite proxy can forward to backend.
 // This avoids hardcoding ports like 5000 that may conflict with local setups.
-const baseURL =
+const rawBaseURL =
   typeof import.meta !== "undefined" && import.meta.env?.VITE_API_BASE_URL
     ? String(import.meta.env.VITE_API_BASE_URL).replace(/\/$/, "")
     : "/api/v1";
+
+// Safety: if the baked-in base URL points at localhost but the browser is on a
+// real domain (production deployment), fall back to relative /api/v1 so API
+// calls go to the correct server.
+const isLocalhostBase = /^https?:\/\/(localhost|127\.0\.0\.1)/i.test(rawBaseURL);
+const browserOnRealDomain =
+  typeof window !== "undefined" &&
+  window.location?.hostname !== "localhost" &&
+  window.location?.hostname !== "127.0.0.1";
+const baseURL = (isLocalhostBase && browserOnRealDomain) ? "/api/v1" : rawBaseURL;
 
 const apiClient = axios.create({
   baseURL: baseURL || undefined,

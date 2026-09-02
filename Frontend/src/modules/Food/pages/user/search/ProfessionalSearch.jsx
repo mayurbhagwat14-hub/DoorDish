@@ -27,16 +27,11 @@ import {
 } from "@food/utils/vegMode"
 const CategoryPage = lazy(() => import("../CategoryPage"))
 
-// Helper to resolve media URLs consistently
+import { normalizeImageUrl } from "@food/utils/common"
+
 const getMediaUrl = (url) => {
   if (!url || typeof url !== 'string') return null;
-  if (url.startsWith('http')) return url;
-  
-  // Use VITE_API_BASE_URL to derive the backend origin
-  const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/v1";
-  const origin = apiBase.split('/api/v1')[0];
-  
-  return `${origin}${url.startsWith('/') ? url : '/' + url}`;
+  return normalizeImageUrl(url);
 };
 
 // Debounce hook for real-time search

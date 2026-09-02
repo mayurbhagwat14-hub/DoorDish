@@ -4,10 +4,20 @@
  * - `API_BASE_URL` is used by UI (e.g. banners/debug) and should reflect the same value.
  */
 
-export const API_BASE_URL =
+const _rawApiBaseUrl =
   typeof import.meta !== "undefined" && import.meta.env?.VITE_API_BASE_URL
     ? String(import.meta.env.VITE_API_BASE_URL).replace(/\/$/, "")
     : "";
+
+// Safety: if the baked-in URL is localhost but we're on a real domain, use
+// relative path so requests go to the current host instead.
+const _isLocalhostApi = /^https?:\/\/(localhost|127\.0\.0\.1)/i.test(_rawApiBaseUrl);
+const _onRealDomain =
+  typeof window !== "undefined" &&
+  window.location?.hostname !== "localhost" &&
+  window.location?.hostname !== "127.0.0.1";
+
+export const API_BASE_URL = (_isLocalhostApi && _onRealDomain) ? "/api/v1" : _rawApiBaseUrl;
 
 // Minimal shape so existing API_ENDPOINTS.* references do not break
 export const API_ENDPOINTS = {
