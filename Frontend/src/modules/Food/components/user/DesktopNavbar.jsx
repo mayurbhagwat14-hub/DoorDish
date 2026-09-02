@@ -1,4 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom"
+import { API_BASE_URL } from "@food/api/config"
+import { normalizeImageUrl } from "@food/utils/common"
 import { useEffect, useState, useRef, useMemo } from "react"
 import { ChevronDown, ShoppingCart, Wallet, Search, Mic } from "lucide-react"
 import { Button } from "@food/components/ui/button"
@@ -100,7 +102,7 @@ export default function DesktopNavbar({ showLogo = true }) {
                 const cached = getCachedSettings()
                 if (cached) {
                     if (cached.logo?.url) {
-                        setLogoUrl(cached.logo.url)
+                        setLogoUrl(normalizeImageUrl(cached.logo.url, API_BASE_URL))
                     }
                     if (cached.companyName) {
                         setCompanyName(cached.companyName)
@@ -109,7 +111,7 @@ export default function DesktopNavbar({ showLogo = true }) {
                     const settings = await loadBusinessSettings()
                     if (settings) {
                         if (settings.logo?.url) {
-                            setLogoUrl(settings.logo.url)
+                            setLogoUrl(normalizeImageUrl(settings.logo.url, API_BASE_URL))
                         }
                         if (settings.companyName) {
                             setCompanyName(settings.companyName)
@@ -127,7 +129,7 @@ export default function DesktopNavbar({ showLogo = true }) {
             const cached = getCachedSettings()
             if (cached) {
                 if (cached.logo?.url) {
-                    setLogoUrl(cached.logo.url)
+                    setLogoUrl(normalizeImageUrl(cached.logo.url, API_BASE_URL))
                 }
                 if (cached.companyName) {
                     setCompanyName(cached.companyName)

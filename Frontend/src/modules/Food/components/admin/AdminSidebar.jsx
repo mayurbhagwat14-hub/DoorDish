@@ -1,4 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useLayoutEffect } from "react"
+import { API_BASE_URL } from "@food/api/config"
+import { normalizeImageUrl } from "@food/utils/common"
 import { Link, useLocation, useNavigationType } from "react-router-dom"
 import {
   Search,
@@ -298,7 +300,7 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
         let cached = getCachedSettings()
         if (cached) {
           if (cached.logo?.url) {
-            setLogoUrl(cached.logo.url)
+            setLogoUrl(normalizeImageUrl(cached.logo.url, API_BASE_URL))
           }
           if (cached.companyName) {
             setCompanyName(cached.companyName)
@@ -309,7 +311,7 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
         const settings = await loadBusinessSettings()
         if (settings) {
           if (settings.logo?.url) {
-            setLogoUrl(settings.logo.url)
+            setLogoUrl(normalizeImageUrl(settings.logo.url, API_BASE_URL))
           }
           if (settings.companyName) {
             setCompanyName(settings.companyName)
@@ -333,7 +335,7 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
       const cached = getCachedSettings()
       if (cached) {
         if (cached.logo?.url) {
-          setLogoUrl(cached.logo.url)
+          setLogoUrl(normalizeImageUrl(cached.logo.url, API_BASE_URL))
         }
         if (cached.companyName) {
           setCompanyName(cached.companyName)
