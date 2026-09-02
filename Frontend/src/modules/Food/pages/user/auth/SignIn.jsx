@@ -1,15 +1,10 @@
 import { useState, useEffect, useRef } from "react"
 import { useNavigate, Link, useSearchParams } from "react-router-dom"
-import { AlertCircle, Loader2 } from "lucide-react"
+import { AlertCircle, Loader2, ArrowRight, Phone } from "lucide-react"
 import AnimatedPage from "@food/components/user/AnimatedPage"
-import { Button } from "@food/components/ui/button"
-import { Input } from "@food/components/ui/input"
 import { authAPI } from "@food/api"
-import loginBanner from "@food/assets/loginbanner.png"
-const debugLog = (...args) => {}
-const debugWarn = (...args) => {}
-const debugError = (...args) => {}
 
+const debugError = (...args) => {}
 
 export default function SignIn() {
   const navigate = useNavigate()
@@ -21,9 +16,8 @@ export default function SignIn() {
       : ""
 
   const [formData, setFormData] = useState({
-    // phone: "",
     phone: defaultTestPhone,
-    countryCode: "+91", // required; default +91 for India
+    countryCode: "+91",
   })
 
   const [error, setError] = useState("")
@@ -33,12 +27,10 @@ export default function SignIn() {
   useEffect(() => {
     const stored = sessionStorage.getItem("userAuthData")
     if (!stored) return
-
     try {
       const data = JSON.parse(stored)
       const fullPhone = String(data.phone || "").trim()
       const phoneDigits = fullPhone.replace(/^\+91\s*/, "").replace(/\D/g, "").slice(0, 10)
-
       setFormData((prev) => ({
         ...prev,
         phone: phoneDigits || prev.phone,
@@ -58,12 +50,10 @@ export default function SignIn() {
   const handleChange = (e) => {
     const { name } = e.target
     let { value } = e.target
-
     if (name === "phone") {
       value = value.replace(/\D/g, "").slice(0, 10)
       setError(validatePhone(value))
     }
-
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
@@ -115,136 +105,154 @@ export default function SignIn() {
   }
 
   return (
-    <AnimatedPage className="min-h-screen bg-gray-50 dark:bg-[#0a0a0a] flex items-center justify-center p-4">
-      {/* Background decoration (desktop only) */}
-      <div className="fixed inset-0 z-0 hidden md:block opacity-40">
-        <img src={loginBanner} alt="" className="w-full h-full object-cover blur-sm" />
-        <div className="absolute inset-0 bg-white/60 dark:bg-black/80" />
+    <AnimatedPage className="min-h-screen bg-white relative overflow-hidden flex flex-col justify-between max-w-md mx-auto shadow-2xl border-x border-gray-100">
+      
+      {/* Top Left Orange Blob & Burger */}
+      <div className="absolute top-0 left-0 w-full h-[400px] pointer-events-none z-0">
+        <svg viewBox="0 0 400 400" className="absolute top-0 left-0 w-full h-full" preserveAspectRatio="none">
+          <path d="M0,0 L400,0 C250,80 120,250 0,380 Z" fill="#FF5A1F" />
+        </svg>
+        <img 
+          src="/assets/images/burger-real.png" 
+          alt="Burger" 
+          className="absolute top-4 -left-4 w-[200px] h-[150px] object-contain drop-shadow-xl z-10 transform -rotate-6"
+        />
+        {/* Subtle background line art placeholders */}
+        <div className="absolute top-32 left-8 w-8 h-8 border-2 border-white/20 rounded-lg opacity-50 rotate-12"></div>
+        <div className="absolute top-12 left-48 w-6 h-6 border-2 border-white/20 rounded-full opacity-50 -rotate-12"></div>
+        <div className="absolute top-52 left-32 w-10 h-6 border-2 border-white/20 rounded-xl opacity-50 rotate-45"></div>
       </div>
 
-      <div className="w-full max-w-[450px] bg-white dark:bg-[#1a1a1a] rounded-xl shadow-2xl relative z-10 overflow-hidden border border-gray-100 dark:border-gray-800">
-        {/* Banner (Mobile Only) */}
-        <div className="md:hidden w-full h-[180px] relative">
-          <img src={loginBanner} alt="Food Banner" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-white dark:from-[#1a1a1a] to-transparent" />
+      {/* Main Content Area */}
+      <div className="relative z-10 flex-1 flex flex-col px-6 pt-[140px] pb-6">
+        
+        {/* App Logo & Scooter */}
+        <div className="flex items-center justify-center gap-3">
+          <div className="w-[120px] h-[120px] bg-[#FF5A1F] rounded-[32px] flex flex-col items-center justify-center font-black text-4xl leading-[1] tracking-tighter shadow-lg shrink-0">
+            <span className="text-black">Door</span>
+            <span className="text-white">Dish</span>
+          </div>
+          <div className="w-[130px] h-[130px] shrink-0">
+            <img 
+              src="/assets/images/MapRider.png" 
+              alt="Delivery Rider" 
+              className="w-full h-full object-contain drop-shadow-lg"
+            />
+          </div>
         </div>
 
-        <div className="p-6 sm:p-8 md:p-10 space-y-6 md:space-y-8">
-          <div className="text-center space-y-2 md:space-y-3">
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white leading-tight">
-              Login or Signup
-            </h2>
-            <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400">
-              Enter your phone number to continue
-            </p>
-          </div>
+        {/* Welcome Text */}
+        <div className="text-center mt-6">
+          <h1 className="text-[28px] font-black text-[#1A1A1A] tracking-tight">
+            Welcome to <span className="text-[#FF5A1F]">DoorDish</span>
+          </h1>
+          <p className="text-[#666666] text-[15px] font-semibold mt-1">
+            Delicious food, delivered fast to your door.
+          </p>
+        </div>
 
-          <form id="user-signin-form" onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-2">
-              <div className="relative flex items-center">
-                <div className="flex items-center px-4 h-12 md:h-14 border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#2a2a2a] text-gray-900 dark:text-white rounded-lg border-r-0 rounded-r-none font-medium">
-                  <span>+91</span>
-                </div>
-                <Input
-                  id="phone"
-                  name="phone"
-                  type="tel"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  maxLength={10}
-                  placeholder="Phone number"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  className={`flex-1 h-12 md:h-14 text-lg bg-white dark:bg-[#1a1a1a] text-gray-900 dark:text-white border-gray-300 dark:border-gray-700 rounded-lg rounded-l-none focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary ${error ? "border-red-500" : ""} transition-all`}
-                  aria-invalid={error ? "true" : "false"}
-                />
+        {/* Phone instructions */}
+        <div className="flex items-center justify-center gap-3 mt-8 mb-5">
+          <div className="w-9 h-9 rounded-full bg-[#FFF0EB] flex items-center justify-center text-[#FF5A1F] shrink-0">
+            <Phone className="w-[18px] h-[18px] fill-[#FF5A1F]" />
+          </div>
+          <span className="text-[#4A4A4A] font-bold text-[14px]">
+            Login or signup with your phone number
+          </span>
+        </div>
+
+        {/* Form */}
+        <form id="mobile-signin-form" onSubmit={handleSubmit} className="flex flex-col gap-5">
+          <div className="space-y-2">
+            <div className={`flex items-center h-[60px] rounded-full border-2 ${error ? 'border-red-500 bg-red-50' : 'border-[#FF5A1F] bg-white'} px-2 transition-colors`}>
+              <div className="flex items-center justify-center px-4 font-bold text-[#FF5A1F] text-lg border-r border-gray-200 h-[30px] shrink-0">
+                +91
               </div>
-
-              {error && (
-                <div className="flex items-center gap-1.5 text-xs text-red-500 pl-1">
-                  <AlertCircle className="h-3.5 w-3.5" />
-                  <span>{error}</span>
-                </div>
-              )}
+              <input 
+                id="phone"
+                name="phone"
+                type="tel"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={10}
+                placeholder="Mobile number"
+                value={formData.phone}
+                onChange={handleChange}
+                className="flex-1 h-full w-full bg-transparent border-none focus:outline-none focus:ring-0 px-4 text-[#1A1A1A] font-bold text-lg placeholder:font-semibold placeholder:text-[#999999]"
+              />
             </div>
-
-            <Button
-              type="submit"
-              form="user-signin-form"
-              className="w-full h-12 md:h-14 bg-primary hover:bg-[#991B1B] text-white font-bold text-base md:text-lg rounded-lg transition-all hover:shadow-lg active:scale-[0.98]"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                  Sending OTP...
-                </>
-              ) : (
-                "Continue"
-              )}
-            </Button>
-          </form>
-
-          {/* Social login separator */}
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-gray-200 dark:border-gray-800" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white dark:bg-[#1a1a1a] px-3 text-gray-500 dark:text-gray-400 font-medium">
-                or
-              </span>
-            </div>
+            {error && (
+              <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-red-500 animate-in fade-in">
+                <AlertCircle className="h-3.5 w-3.5" />
+                <span>{error}</span>
+              </div>
+            )}
           </div>
 
-          {/* Social login buttons */}
-          <div className="grid grid-cols-1 gap-3">
-            <button
-              type="button"
-              className="flex items-center justify-center gap-3 w-full h-12 md:h-14 bg-white dark:bg-[#2a2a2a] border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-[#333] transition-colors"
-            >
-              <svg className="w-5 h-5" viewBox="0 0 24 24">
-                <path
-                  fill="#4285F4"
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                />
-                <path
-                  fill="#34A853"
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                />
-                <path
-                  fill="#FBBC05"
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"
-                />
-                <path
-                  fill="#EA4335"
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.14-4.53z"
-                />
-              </svg>
-              <span className="text-gray-700 dark:text-gray-200 font-medium">Continue with Google</span>
-            </button>
-          </div>
+          <button 
+            type="submit" 
+            disabled={isLoading}
+            className="w-full h-[60px] bg-[#FF5A1F] text-white rounded-full font-black text-[19px] flex items-center justify-center gap-2 shadow-lg shadow-[#FF5A1F]/30 active:scale-95 transition-all"
+          >
+            {isLoading ? (
+              <Loader2 className="w-6 h-6 animate-spin" />
+            ) : (
+              <>
+                Log in
+                <ArrowRight className="w-[22px] h-[22px]" strokeWidth={2.5} />
+              </>
+            )}
+          </button>
+        </form>
 
-          <div className="text-center text-xs md:text-sm text-gray-500 dark:text-gray-400 pt-2">
-            <p className="mt-8 text-center text-xs text-gray-500 dark:text-gray-400 max-w-xs mx-auto">
-              By continuing, you agree to our{" "}
-              <Link to="/user/profile/terms" className="underline hover:text-gray-900 dark:hover:text-gray-100 transition-colors">
-                Terms of Service
-              </Link>{" "}
-              and{" "}
-              <Link to="/user/profile/privacy" className="underline hover:text-gray-900 dark:hover:text-gray-100 transition-colors">
-                Privacy Policy
-              </Link>
-            </p>
-            <div className="flex justify-center gap-2 flex-wrap">
-              <span className="text-gray-300 dark:text-gray-700">•</span>
-              <Link to="/profile/refund" className="underline hover:text-gray-900 dark:hover:text-gray-100 transition-colors">
-                Content Policy
-              </Link>
-            </div>
-          </div>
+        {/* Divider */}
+        <div className="my-6 flex items-center justify-center gap-4">
+          <div className="h-[1px] w-12 bg-gray-200" />
+          <span className="text-gray-500 font-semibold text-[15px]">or</span>
+          <div className="h-[1px] w-12 bg-gray-200" />
+        </div>
+
+        {/* Skip button */}
+        <button 
+          type="button" 
+          onClick={() => navigate('/food/user')} 
+          className="w-full h-[60px] bg-white border-2 border-[#FF5A1F] text-[#FF5A1F] rounded-full font-black text-[19px] flex items-center justify-center gap-2 active:scale-95 transition-all"
+        >
+          Skip for now
+          <ArrowRight className="w-[22px] h-[22px]" strokeWidth={2.5} />
+        </button>
+
+      </div>
+
+      {/* Footer Text */}
+      <div className="relative z-10 text-center mb-8 pb-10">
+        <p className="text-[#666666] font-semibold text-[13px]">
+          By continuing, you agree to our
+        </p>
+        <div className="flex items-center justify-center gap-2.5 mt-2 text-[12px] font-black text-[#FF5A1F] tracking-widest">
+          <Link to="/user/profile/terms" className="hover:underline">TERMS</Link>
+          <span className="text-[#FF5A1F]">•</span>
+          <Link to="/user/profile/privacy" className="hover:underline">PRIVACY</Link>
+          <span className="text-[#FF5A1F]">•</span>
+          <Link to="/user/profile/support" className="hover:underline">SUPPORT</Link>
         </div>
       </div>
+
+      {/* Bottom Right Orange Blob & Pasta */}
+      <div className="absolute bottom-0 right-0 w-full h-[350px] pointer-events-none z-0">
+        <svg viewBox="0 0 400 400" className="absolute bottom-0 right-0 w-full h-full" preserveAspectRatio="none">
+          <path d="M400,400 L0,400 C150,300 300,150 400,0 Z" fill="#FF5A1F" />
+        </svg>
+        <img 
+          src="/assets/images/dish-img.png" 
+          alt="Pasta" 
+          className="absolute bottom-4 -right-12 w-[350px] h-[250px] object-contain drop-shadow-2xl z-10"
+        />
+        {/* Subtle background line art placeholders */}
+        <div className="absolute bottom-40 right-12 w-8 h-8 border-2 border-white/20 rounded-md opacity-50 -rotate-12"></div>
+        <div className="absolute bottom-20 right-48 w-10 h-10 border-2 border-white/20 rounded-full opacity-50 rotate-45"></div>
+      </div>
+
     </AnimatedPage>
   )
 }

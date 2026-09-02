@@ -954,11 +954,7 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
                       alt={companyName || "Company"}
                       className="w-24 h-10 object-contain"
                       loading="lazy"
-                      onError={(e) => {
-                        if (e.target.src !== quickSpicyLogo) {
-                          e.target.src = quickSpicyLogo
-                        }
-                      }}
+                      onError={(e) => { e.target.onerror = null; e.target.src = quickSpicyLogo }}
                     />
                   ) : companyName ? (
                     <span className="text-xs font-semibold text-white px-2 truncate">
@@ -979,11 +975,7 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
                       alt={companyName || "Company"}
                       className="w-10 h-10 object-contain"
                       loading="lazy"
-                      onError={(e) => {
-                        if (e.target.src !== quickSpicyLogo) {
-                          e.target.src = quickSpicyLogo
-                        }
-                      }}
+                      onError={(e) => { e.target.onerror = null; e.target.src = quickSpicyLogo }}
                     />
                   ) : (
                     <img src={quickSpicyLogo} alt="Company" className="w-10 h-10 object-contain" loading="lazy" />

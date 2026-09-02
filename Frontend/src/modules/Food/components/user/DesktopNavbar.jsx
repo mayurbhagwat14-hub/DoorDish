@@ -210,11 +210,7 @@ export default function DesktopNavbar({ showLogo = true }) {
                                             src={logoUrl || quickSpicyLogo}
                                             alt={companyName || "Company Logo"}
                                             className="h-10 w-auto md:h-14 lg:h-16 object-contain"
-                                            onError={(e) => {
-                                                if (e.target.src !== quickSpicyLogo) {
-                                                    e.target.src = quickSpicyLogo
-                                                }
-                                            }}
+                                            onError={(e) => { e.target.onerror = null; e.target.src = quickSpicyLogo }}
                                         />
                                     ) : (
                                         <img src={quickSpicyLogo} alt={companyName || "Logo"} className="h-10 w-auto md:h-14 lg:h-16 object-contain" />

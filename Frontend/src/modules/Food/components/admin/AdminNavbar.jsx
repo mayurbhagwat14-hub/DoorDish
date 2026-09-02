@@ -295,10 +295,7 @@ export default function AdminNavbar({ onMenuClick }) {
                     alt={businessSettings.companyName || "Company"}
                     className="w-24 h-10 object-contain"
                     loading="lazy"
-                    onError={(e) => {
-                      // Fallback to default logo if company logo fails to load
-                      e.target.src = quickSpicyLogo;
-                    }}
+                    onError={(e) => { e.target.onerror = null; e.target.src = quickSpicyLogo }}
                   />
                 ) : (
                   businessSettings?.companyName ? (

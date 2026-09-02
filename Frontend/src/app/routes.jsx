@@ -124,12 +124,8 @@ const AppRoutes = () => {
             </Suspense>
           } />
 
-          {/* Landing Page ONLY on / */}
-          <Route path="/" element={
-            <Suspense fallback={<AppShellSkeleton />}>
-              <MasterLandingPage />
-            </Suspense>
-          } />
+          {/* Landing Page Redirect */}
+          <Route path="/" element={<Navigate to="/user/auth/login" replace />} />
 
           {/* Handle root and other paths via FoodAppWrapper */}
           <Route path="/*" element={<FoodAppWrapper />} />

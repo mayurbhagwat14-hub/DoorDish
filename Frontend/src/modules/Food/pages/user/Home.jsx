@@ -1093,7 +1093,7 @@ export default function Home({ homeMode = null, isTabActive = true }) {
             ? data
             : [];
         const images = list
-          .map((b) => (b && typeof b.imageUrl === "string" ? b.imageUrl : ""))
+          .map((b) => (b && typeof b.imageUrl === "string" ? normalizeImageUrl(b.imageUrl) : ""))
           .filter(Boolean);
         setHeroBannerImages(images);
         setHeroBannersData(list);
