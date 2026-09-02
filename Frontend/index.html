@@ -13,11 +13,11 @@
           // Cooldown of 10 seconds to avoid infinite reload loops (e.g., if offline or asset is truly missing)
           if (!lastReload || (now - parseInt(lastReload, 10)) > 10000) {
             sessionStorage.setItem('chunk_reload_timestamp', String(now));
-            console.warn('Ometto: Chunk/Module load failure caught (' + reason + '). Reloading application...');
+            console.warn('DoorDish: Chunk/Module load failure caught (' + reason + '). Reloading application...');
             window.location.reload();
           }
         } catch (e) {
-          console.error('Ometto: Failed to handle reload', e);
+          console.error('DoorDish: Failed to handle reload', e);
         }
       }
 

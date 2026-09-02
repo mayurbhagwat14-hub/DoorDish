@@ -212,7 +212,7 @@ export function clearUserSession() {
   keys.forEach((k) => localStorage.removeItem(k));
   // Next login should fetch current GPS like a fresh app open.
   try {
-    sessionStorage.removeItem("ometto_location_session");
+    sessionStorage.removeItem("doordish_location_session");
     sessionStorage.removeItem("lastLoginLocationFetch");
     localStorage.setItem("deliveryAddressMode", "current");
   } catch {

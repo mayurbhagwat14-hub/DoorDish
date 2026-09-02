@@ -7,7 +7,7 @@ import apiClient from "@food/api/axios";
 import { API_ENDPOINTS } from "@food/api/config";
 import { publicGetOnce } from "@food/api";
 
-const SETTINGS_KEY = 'ometto_business_settings';
+const SETTINGS_KEY = 'doordish_business_settings';
 
 // Initialize from localStorage immediately so it's available for components on mount
 let cachedSettings = (() => {
@@ -79,7 +79,7 @@ export const loadBusinessSettings = async () => {
 export const updateFavicon = (url) => {
   if (typeof document === 'undefined') return;
 
-  // Admin favicon when present; otherwise default Ometto favicon
+  // Admin favicon when present; otherwise default DoorDish favicon
   const href = (url && String(url).trim()) || '/assets/images/favicon.png';
 
   // Remove existing favicons
@@ -100,7 +100,7 @@ export const updateFavicon = (url) => {
  */
 export const updateTitle = (companyName) => {
   if (typeof document !== 'undefined') {
-    document.title = (companyName && companyName !== "Foodelo") ? companyName : "Ometto";
+    document.title = (companyName && companyName !== "Foodelo") ? companyName : "DoorDish";
   }
 };
 
@@ -138,23 +138,23 @@ export const getCachedSettings = () => {
 
 /**
  * Get company name from business settings with fallback
- * @returns {string} Company name or default "Ometto"
+ * @returns {string} Company name or default "DoorDish"
  */
 export const getCompanyName = () => {
   const settings = getCachedSettings();
-  const name = settings?.companyName || "Ometto";
-  return name === "Foodelo" ? "Ometto" : name;
+  const name = settings?.companyName || "DoorDish";
+  return name === "Foodelo" ? "DoorDish" : name;
 };
 
 /**
  * Get company name asynchronously (loads if not cached)
- * @returns {Promise<string>} Company name or default "Ometto"
+ * @returns {Promise<string>} Company name or default "DoorDish"
  */
 export const getCompanyNameAsync = async () => {
   try {
     const settings = await loadBusinessSettings();
-    return settings?.companyName || "Ometto";
+    return settings?.companyName || "DoorDish";
   } catch (error) {
-    return "Ometto";
+    return "DoorDish";
   }
 };

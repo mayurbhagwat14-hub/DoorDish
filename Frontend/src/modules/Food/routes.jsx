@@ -237,7 +237,7 @@ export default function App() {
     return () => window.removeEventListener("userLoginSuccess", onLoginSuccess)
   }, [])
 
-  // Global Auth Failure Listener EXACTLY like Ometto
+  // Global Auth Failure Listener EXACTLY like DoorDish
   useEffect(() => {
     const handleAuthFailure = (event) => {
       const module = event.detail?.module || 'user'
@@ -257,7 +257,7 @@ export default function App() {
     }
 
     const handleStorageChange = (e) => {
-      // Cross-tab instant logout (Ometto v2 upgrade)
+      // Cross-tab instant logout (DoorDish v2 upgrade)
       if ((e.key === "restaurant_accessToken" || e.key === "delivery_accessToken") && !e.newValue) {
         const module = e.key === "restaurant_accessToken" ? "restaurant" : "delivery"
         const loginPaths = {

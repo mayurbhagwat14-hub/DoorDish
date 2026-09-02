@@ -270,18 +270,18 @@ function scrubNativeApiErrorBanner(el) {
  */
 export function installNativeApiErrorBridge() {
   if (typeof window === "undefined") return;
-  if (window.__omettoNativeApiErrorBridgeInstalled) return;
-  window.__omettoNativeApiErrorBridgeInstalled = true;
+  if (window.__doordishNativeApiErrorBridgeInstalled) return;
+  window.__doordishNativeApiErrorBridgeInstalled = true;
 
   const handlePayload = (payload) => {
     if (payload == null) return;
     showNativeShellApiError(payload);
   };
 
-  window.omettoOnNativeApiError = handlePayload;
+  window.doordishOnNativeApiError = handlePayload;
   window.handleNativeApiError = handlePayload;
   window.showApiErrorToast = handlePayload;
-  window.__omettoHandleNativeApiError = handlePayload;
+  window.__doordishHandleNativeApiError = handlePayload;
 
   window.addEventListener("message", (event) => {
     const data = event?.data;
@@ -297,7 +297,7 @@ export function installNativeApiErrorBridge() {
     }
   });
 
-  window.addEventListener("ometto:native-api-error", (event) => {
+  window.addEventListener("doordish:native-api-error", (event) => {
     handlePayload(event?.detail);
   });
 

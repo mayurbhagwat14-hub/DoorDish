@@ -1,31 +1,29 @@
 /**
  * PM2 ecosystem for Ometto API + BullMQ workers.
  *
- * Usage (on live server, from Backend folder):
- *   pm2 start ecosystem.config.cjs
- *   pm2 save
+ * PM2 ecosystem for DoorDish API + BullMQ workers.
  *
- * Safe rules:
- * - Start Redis BEFORE enabling REDIS_ENABLED / BULLMQ_ENABLED in .env
- * - API never crashes if Redis blips (queues degrade gracefully)
- * - Workers wait for Redis, then exit 0 (not 1) so PM2 doesn't hard crash-loop
+ * Usage:
+ *   pm2 start ecosystem.config.cjs
+ *   pm2 reload ecosystem.config.cjs
+ *   pm2 stop ecosystem.config.cjs
  */
 module.exports = {
   apps: [
     {
-      name: 'ometto',
-      script: 'server.js',
+      name: 'doordish',
+      script: './src/app.js',
       cwd: __dirname,
-      instances: 1,
-      exec_mode: 'fork',
-      max_memory_restart: '512M',
+      instances: 'max',
+      exec_mode: 'cluster',
+      max_memory_restart: '1G',
       env: {
         NODE_ENV: 'production',
       },
     },
     {
-      name: 'ometto-worker-order',
-      script: 'src/queues/workers/order.worker.js',
+      name: 'doordish-worker-order',
+      script: './src/shared/queues/orderQueue.worker.js',
       cwd: __dirname,
       instances: 1,
       exec_mode: 'fork',
@@ -34,8 +32,8 @@ module.exports = {
       env: { NODE_ENV: 'production' },
     },
     {
-      name: 'ometto-worker-payment',
-      script: 'src/queues/workers/payment.worker.js',
+      name: 'doordish-worker-payment',
+      script: './src/shared/queues/paymentQueue.worker.js',
       cwd: __dirname,
       instances: 1,
       exec_mode: 'fork',
@@ -44,8 +42,8 @@ module.exports = {
       env: { NODE_ENV: 'production' },
     },
     {
-      name: 'ometto-worker-notification',
-      script: 'src/queues/workers/notification.worker.js',
+      name: 'doordish-worker-notification',
+      script: './src/shared/queues/notificationQueue.worker.js',
       cwd: __dirname,
       instances: 1,
       exec_mode: 'fork',
@@ -54,8 +52,8 @@ module.exports = {
       env: { NODE_ENV: 'production' },
     },
     {
-      name: 'ometto-worker-tracking',
-      script: 'src/queues/workers/tracking.worker.js',
+      name: 'doordish-worker-tracking',
+      script: './src/shared/queues/trackingQueue.worker.js',
       cwd: __dirname,
       instances: 1,
       exec_mode: 'fork',
@@ -64,8 +62,8 @@ module.exports = {
       env: { NODE_ENV: 'production' },
     },
     {
-      name: 'ometto-worker-otp',
-      script: 'src/queues/workers/otp.worker.js',
+      name: 'doordish-worker-otp',
+      script: './src/shared/queues/otpQueue.worker.js',
       cwd: __dirname,
       instances: 1,
       exec_mode: 'fork',

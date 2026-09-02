@@ -8,8 +8,8 @@ importScripts("https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js
 importScripts("https://www.gstatic.com/firebasejs/10.13.2/firebase-messaging-compat.js");
 
 const sanitize = (value) => String(value || "").trim().replace(/^['"]|['"]$/g, "");
-const CONFIG_CACHE = "ometto-fcm-config-v1";
-const CONFIG_URL = "/__ometto_fcm_web_config__";
+const CONFIG_CACHE = "doordish-fcm-config-v1";
+const CONFIG_URL = "/__doordish_fcm_web_config__";
 const notificationDedupWindowMs = 30000;
 
 let messagingReady = false;
@@ -116,8 +116,8 @@ async function resolveFirebaseConfig() {
 
 function shouldSkipDuplicateOsNotification(notificationKey) {
   if (!notificationKey) return false;
-  if (!self.__omettoOsDedup) self.__omettoOsDedup = {};
-  const shared = self.__omettoOsDedup;
+  if (!self.__doordishOsDedup) self.__doordishOsDedup = {};
+  const shared = self.__doordishOsDedup;
   const now = Date.now();
   for (const [key, timestamp] of Object.entries(shared)) {
     if (now - Number(timestamp) > notificationDedupWindowMs) delete shared[key];
@@ -225,7 +225,7 @@ async function showOsNotificationFromPayload(payload) {
     icon: "/assets/images/favicon.png",
     badge: "/assets/images/favicon.png",
     image,
-    tag: notificationKey || `ometto-${Date.now()}`,
+    tag: notificationKey || `doordish-${Date.now()}`,
     renotify: data.type === "admin_broadcast",
     silent: false,
     requireInteraction: data.type === "admin_broadcast",
@@ -274,7 +274,7 @@ void ensureFirebaseMessaging();
 self.addEventListener("message", (event) => {
   const data = event?.data;
   if (!data || typeof data !== "object") return;
-  if (data.type === "OMETTO_FCM_CONFIG" && data.config) {
+  if (data.type === "DOORDISH_FCM_CONFIG" && data.config) {
     event.waitUntil(
       (async () => {
         await writeCachedFirebaseConfig(data.config);

@@ -49,17 +49,17 @@ app.use(helmet({
     crossOriginResourcePolicy: { policy: 'cross-origin' }
 }));
 const defaultOrigins = [
-    'https://omettofood.com',
-    'https://www.omettofood.com',
-    'http://omettofood.com',
-    'http://www.omettofood.com',
+    'https://doordish.com',
+    'https://www.doordish.com',
+    'http://doordish.com',
+    'http://www.doordish.com',
     'http://localhost:5173',
     'http://localhost:3000'
 ];
 
 const allowedHostnames = new Set([
-    'omettofood.com',
-    'www.omettofood.com',
+    'doordish.com',
+    'www.doordish.com',
     'localhost',
     '127.0.0.1'
 ]);

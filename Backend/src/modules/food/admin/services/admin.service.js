@@ -4309,7 +4309,7 @@ async function sendDeliveryApprovalNotifications(partner, existing = {}, isChang
         ? 'Profile Changes Approved! ✅'
         : 'Welcome Aboard! 🛵';
     const pushBody = isChangesApproval
-        ? 'Your delivery profile changes have been approved. You can continue delivering with Ometto.'
+        ? 'Your delivery profile changes have been approved. You can continue delivering with DoorDish.'
         : 'Your delivery partner application has been approved. You can now go online and start earning!';
     const targetUrl = isChangesApproval
         ? '/food/delivery'

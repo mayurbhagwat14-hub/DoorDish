@@ -50,7 +50,7 @@ const rewriteUploadsUrl = (absoluteUrl, customOrigin = "") => {
     if (!filename || filename.includes("..")) return absoluteUrl;
 
     const activeOrigin = getActiveOrigin(customOrigin);
-    const isLegacyDomain = /ometto|localhost|127\.0\.0\.1/i.test(parsed.hostname);
+    const isLegacyDomain = /doordish|localhost|127\.0\.0\.1/i.test(parsed.hostname);
 
     if ((isLegacyDomain || ASSET_BASE_URL) && activeOrigin) {
       return `${activeOrigin}/uploads/${filename}${parsed.search || ""}`;
@@ -81,8 +81,8 @@ export const normalizeImageUrl = (imageUrl, backendOrigin = "") => {
     .replace(/^(https?):\/(?!\/)/i, "$1://")
     .replace(/^(https?:\/\/)(https?:\/\/)/i, "$1");
 
-  // Strip legacy domains (e.g. omettofood.com, ometto.com, localhost) so the path resolves to active origin
-  if (/^https?:\/\/(www\.)?(omettofood\.com|ometto\.com|localhost|127\.0\.0\.1)(:\d+)?/i.test(normalized)) {
+  // Strip legacy domains (e.g. doordish.com, doordish.com, localhost) so the path resolves to active origin
+  if (/^https?:\/\/(www\.)?(doordishfood\.com|doordish\.com|localhost|127\.0\.0\.1)(:\d+)?/i.test(normalized)) {
     try {
       const parsed = new URL(normalized);
       normalized = parsed.pathname + (parsed.search || "");

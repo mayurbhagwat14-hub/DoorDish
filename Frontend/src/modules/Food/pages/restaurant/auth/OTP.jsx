@@ -436,8 +436,8 @@ export default function RestaurantOTP() {
           {/* Main Title */}
           <div className="mb-5 text-center flex flex-col items-center">
             <img 
-              src="/assets/images/ometto_logo_transparent.png" 
-              alt="Ometto Logo" 
+              src="/assets/images/doordish_logo_transparent.png" 
+              alt="DoorDish Logo" 
               className="h-28 -mb-3.5 object-contain drop-shadow-md" 
             />
             <h2 className="text-[25px] font-extrabold text-[#FA5300] dark:text-red-400 tracking-tight font-['Outfit']">

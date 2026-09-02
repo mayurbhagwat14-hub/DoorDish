@@ -406,10 +406,10 @@ export default function Help() {
                       We'll respond within 24 hours
                     </p>
                     <a
-                      href="mailto:support@ometto.com"
+                      href="mailto:support@doordish.com"
                       className="text-sm text-primary hover:underline font-medium"
                     >
-                      support@ometto.com
+                      support@doordish.com
                     </a>
                   </div>
                 </div>

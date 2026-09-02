@@ -1074,9 +1074,9 @@ async function syncFirebaseConfigToServiceWorker(registration, firebasePublicEnv
 
   // Persist for SW cold starts (closed-tab background push) — do not rely only on postMessage race
   try {
-    const cache = await caches.open("ometto-fcm-config-v1");
+    const cache = await caches.open("doordish-fcm-config-v1");
     await cache.put(
-      "/__ometto_fcm_web_config__",
+      "/__doordish_fcm_web_config__",
       new Response(JSON.stringify(config), {
         headers: { "Content-Type": "application/json" },
       }),
@@ -1087,7 +1087,7 @@ async function syncFirebaseConfigToServiceWorker(registration, firebasePublicEnv
 
   const post = (sw) => {
     try {
-      sw?.postMessage({ type: "OMETTO_FCM_CONFIG", config });
+      sw?.postMessage({ type: "DOORDISH_FCM_CONFIG", config });
     } catch {
       // ignore
     }
