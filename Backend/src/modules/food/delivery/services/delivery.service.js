@@ -289,11 +289,34 @@ export const updateDeliveryPartnerProfile = async (userId, payload, files) => {
             replaceUrl: partner.profilePhoto
         });
     }
+    if (files?.aadharPhoto?.[0]) {
+        partner.aadharPhoto = await uploadImageBuffer(files.aadharPhoto[0].buffer, 'food/delivery/aadhar', {
+            replaceUrl: partner.aadharPhoto
+        });
+        updatedDocsRequiringReapproval = true;
+    }
+    if (files?.panPhoto?.[0]) {
+        partner.panPhoto = await uploadImageBuffer(files.panPhoto[0].buffer, 'food/delivery/pan', {
+            replaceUrl: partner.panPhoto
+        });
+        updatedDocsRequiringReapproval = true;
+    }
+    if (files?.drivingLicensePhoto?.[0]) {
+        partner.drivingLicensePhoto = await uploadImageBuffer(files.drivingLicensePhoto[0].buffer, 'food/delivery/license', {
+            replaceUrl: partner.drivingLicensePhoto
+        });
+        updatedDocsRequiringReapproval = true;
+    }
+
+    if (updatedDocsRequiringReapproval && partner.status !== 'pending') {
+        partner.status = 'pending';
+        partner.pendingApprovalType = 'changes';
+    }
 
     await partner.save();
     return {
         partner: partner.toObject(),
-        requiresReapproval: false
+        requiresReapproval: updatedDocsRequiringReapproval
     };
 };
 

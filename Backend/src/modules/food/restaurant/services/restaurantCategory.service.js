@@ -170,32 +170,7 @@ export async function listPublicCategories(query = {}) {
     const search = typeof query.search === 'string' ? query.search.trim() : '';
     const zoneIdRaw = typeof query.zoneId === 'string' ? query.zoneId.trim() : '';
 
-    let approvedCategoryIds = [];
-    if (zoneIdRaw && mongoose.Types.ObjectId.isValid(zoneIdRaw)) {
-        const zoneRestaurants = await FoodRestaurant.find({
-            zoneId: new mongoose.Types.ObjectId(zoneIdRaw),
-            status: 'approved'
-        }).select('_id').lean();
-        const zoneRestaurantIds = zoneRestaurants.map(r => r._id);
-        
-        approvedCategoryIds = await FoodItem.distinct('categoryId', {
-            approvalStatus: 'approved',
-            restaurantId: { $in: zoneRestaurantIds },
-            categoryId: { $ne: null }
-        });
-    } else {
-        approvedCategoryIds = await FoodItem.distinct('categoryId', {
-            approvalStatus: 'approved',
-            categoryId: { $ne: null }
-        });
-    }
-
-    if (!approvedCategoryIds.length) {
-        return { categories: [], total: 0, page, limit };
-    }
-
     const filter = {
-        _id: { $in: approvedCategoryIds },
         isActive: true,
         $and: [{ $or: APPROVED_CATEGORY_FILTER }]
     };
@@ -206,10 +181,29 @@ export async function listPublicCategories(query = {}) {
     }
     applyZoneVisibilityFilter(filter.$and, zoneIdRaw);
 
-    const list = await FoodCategory.find(filter)
+    let list = await FoodCategory.find(filter)
         .sort({ sortOrder: 1, createdAt: -1 })
         .select('name image type foodTypeScope zoneId sortOrder createdAt updatedAt')
         .lean();
+
+    if (!list.length && zoneIdRaw) {
+        // Fallback for custom zone without specific categories: return global active approved categories
+        const fallbackFilter = {
+            isActive: true,
+            $and: [{ $or: APPROVED_CATEGORY_FILTER }]
+        };
+        if (search) {
+            const term = escapeRegex(search.slice(0, 80));
+            fallbackFilter.$and.push({ name: { $regex: term, $options: 'i' } });
+        }
+        fallbackFilter.$and.push({
+            $or: [{ zoneId: { $exists: false } }, { zoneId: null }]
+        });
+        list = await FoodCategory.find(fallbackFilter)
+            .sort({ sortOrder: 1, createdAt: -1 })
+            .select('name image type foodTypeScope zoneId sortOrder createdAt updatedAt')
+            .lean();
+    }
 
     // Deduplicate categories by name in memory
     const groups = {};

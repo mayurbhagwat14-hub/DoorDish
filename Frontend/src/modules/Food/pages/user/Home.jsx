@@ -2211,7 +2211,7 @@ export default function Home({ homeMode = null, isTabActive = true }) {
     if (showBannerSkeleton) {
       return (
         <div className="px-4 py-2">
-          <HeroBannerSkeleton className="h-36 sm:h-44 lg:h-56 rounded-2xl" />
+          <HeroBannerSkeleton className="h-52 sm:h-64 lg:h-76 rounded-2xl" />
         </div>
       );
     }
@@ -2219,19 +2219,19 @@ export default function Home({ homeMode = null, isTabActive = true }) {
     if (heroBannerImages.length === 0) {
       return (
         <div className="px-4 py-2">
-          <div className="relative w-full overflow-hidden rounded-[24px] bg-gradient-to-r from-[#FF5A1F] to-[#E64A0F] p-5 text-white shadow-md flex items-center justify-between min-h-[170px]">
+          <div className="relative w-full overflow-hidden rounded-[26px] bg-gradient-to-r from-[#FF5A1F] via-[#F04B10] to-[#E64A0F] p-6 sm:p-7 text-white shadow-md flex items-center justify-between min-h-[210px] sm:min-h-[250px] lg:min-h-[290px]">
             {/* Background pattern */}
-            <div className="absolute inset-0 bg-[radial-gradient(#rgba(255,255,255,0.1)_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
+            <div className="absolute inset-0 bg-[radial-gradient(#rgba(255,255,255,0.12)_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
 
             {/* Left Content */}
-            <div className="relative z-10 max-w-[60%] space-y-2">
-              <div className="inline-flex items-center gap-1 px-2.5 py-1 bg-white/20 backdrop-blur-md rounded-full text-[10px] font-bold uppercase tracking-wider text-white">
+            <div className="relative z-10 max-w-[62%] space-y-2.5 sm:space-y-3">
+              <div className="inline-flex items-center gap-1 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-[11px] font-bold uppercase tracking-wider text-white">
                 <span>⚡ FAST DELIVERY</span>
               </div>
-              <h2 className="text-xl sm:text-2xl font-extrabold text-white leading-tight drop-shadow-xs">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white leading-tight drop-shadow-xs">
                 Cravings? We got you!
               </h2>
-              <p className="text-xs text-white/90 font-medium line-clamp-2">
+              <p className="text-xs sm:text-sm text-white/95 font-medium line-clamp-2 leading-relaxed">
                 Delicious food from your favorite restaurants, delivered hot & fresh.
               </p>
               <button
@@ -2240,28 +2240,28 @@ export default function Home({ homeMode = null, isTabActive = true }) {
                   const categoriesEl = document.getElementById("categories-section");
                   if (categoriesEl) categoriesEl.scrollIntoView({ behavior: "smooth" });
                 }}
-                className="mt-2 inline-flex items-center gap-1.5 px-4 py-2 bg-white text-[#FF5A1F] rounded-full text-xs font-bold shadow-xs hover:bg-[#FFF0EB] transition-all active:scale-95 cursor-pointer"
+                className="mt-2.5 inline-flex items-center gap-2 px-5 py-2.5 bg-white text-[#FF5A1F] rounded-full text-xs sm:text-sm font-extrabold shadow-sm hover:bg-[#FFF0EB] transition-all active:scale-95 cursor-pointer"
               >
                 <span>Order Now</span>
-                <span className="text-sm">›</span>
+                <span className="text-base font-bold">›</span>
               </button>
             </div>
 
             {/* Right Visual Image */}
-            <div className="relative z-10 shrink-0 w-[38%] max-w-[150px] flex items-center justify-center">
+            <div className="relative z-10 shrink-0 w-[40%] max-w-[180px] sm:max-w-[220px] lg:max-w-[260px] flex items-center justify-center">
               <div className="relative w-full aspect-square">
                 <img
                   src="/assets/images/burger-real.png"
                   alt="Delicious burger"
-                  className="w-full h-full object-contain drop-shadow-lg"
+                  className="w-full h-full object-contain drop-shadow-xl"
                   onError={(e) => {
                     e.target.src = "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&h=400&fit=crop";
                   }}
                 />
                 {/* 30 MINS Badge */}
-                <div className="absolute -bottom-1 -left-2 bg-white text-[#1A1A1A] rounded-full w-11 h-11 flex flex-col items-center justify-center shadow-lg border-2 border-[#FF5A1F]">
-                  <span className="text-[11px] font-black text-[#FF5A1F] leading-none">30</span>
-                  <span className="text-[7px] font-bold uppercase text-gray-500 leading-none">MINS</span>
+                <div className="absolute -bottom-1 -left-2 bg-white text-[#1A1A1A] rounded-full w-12 h-12 sm:w-14 sm:h-14 flex flex-col items-center justify-center shadow-lg border-2 border-[#FF5A1F]">
+                  <span className="text-xs sm:text-sm font-black text-[#FF5A1F] leading-none">30</span>
+                  <span className="text-[7px] sm:text-[8px] font-bold uppercase text-gray-500 leading-none">MINS</span>
                 </div>
               </div>
             </div>
@@ -2288,7 +2288,7 @@ export default function Home({ homeMode = null, isTabActive = true }) {
         <div
           ref={heroShellRef}
           data-home-hero-shell="true"
-          className="relative w-full overflow-hidden aspect-[1.7/1] sm:aspect-[1.9/1] lg:aspect-[2.1/1] min-h-[180px] sm:min-h-[220px] lg:min-h-[260px] rounded-[24px] shadow-sm group cursor-pointer bg-white"
+          className="relative w-full overflow-hidden aspect-[1.6/1] sm:aspect-[1.8/1] lg:aspect-[2.0/1] min-h-[210px] sm:min-h-[250px] lg:min-h-[290px] rounded-[26px] shadow-sm group cursor-pointer bg-white"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
@@ -2785,16 +2785,16 @@ export default function Home({ homeMode = null, isTabActive = true }) {
 
                     {/* Categories Horizontal Slider */}
                     <div className="flex overflow-x-auto gap-3 pb-2 scrollbar-hide -mx-4 px-4">
-                      {/* Offers Card (First item if available or matching ref) */}
+                      {/* Offers Card */}
                       <Link
                         to="/food/user/offers"
-                        className="flex-shrink-0 flex flex-col items-center gap-2 group w-[76px] sm:w-[84px]"
+                        className="flex-shrink-0 flex flex-col items-center gap-1 group w-[62px] sm:w-[70px]"
                       >
-                        <div className="relative w-full aspect-square rounded-[20px] overflow-hidden shadow-xs border border-[#F0E8E4] bg-white flex items-center justify-center p-3 group-active:scale-95 transition-all duration-200 group-hover:border-[#FF5A1F]/30 group-hover:shadow-md">
-                          <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[#FF5A1F]" />
-                          <Tag className="w-8 h-8 text-[#FF5A1F]" strokeWidth={2} />
+                        <div className="relative w-full aspect-square rounded-[16px] shadow-xs border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a1a1a] flex items-center justify-center p-3 group-active:scale-95 transition-all duration-200 group-hover:border-[#FF5A1F]/30 group-hover:shadow-md">
+                          <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-[#FF5A1F]" />
+                          <Tag className="w-6 h-6 sm:w-7 sm:h-7 text-[#FF5A1F]" strokeWidth={2.2} />
                         </div>
-                        <span className="text-xs font-bold text-[#1A1A1A] text-center leading-tight truncate w-full group-hover:text-[#FF5A1F] transition-colors">
+                        <span className="text-[11px] font-bold text-gray-800 dark:text-gray-200 text-center leading-tight truncate w-full group-hover:text-[#FF5A1F] transition-colors">
                           Offers
                         </span>
                       </Link>
@@ -2805,20 +2805,20 @@ export default function Home({ homeMode = null, isTabActive = true }) {
                           to={`/food/user/category/${category.slug}`}
                           state={{ from: '/food/user' }}
                           onClick={rememberLeaveForCategory}
-                          className="flex-shrink-0 flex flex-col items-center gap-2 group w-[76px] sm:w-[84px]"
+                          className="flex-shrink-0 flex flex-col items-center gap-1 group w-[62px] sm:w-[70px]"
                         >
-                          <div className="relative w-full aspect-square rounded-[20px] overflow-hidden shadow-xs border border-[#F0E8E4] bg-white flex items-center justify-center group-active:scale-95 transition-all duration-200 group-hover:border-[#FF5A1F]/30 group-hover:shadow-md">
+                          <div className="relative w-full aspect-square rounded-[16px] overflow-hidden shadow-xs border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a1a1a] flex items-center justify-center group-active:scale-95 transition-all duration-200 group-hover:border-[#FF5A1F]/30 group-hover:shadow-md">
                             <OptimizedImage
                               src={category.image}
                               alt={category.name}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                              sizes="84px"
+                              className="w-full h-full object-cover rounded-[16px] group-hover:scale-105 transition-transform duration-300"
+                              sizes="70px"
                               priority={index < 6}
                               responsive={false}
                               placeholder="empty"
                             />
                           </div>
-                          <span className="text-xs font-bold text-[#1A1A1A] text-center leading-tight truncate w-full group-hover:text-[#FF5A1F] transition-colors">
+                          <span className="text-[11px] font-bold text-gray-800 dark:text-gray-200 text-center leading-tight truncate w-full group-hover:text-[#FF5A1F] transition-colors">
                             {category.name}
                           </span>
                         </Link>
@@ -2829,12 +2829,12 @@ export default function Home({ homeMode = null, isTabActive = true }) {
                         <Link
                           to="/food/user/categories"
                           state={{ from: '/food/user' }}
-                          className="flex-shrink-0 flex flex-col items-center gap-2 group w-[76px] sm:w-[84px]"
+                          className="flex-shrink-0 flex flex-col items-center gap-1 group w-[62px] sm:w-[70px]"
                         >
-                          <div className="relative w-full aspect-square rounded-[20px] overflow-hidden shadow-xs border border-[#FF5A1F]/20 bg-[#FFF0EB] flex items-center justify-center p-3 group-active:scale-95 transition-all duration-200 group-hover:bg-[#FFE0D6]">
-                            <UtensilsCrossed className="w-7 h-7 text-[#FF5A1F]" />
+                          <div className="relative w-full aspect-square rounded-[16px] shadow-xs border border-red-100 dark:border-red-900/30 bg-red-50/50 dark:bg-red-950/20 flex items-center justify-center p-3 group-active:scale-95 transition-all duration-200 group-hover:bg-red-100/50">
+                            <UtensilsCrossed className="w-6 h-6 sm:w-7 sm:h-7 text-[#FF5A1F]" />
                           </div>
-                          <span className="text-xs font-bold text-[#FF5A1F] text-center leading-tight truncate w-full">
+                          <span className="text-[11px] font-bold text-[#FF5A1F] text-center leading-tight truncate w-full">
                             More
                           </span>
                         </Link>
@@ -2917,18 +2917,18 @@ export default function Home({ homeMode = null, isTabActive = true }) {
                             onClick={rememberLeaveForCategory}
                             className="flex-shrink-0 flex flex-col items-center gap-1.5 group w-[74px]"
                           >
-                            <div className="w-18 h-18 rounded-full overflow-hidden border-2 border-gray-100 dark:border-white/10 shadow-md bg-white dark:bg-white/5 transition-transform group-active:scale-95">
+                            <div className="w-16 h-16 rounded-[16px] overflow-hidden border border-gray-100 dark:border-white/10 shadow-sm bg-white dark:bg-[#1a1a1a] flex items-center justify-center transition-transform group-active:scale-95">
                               <OptimizedImage
                                 src={category.image}
                                 alt={category.name}
-                                className="w-full h-full object-cover"
-                                sizes="72px"
+                                className="w-full h-full object-cover rounded-[16px]"
+                                sizes="64px"
                                 priority={index < 6}
                                 responsive={false}
                                 placeholder="empty"
                               />
                             </div>
-                            <span className="text-[9px] font-bold text-gray-700 dark:text-gray-300 text-center truncate w-full uppercase tracking-tighter">
+                            <span className="text-[10px] font-bold text-gray-800 dark:text-gray-200 text-center truncate w-full tracking-tight">
                               {category.name}
                             </span>
                           </Link>
@@ -2941,11 +2941,11 @@ export default function Home({ homeMode = null, isTabActive = true }) {
                             state={{ from: '/food/user' }}
                             className="flex-shrink-0 flex flex-col items-center gap-1.5 group w-[74px]"
                           >
-                            <div className="w-18 h-18 rounded-full overflow-hidden border-2 border-red-100 dark:border-red-950/30 bg-red-50 dark:bg-red-950/20 flex items-center justify-center transition-transform group-active:scale-95">
-                              <UtensilsCrossed className="w-7 h-7 text-red-500" />
+                            <div className="w-16 h-16 rounded-[16px] overflow-hidden border border-red-100 dark:border-red-950/30 bg-red-50/60 dark:bg-red-950/20 flex items-center justify-center transition-transform group-active:scale-95">
+                              <UtensilsCrossed className="w-6 h-6 text-[#FF5A1F]" />
                             </div>
-                            <span className="text-[9px] font-bold text-gray-700 dark:text-gray-300 text-center truncate w-full uppercase tracking-tighter flex items-center justify-center gap-0.5 group-hover:text-red-500 transition-colors">
-                              See all <span className="text-[7px] text-red-500">▼</span>
+                            <span className="text-[10px] font-bold text-[#FF5A1F] text-center truncate w-full tracking-tight flex items-center justify-center gap-0.5">
+                              More
                             </span>
                           </Link>
                         )}

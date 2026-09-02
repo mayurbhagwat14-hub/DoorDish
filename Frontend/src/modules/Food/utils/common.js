@@ -44,6 +44,7 @@ const getActiveOrigin = (customOrigin = "") => {
 const rewriteUploadsUrl = (absoluteUrl, customOrigin = "") => {
   try {
     const parsed = new URL(absoluteUrl);
+    if (parsed.hostname.includes("cloudinary.com")) return absoluteUrl;
     const match = parsed.pathname.match(/\/uploads\/(.+)$/i);
     if (!match) return absoluteUrl;
     const filename = match[1];

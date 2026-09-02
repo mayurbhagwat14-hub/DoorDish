@@ -74,6 +74,12 @@ export const config = {
     // Security
     bcryptSaltRounds: Number(process.env.BCRYPT_SALT_ROUNDS || 10),
 
+    // Cloudinary
+    useCloudinary: process.env.USE_CLOUDINARY === 'true' || process.env.CLOUDINARY_ENABLED === 'true',
+    cloudinaryCloudName: process.env.CLOUDINARY_CLOUD_NAME,
+    cloudinaryApiKey: process.env.CLOUDINARY_API_KEY,
+    cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET,
+
     // Uploads
     uploadPath,
     // Single resolved absolute path for every read/write of the uploads dir.

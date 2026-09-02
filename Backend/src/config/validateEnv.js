@@ -23,6 +23,11 @@ export const validateConfig = () => {
     if (config.bullmqEnabled && !config.redisEnabled) {
         missing.push('REDIS_ENABLED=true (required when BULLMQ_ENABLED=true)');
     }
+    if (config.useCloudinary) {
+        if (!config.cloudinaryCloudName) missing.push('CLOUDINARY_CLOUD_NAME (required when USE_CLOUDINARY=true)');
+        if (!config.cloudinaryApiKey) missing.push('CLOUDINARY_API_KEY (required when USE_CLOUDINARY=true)');
+        if (!config.cloudinaryApiSecret) missing.push('CLOUDINARY_API_SECRET (required when USE_CLOUDINARY=true)');
+    }
 
     // ASSET_BASE_URL is baked into every stored image URL.
     const assetBase = String(process.env.ASSET_BASE_URL || process.env.API_BASE_URL || '').trim();

@@ -129,16 +129,15 @@ export default function Categories() {
                     to={`/food/user/category/${category.slug}`}
                     className="flex flex-col items-center gap-2.5 group"
                   >
-                    <div className="relative w-full aspect-square rounded-full overflow-hidden shadow-sm border border-neutral-100 dark:border-gray-800 bg-white dark:bg-gray-900 group-active:scale-90 transition-all duration-300">
-                      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/5 opacity-0 group-hover:opacity-100 transition-opacity z-10" />
+                    <div className="relative w-full aspect-square rounded-[16px] overflow-hidden shadow-xs border border-neutral-100 dark:border-gray-800 bg-white dark:bg-gray-900 flex items-center justify-center group-active:scale-95 transition-all duration-300">
                       <OptimizedImage
                         src={category.image}
                         alt={category.name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                        className="w-full h-full object-cover rounded-[16px] group-hover:scale-105 transition-transform duration-500"
                         sizes="(max-width: 640px) 25vw, 15vw"
                       />
                     </div>
-                    <span className="text-[11px] font-bold text-neutral-700 dark:text-gray-300 text-center leading-tight">
+                    <span className="text-[11px] font-bold text-neutral-800 dark:text-gray-200 text-center leading-tight truncate w-full">
                       {category.name}
                     </span>
                   </Link>

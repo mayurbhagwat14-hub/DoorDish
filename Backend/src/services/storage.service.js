@@ -2,10 +2,22 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import sharp from 'sharp';
+import { v2 as cloudinary } from 'cloudinary';
 import { config } from '../config/env.js';
 import { ValidationError } from '../core/auth/errors.js';
 
+// Configure Cloudinary SDK if credentials and toggle are active
+if (config.useCloudinary && config.cloudinaryCloudName) {
+    cloudinary.config({
+        cloud_name: config.cloudinaryCloudName,
+        api_key: config.cloudinaryApiKey,
+        api_secret: config.cloudinaryApiSecret,
+        secure: true
+    });
+}
+
 const UPLOADS_ROOT = config.uploadsRoot;
+
 const usesRemoteStore = () => {
     if (!config.uploadRemoteOrigin || config.nodeEnv === 'production') return false;
     const remote = String(config.uploadRemoteOrigin).toLowerCase();
@@ -121,6 +133,61 @@ const writeBufferToDisk = async (data, folder, ext) => {
     };
 };
 
+const uploadToCloudinaryBuffer = async (buffer, folder = 'uploads', options = {}) => {
+    return new Promise((resolve, reject) => {
+        const resourceType = options.resourceType || 'auto';
+        const uploadOptions = {
+            folder: folder || 'uploads',
+            resource_type: resourceType
+        };
+        const stream = cloudinary.uploader.upload_stream(uploadOptions, (error, result) => {
+            if (error) {
+                return reject(new ValidationError(error.message || 'Cloudinary upload failed'));
+            }
+            resolve({
+                secure_url: result.secure_url,
+                url: result.secure_url || result.url,
+                public_id: result.public_id,
+                filename: result.public_id,
+                format: result.format,
+                bytes: result.bytes,
+                width: result.width,
+                height: result.height,
+                resource_type: result.resource_type || 'image'
+            });
+        });
+        stream.end(buffer);
+    });
+};
+
+const extractCloudinaryPublicId = (urlOrPublicId) => {
+    if (!urlOrPublicId) return null;
+    const str = String(urlOrPublicId).trim();
+    if (!str) return null;
+    if (str.includes('cloudinary.com')) {
+        const match = str.match(/\/(?:image|video|raw)\/upload\/(?:v\d+\/)?(.+)$/i);
+        if (match && match[1]) {
+            return match[1].replace(/\.[^/.]+$/, '');
+        }
+    }
+    if (!/^https?:\/\//i.test(str) && config.useCloudinary) {
+        return str;
+    }
+    return null;
+};
+
+const deleteFromCloudinary = async (urlOrPublicId, resourceType = 'image') => {
+    const publicId = extractCloudinaryPublicId(urlOrPublicId);
+    if (!publicId) return false;
+    try {
+        const res = await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
+        return res.result === 'ok' || res.result === 'not found';
+    } catch (err) {
+        console.error(`Failed to delete Cloudinary asset ${publicId}:`, err.message);
+        return false;
+    }
+};
+
 const remoteHeaders = () => ({
     'X-Upload-Secret': config.uploadInternalSecret
 });
@@ -175,12 +242,21 @@ export const deleteFromDisk = async (urlOrPublicId) => {
 };
 
 /**
- * Store an image as WebP on the production server (`/var/www/uploads`).
- * Local/dev backends forward the file to UPLOAD_REMOTE_ORIGIN instead of writing disk.
+ * Store an image.
+ * If USE_CLOUDINARY=true in .env, stores to Cloudinary.
+ * Otherwise stores as WebP in local uploads folder (`/uploads`).
  */
 export const storeImageBuffer = async (buffer, folder = 'uploads', options = {}) => {
     if (!buffer || !buffer.length) {
         throw new ValidationError('File buffer is required');
+    }
+
+    if (config.useCloudinary) {
+        const uploaded = await uploadToCloudinaryBuffer(buffer, folder, { ...options, resourceType: 'image' });
+        if (options.replaceUrl) {
+            await deleteStoredAsset(options.replaceUrl, { skipRemote: options.skipRemote });
+        }
+        return uploaded;
     }
 
     if (usesRemoteStore() && !options.skipRemote) {
@@ -206,10 +282,18 @@ export const storeImageBuffer = async (buffer, folder = 'uploads', options = {})
     };
 };
 
-/** Store a video/raw buffer (no transcoding). Images should use storeImageBuffer. */
+/** Store a video/raw buffer. Images should use storeImageBuffer. */
 export const storeFileBuffer = async (buffer, folder = 'uploads', originalName = '', options = {}) => {
     if (!buffer || !buffer.length) {
         throw new ValidationError('File buffer is required');
+    }
+
+    if (config.useCloudinary) {
+        const uploaded = await uploadToCloudinaryBuffer(buffer, folder, { ...options, resourceType: 'auto' });
+        if (options.replaceUrl) {
+            await deleteStoredAsset(options.replaceUrl, { skipRemote: options.skipRemote });
+        }
+        return uploaded;
     }
 
     if (usesRemoteStore() && !options.skipRemote) {
@@ -233,6 +317,11 @@ export const storeFileBuffer = async (buffer, folder = 'uploads', originalName =
 export const deleteStoredAsset = async (urlOrPublicId, options = {}) => {
     const url = extractAssetUrl(urlOrPublicId);
     if (!url) return false;
+
+    if (String(url).includes('cloudinary.com') || (config.useCloudinary && extractCloudinaryPublicId(url))) {
+        return deleteFromCloudinary(url);
+    }
+
     if (usesRemoteStore() && !options.skipRemote) {
         try {
             return await deleteRemoteAsset(url);
