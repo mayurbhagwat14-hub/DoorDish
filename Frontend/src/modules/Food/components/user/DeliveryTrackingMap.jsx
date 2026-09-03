@@ -8,6 +8,7 @@ import {
 } from '@react-google-maps/api';
 import io from 'socket.io-client';
 import { API_BASE_URL } from '@food/api/config';
+import { getSocketUrl } from '@food/utils/socketConfig';
 import bikeLogo from '@food/assets/bikelogo.png';
 import { subscribeOrderTracking } from '@food/realtimeTracking';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -176,7 +177,8 @@ const DeliveryTrackingMap = ({
 
     // B. SOCKET.IO REALTIME
     const token = localStorage.getItem('user_accessToken') || localStorage.getItem('accessToken') || '';
-    socketRef.current = io(backendUrl, {
+    const socketUrl = getSocketUrl();
+    socketRef.current = io(socketUrl, {
       transports: ['websocket', 'polling'],
       auth: { token }
     });

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import io from 'socket.io-client';
 import { API_BASE_URL } from '@food/api/config';
+import { getSocketUrl } from '@food/utils/socketConfig';
 import { deliveryAPI } from '@food/api';
 const alertSound = '/assets/media/restaurant_alert.mp3';
 const originalSound = '/assets/media/restaurant_alert.mp3';
@@ -1010,7 +1011,7 @@ export const useDeliveryNotifications = () => {
     }
     
     // Backend uses default namespace; rooms handle role separation.
-    const socketUrl = `${backendUrl}`;
+    const socketUrl = getSocketUrl();
     
     debugLog('?? Attempting to connect to Delivery Socket.IO:', socketUrl);
     debugLog('?? Backend URL:', backendUrl);

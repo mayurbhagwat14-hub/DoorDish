@@ -167,6 +167,16 @@ export default function UserRouter() {
           <Route path="help/orders/:orderId" element={<OrderHelp />} />
 
           {/* Auth Redirects & Callbacks */}
+          <Route path="login" element={
+            <AuthRedirect module="user">
+              <Navigate to="/user/auth/login" replace />
+            </AuthRedirect>
+          } />
+          <Route path="sign-in" element={
+            <AuthRedirect module="user">
+              <Navigate to="/user/auth/login" replace />
+            </AuthRedirect>
+          } />
           <Route path="auth/login" element={
             <AuthRedirect module="user">
               <Navigate to="/user/auth/login" replace />

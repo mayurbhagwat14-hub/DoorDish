@@ -386,7 +386,7 @@ export default function OTP() {
         {/* Header */}
         <div className="flex items-center px-6 py-4 border-b border-gray-100 dark:border-gray-800">
           <button
-            onClick={() => navigate("/food/user/auth/login")}
+            onClick={() => navigate("/user/auth/login")}
             className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
             aria-label="Go back"
           >

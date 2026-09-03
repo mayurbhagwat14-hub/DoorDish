@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import io from 'socket.io-client';
 import { API_BASE_URL } from '@food/api/config';
+import { getSocketUrl } from '@food/utils/socketConfig';
 import { writeDeliveryLocation, writeOrderTracking } from '@food/realtimeTracking';
 
 function calculateDistance(lat1, lng1, lat2, lng2) {
@@ -26,15 +27,12 @@ export const useLocationSharing = (orderId, enabled = false) => {
       '',
   );
 
-  const backendUrl = API_BASE_URL ? API_BASE_URL.replace('/api', '') : '';
-
   const startSharing = () => {
     if (!orderId || isSharingRef.current) return;
-    // Backend disconnected - new backend in progress. Do not open Socket.
-    if (!API_BASE_URL || !backendUrl || !backendUrl.startsWith('http')) return;
+    const socketUrl = getSocketUrl();
 
     if (!socketRef.current) {
-      socketRef.current = io(backendUrl, {
+      socketRef.current = io(socketUrl, {
         transports: ['websocket', 'polling'],
         reconnection: true,
         reconnectionDelay: 1000,

@@ -3,6 +3,7 @@ import io from 'socket.io-client';
 import { toast } from 'sonner';
 import { API_BASE_URL } from '@food/api/config';
 import { userAPI } from '@food/api';
+import { getSocketUrl } from '@food/utils/socketConfig';
 import { dispatchNotificationInboxRefresh } from '@food/hooks/useNotificationInbox';
 import { isModuleAuthenticated } from '@food/utils/auth';
 
@@ -57,18 +58,10 @@ export const useUserNotifications = () => {
       return;
     }
 
-    // Normalize backend URL
-    let backendUrl = API_BASE_URL;
-    try {
-      backendUrl = new URL(backendUrl).origin;
-    } catch {
-      backendUrl = String(backendUrl || "")
-        .replace(/\/api\/v\d+\/?$/i, "")
-        .replace(/\/api\/?$/i, "")
-        .replace(/\/+$/, "");
-    }
+import { getSocketUrl } from "@food/utils/socketConfig";
 
-    const socketUrl = `${backendUrl}`;
+// In useEffect:
+    const socketUrl = getSocketUrl();
     
     // Auth token
     const token = localStorage.getItem('user_accessToken') || localStorage.getItem('accessToken');

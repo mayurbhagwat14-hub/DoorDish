@@ -11,14 +11,29 @@
 module.exports = {
   apps: [
     {
-      name: 'doordish',
-      script: './src/app.js',
+      name: 'doordish-api',
+      script: './server.js',
       cwd: __dirname,
       instances: 'max',
       exec_mode: 'cluster',
       max_memory_restart: '1G',
       env: {
         NODE_ENV: 'production',
+        PORT: 5000,
+        SOCKET_SEPARATE_SERVER: 'true',
+      },
+    },
+    {
+      name: 'doordish-socket',
+      script: './socket.server.js',
+      cwd: __dirname,
+      instances: 1,
+      exec_mode: 'fork',
+      max_memory_restart: '512M',
+      restart_delay: 5000,
+      env: {
+        NODE_ENV: 'production',
+        SOCKET_PORT: 5001,
       },
     },
     {

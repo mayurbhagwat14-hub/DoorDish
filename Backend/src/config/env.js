@@ -123,6 +123,8 @@ export const config = {
 
     // Socket.io
     socketCorsOrigin: process.env.SOCKET_CORS_ORIGIN || '*',
+    socketPort: Number(process.env.SOCKET_PORT) || (process.env.PORT ? Number(process.env.PORT) + 1 : 5001),
+    socketSeparateServer: process.env.SOCKET_SEPARATE_SERVER === 'true',
 
     // Razorpay (payments)
     razorpayKeyId: process.env.RAZORPAY_KEY_ID,

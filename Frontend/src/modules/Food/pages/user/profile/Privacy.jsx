@@ -10,7 +10,7 @@ export default function Privacy() {
       title="Privacy Policy"
       module="USER"
       goBack={goBack}
-      fallbackPath="/food/user/auth/login"
+      fallbackPath="/user/auth/login"
     />
   )
 }

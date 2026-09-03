@@ -246,12 +246,12 @@ export default function App() {
         admin: '/admin/login',
         restaurant: '/food/restaurant/login',
         delivery: '/food/delivery/login',
-        user: '/food/user/login'
+        user: '/user/auth/login'
       }
 
       // Only redirect if the current tab is actually on the module that failed
-      if (location.pathname.startsWith(`/food/${module}`) || (module === 'admin' && location.pathname.startsWith('/admin'))) {
-        const targetPath = loginPaths[module] || '/food/user/login'
+      if (location.pathname.startsWith(`/food/${module}`) || (module === 'admin' && location.pathname.startsWith('/admin')) || (module === 'user' && (location.pathname.startsWith('/food/user') || location.pathname === '/food'))) {
+        const targetPath = loginPaths[module] || '/user/auth/login'
         navigate(targetPath, { replace: true, state: { from: location.pathname } })
       }
     }

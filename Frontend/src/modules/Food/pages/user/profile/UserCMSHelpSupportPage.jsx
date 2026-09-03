@@ -11,7 +11,7 @@ export default function UserCMSHelpSupportPage() {
       title="Help & Support"
       module="USER"
       goBack={goBack}
-      fallbackPath="/food/user/auth/login"
+      fallbackPath="/user/auth/login"
     />
   )
 }

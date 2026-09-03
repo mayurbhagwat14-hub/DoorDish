@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import io from 'socket.io-client';
 import { toast } from 'sonner';
 import { API_BASE_URL } from '@food/api/config';
+import { getSocketUrl } from '@food/utils/socketConfig';
 import { restaurantAPI } from '@food/api';
 import { dispatchNotificationInboxRefresh } from '@food/hooks/useNotificationInbox';
 import {
@@ -617,14 +618,7 @@ export const useRestaurantNotifications = () => {
       return;
     }
 
-    let socketOrigin = backendUrl;
-    try {
-      socketOrigin = new URL(backendUrl).origin;
-    } catch {
-      socketOrigin = String(backendUrl || "").replace(/\/api\/v\d+\/?$/i, "").replace(/\/api\/?$/i, "").replace(/\/+$/, "");
-    }
-
-    const socketUrl = `${socketOrigin}`;
+    const socketUrl = getSocketUrl();
 
     try {
       new URL(socketUrl);

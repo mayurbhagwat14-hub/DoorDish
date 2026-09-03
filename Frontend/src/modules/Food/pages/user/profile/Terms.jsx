@@ -10,7 +10,7 @@ export default function Terms() {
       title="Terms of Service"
       module="USER"
       goBack={goBack}
-      fallbackPath="/food/user/auth/login"
+      fallbackPath="/user/auth/login"
     />
   )
 }
