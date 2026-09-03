@@ -82,8 +82,17 @@ function getAccessToken(config) {
     const moduleToken = localStorage.getItem(key);
     if (moduleToken) return moduleToken;
 
-    // 2. Fallback to generic token if module-specific token is missing
-    return localStorage.getItem("accessToken") || null;
+    // 2. Fallback to any active module token (restaurant, admin, delivery, user)
+    const fallbackToken =
+      localStorage.getItem("restaurant_accessToken") ||
+      localStorage.getItem("admin_accessToken") ||
+      localStorage.getItem("delivery_accessToken") ||
+      localStorage.getItem("user_accessToken") ||
+      localStorage.getItem("accessToken");
+
+    if (fallbackToken) return fallbackToken;
+
+    return null;
   } catch {
     return null;
   }

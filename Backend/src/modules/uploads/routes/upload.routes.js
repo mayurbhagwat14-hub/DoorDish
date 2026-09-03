@@ -23,8 +23,16 @@ const requireUploadSecret = (req, res, next) => {
     next();
 };
 
-router.post('/image', authMiddleware, upload.single('file'), uploadImageController);
-router.delete('/', authMiddleware, deleteUploadController);
+const optionalAuthMiddleware = (req, res, next) => {
+    const authHeader = req.headers.authorization || '';
+    if (!authHeader) {
+        return next();
+    }
+    return authMiddleware(req, res, next);
+};
+
+router.post('/image', optionalAuthMiddleware, upload.single('file'), uploadImageController);
+router.delete('/', optionalAuthMiddleware, deleteUploadController);
 
 // Local/dev backends forward files here so they land in /var/www/uploads on the server.
 router.post('/internal', requireUploadSecret, upload.single('file'), uploadImageController);
