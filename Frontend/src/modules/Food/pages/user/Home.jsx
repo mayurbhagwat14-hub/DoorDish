@@ -2385,11 +2385,11 @@ export default function Home({ homeMode = null, isTabActive = true }) {
             className="flex-shrink-0 flex flex-col items-center gap-2 cursor-pointer transition-transform hover:scale-105 active:scale-95"
             onClick={() => navigate(toFoodUserPath("/user/under-250"))}
           >
-            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#DC2626] rounded-b-full rounded-t-sm shadow-md border-t-4 border-orange-200 flex flex-col items-center justify-center p-1">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#FF5A1F] rounded-b-full rounded-t-sm shadow-md border-t-4 border-orange-200 flex flex-col items-center justify-center p-1">
               <span className="text-[10px] sm:text-xs font-bold text-white text-center leading-tight">UNDER</span>
               <span className="text-sm sm:text-base font-extrabold text-white">₹200</span>
               <div className="w-10 h-3.5 bg-white rounded-full mt-1 flex items-center justify-center">
-                <span className="text-[8px] font-bold text-[#DC2626]">Explore</span>
+                <span className="text-[8px] font-bold text-[#FF5A1F]">Explore</span>
               </div>
             </div>
             <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Offers</span>
@@ -2405,7 +2405,7 @@ export default function Home({ homeMode = null, isTabActive = true }) {
                 onClick={rememberLeaveForCategory}
                 className="flex-shrink-0 flex flex-col items-center gap-2 group transition-all duration-300 hover:-translate-y-1"
               >
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden shadow-sm border border-gray-100 dark:border-gray-800 group-hover:border-[#DC2626] transition-colors">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden shadow-sm border border-gray-100 dark:border-gray-800 group-hover:border-[#FF5A1F] transition-colors">
                   <OptimizedImage
                     src={category.image}
                     alt={category.name}
@@ -2428,8 +2428,8 @@ export default function Home({ homeMode = null, isTabActive = true }) {
               className="flex-shrink-0 flex flex-col items-center gap-2 cursor-pointer group"
               onClick={() => navigate("/food/user/categories")}
             >
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-orange-50 dark:bg-orange-950 flex items-center justify-center border border-orange-100 group-hover:border-[#DC2626] transition-all">
-                <Plus className="w-6 h-6 text-[#DC2626]" />
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-orange-50 dark:bg-orange-950 flex items-center justify-center border border-orange-100 group-hover:border-[#FF5A1F] transition-all">
+                <Plus className="w-6 h-6 text-[#FF5A1F]" />
               </div>
               <span className="text-xs font-medium text-gray-700">See All</span>
             </div>
@@ -2623,10 +2623,10 @@ export default function Home({ homeMode = null, isTabActive = true }) {
                         onClick={() => {
                           setTakeawaySearchOpen(true);
                         }}
-                        className={`p-2.5 backdrop-blur-md rounded-full active:scale-95 transition-all duration-200 ${takeawaySearchOpen ? "bg-white text-[#DC2626]" : "bg-white/20 dark:bg-black/20"}`}
+                        className={`p-2.5 backdrop-blur-md rounded-full active:scale-95 transition-all duration-200 ${takeawaySearchOpen ? "bg-white text-[#FF5A1F]" : "bg-white/20 dark:bg-black/20"}`}
                         aria-label="Search takeaway restaurants"
                       >
-                        <Search className={`h-5 w-5 ${takeawaySearchOpen ? "text-[#DC2626]" : "text-white"}`} strokeWidth={2.5} />
+                        <Search className={`h-5 w-5 ${takeawaySearchOpen ? "text-[#FF5A1F]" : "text-white"}`} strokeWidth={2.5} />
                       </button>
                       <Link
                         to="/food/user/cart"
@@ -2636,7 +2636,7 @@ export default function Home({ homeMode = null, isTabActive = true }) {
                       >
                         <ShoppingCart className="h-5 w-5 text-white" strokeWidth={2.5} />
                         {cartCount > 0 && (
-                          <span className="absolute -top-1 -right-1 bg-[#DC2626] text-white text-[9px] font-bold h-4.5 w-4.5 rounded-full flex items-center justify-center border-2 border-white dark:border-[#1a1a1a]">
+                          <span className="absolute -top-1 -right-1 bg-[#FF5A1F] text-white text-[9px] font-bold h-4.5 w-4.5 rounded-full flex items-center justify-center border-2 border-white dark:border-[#1a1a1a]">
                             {cartCount > 99 ? "99+" : cartCount}
                           </span>
                         )}
@@ -2658,7 +2658,7 @@ export default function Home({ homeMode = null, isTabActive = true }) {
                             alt="Profile"
                             className="object-cover"
                           />
-                          <AvatarFallback className="bg-[#FFF5E6] text-[20px] font-black text-[#DC2626] leading-none tracking-tighter antialiased">
+                          <AvatarFallback className="bg-[#FFF5E6] text-[20px] font-black text-[#FF5A1F] leading-none tracking-tighter antialiased">
                             <img src="/assets/images/profile_avatar.webp" alt="Profile" className="object-cover w-full h-full" />
                           </AvatarFallback>
                         </Avatar>
@@ -2692,7 +2692,7 @@ export default function Home({ homeMode = null, isTabActive = true }) {
                           }}
                           className="relative bg-gray-50 dark:bg-[#1a1a1a] rounded-xl border border-gray-200 dark:border-gray-800 p-2 flex items-center shadow-inner group mt-3"
                         >
-                          <Search className="h-4 w-4 text-[#DC2626] ml-2 shrink-0" strokeWidth={2.5} />
+                          <Search className="h-4 w-4 text-[#FF5A1F] ml-2 shrink-0" strokeWidth={2.5} />
                           <div className="flex-1 px-3">
                             <Input
                               autoFocus
@@ -2725,7 +2725,7 @@ export default function Home({ homeMode = null, isTabActive = true }) {
                                 setHeroSearch("");
                                 setTakeawaySearchOpen(false);
                               }}
-                              className="flex h-7 w-7 items-center justify-center rounded-full bg-[#DC2626]/10 text-[#DC2626] hover:bg-[#DC2626]/20 transition-colors"
+                              className="flex h-7 w-7 items-center justify-center rounded-full bg-[#FF5A1F]/10 text-[#FF5A1F] hover:bg-[#FF5A1F]/20 transition-colors"
                               aria-label="Close search"
                             >
                               <X className="h-4 w-4" strokeWidth={2.5} />
@@ -2863,16 +2863,16 @@ export default function Home({ homeMode = null, isTabActive = true }) {
                             className="px-4 pt-3 pb-2 flex items-center gap-3"
                           >
                             <div
-                              className="bg-white dark:bg-[#1a1a1a] flex-1 rounded-2xl flex items-center px-4 py-3 cursor-pointer border-2 border-[#DC2626]/30 dark:border-[#DC2626]/50 shadow-md"
+                              className="bg-white dark:bg-[#1a1a1a] flex-1 rounded-2xl flex items-center px-4 py-3 cursor-pointer border-2 border-[#FF5A1F]/30 dark:border-[#FF5A1F]/50 shadow-md"
                               onClick={handleSearchFocus}
                             >
-                              <Search className="h-5 w-5 text-[#DC2626] dark:text-[#a14b84] mr-3" strokeWidth={2.5} />
+                              <Search className="h-5 w-5 text-[#FF5A1F] dark:text-[#a14b84] mr-3" strokeWidth={2.5} />
                               <div className="flex-1 relative h-5 overflow-hidden">
                                 <span className="absolute inset-0 text-base text-gray-400 font-medium">Search "biryani"</span>
                               </div>
                               <div className="h-5 w-[1px] bg-gray-200 dark:bg-white/10 mx-2" />
                               <Mic
-                                className="h-5 w-5 text-[#DC2626] dark:text-[#a14b84]"
+                                className="h-5 w-5 text-[#FF5A1F] dark:text-[#a14b84]"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   voiceSearch.clearError();
@@ -3006,7 +3006,7 @@ export default function Home({ homeMode = null, isTabActive = true }) {
                               );
                             }}
                             className={`h-9 px-4 rounded-full flex items-center gap-2 whitespace-nowrap flex-shrink-0 transition-all font-bold shadow-sm active:scale-95 ${isActive
-                              ? "bg-[#DC2626] text-white border border-[#DC2626] hover:bg-orange-700"
+                              ? "bg-[#FF5A1F] text-white border border-[#FF5A1F] hover:bg-orange-700"
                               : "bg-white dark:bg-[#1a1a1a] border border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
                               }`}
                           >
@@ -3093,8 +3093,8 @@ export default function Home({ homeMode = null, isTabActive = true }) {
                         <p className="text-sm font-semibold text-gray-900 dark:text-white truncate tracking-tight">
                           {restaurant.name}
                         </p>
-                        <p className="text-[10px] text-[#DC2626] font-bold mt-1 flex items-center gap-1 uppercase tracking-wider">
-                          <Flame className="w-3.5 h-3.5 fill-[#DC2626]" />
+                        <p className="text-[10px] text-[#FF5A1F] font-bold mt-1 flex items-center gap-1 uppercase tracking-wider">
+                          <Flame className="w-3.5 h-3.5 fill-[#FF5A1F]" />
                           Near & Fast
                         </p>
                       </div>
@@ -3133,9 +3133,9 @@ export default function Home({ homeMode = null, isTabActive = true }) {
                         aria-label={item.label}
                         className="block">
                         <div className="flex flex-col items-center gap-1.5 group">
-                          <div className="relative aspect-square w-full rounded-2xl sm:rounded-[24px] bg-white dark:bg-[#1a1a1a] flex items-center justify-center shadow-sm hover:shadow-md transition-all duration-500 overflow-hidden border border-gray-100 dark:border-gray-800 p-1 group-hover:border-[#DC2626]/40">
+                          <div className="relative aspect-square w-full rounded-2xl sm:rounded-[24px] bg-white dark:bg-[#1a1a1a] flex items-center justify-center shadow-sm hover:shadow-md transition-all duration-500 overflow-hidden border border-gray-100 dark:border-gray-800 p-1 group-hover:border-[#FF5A1F]/40">
                             {/* Colorful Glow Background */}
-                            <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500 bg-gradient-to-br ${index % 3 === 0 ? 'from-[#DC2626] to-rose-500' : index % 3 === 1 ? 'from-indigo-500 to-purple-500' : 'from-teal-500 to-emerald-500'} z-20 pointer-events-none`} />
+                            <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500 bg-gradient-to-br ${index % 3 === 0 ? 'from-[#FF5A1F] to-rose-500' : index % 3 === 1 ? 'from-indigo-500 to-purple-500' : 'from-teal-500 to-emerald-500'} z-20 pointer-events-none`} />
 
                             <ExploreIconImage
                               src={item.image}
@@ -3143,7 +3143,7 @@ export default function Home({ homeMode = null, isTabActive = true }) {
                               className="relative z-10 transition-transform duration-500 group-hover:scale-110 drop-shadow-sm rounded-xl"
                             />
                           </div>
-                          <span className="text-[9px] sm:text-[10px] font-bold text-gray-500 dark:text-gray-400 group-hover:text-[#DC2626] transition-colors text-center tracking-tighter leading-tight uppercase truncate w-full px-0.5">
+                          <span className="text-[9px] sm:text-[10px] font-bold text-gray-500 dark:text-gray-400 group-hover:text-[#FF5A1F] transition-colors text-center tracking-tighter leading-tight uppercase truncate w-full px-0.5">
                             {item.label}
                           </span>
                         </div>
@@ -3385,7 +3385,7 @@ export default function Home({ homeMode = null, isTabActive = true }) {
                           </div>
 
                           {/* Border Glow Effect */}
-                          <div className="absolute inset-0 rounded-md pointer-events-none z-0 transition-all duration-300 border border-transparent group-hover:border-[#DC2626]/30 group-hover:shadow-[inset_0_0_0_1px_rgba(235,89,14,0.2)]" />
+                          <div className="absolute inset-0 rounded-md pointer-events-none z-0 transition-all duration-300 border border-transparent group-hover:border-[#FF5A1F]/30 group-hover:shadow-[inset_0_0_0_1px_rgba(235,89,14,0.2)]" />
                         </Card>
                       </Link>
                     </div>
@@ -3477,7 +3477,7 @@ export default function Home({ homeMode = null, isTabActive = true }) {
                     setSortBy(null);
                     setSelectedCuisine(null);
                   }}
-                  className="text-[#DC2626] font-medium text-sm">
+                  className="text-[#FF5A1F] font-medium text-sm">
                   Clear all
                 </button>
               </div>
@@ -3513,11 +3513,11 @@ export default function Home({ homeMode = null, isTabActive = true }) {
                           }
                         }}
                         className={`flex flex-col items-center gap-1 py-4 px-2 text-center relative transition-colors ${isActive
-                          ? "bg-white dark:bg-[#1a1a1a] text-[#DC2626]"
+                          ? "bg-white dark:bg-[#1a1a1a] text-[#FF5A1F]"
                           : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
                           }`}>
                         {isActive && (
-                          <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#DC2626] rounded-r" />
+                          <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#FF5A1F] rounded-r" />
                         )}
                         <Icon className="h-5 w-5" strokeWidth={1.5} />
                         <span className="text-xs font-medium leading-tight">
@@ -3552,11 +3552,11 @@ export default function Home({ homeMode = null, isTabActive = true }) {
                           key={option.id || "relevance"}
                           onClick={() => setSortBy(option.id)}
                           className={`px-4 py-3 rounded-xl border text-left transition-colors ${sortBy === option.id
-                            ? "border-[#DC2626] bg-[#F9F9FB] dark:bg-green-900/20"
-                            : "border-gray-200 dark:border-gray-800 hover:border-[#DC2626]"
+                            ? "border-[#FF5A1F] bg-[#F9F9FB] dark:bg-green-900/20"
+                            : "border-gray-200 dark:border-gray-800 hover:border-[#FF5A1F]"
                             }`}>
                           <span
-                            className={`text-sm font-medium ${sortBy === option.id ? "text-[#DC2626]" : "text-gray-700 dark:text-gray-300"}`}>
+                            className={`text-sm font-medium ${sortBy === option.id ? "text-[#FF5A1F]" : "text-gray-700 dark:text-gray-300"}`}>
                             {option.label}
                           </span>
                         </button>
@@ -3576,30 +3576,30 @@ export default function Home({ homeMode = null, isTabActive = true }) {
                       <button
                         onClick={() => toggleFilter("delivery-under-30")}
                         className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-colors ${activeFilters.has("delivery-under-30")
-                          ? "border-[#DC2626] bg-[#F9F9FB] dark:bg-green-900/20"
-                          : "border-gray-200 dark:border-gray-800 hover:border-[#DC2626]"
+                          ? "border-[#FF5A1F] bg-[#F9F9FB] dark:bg-green-900/20"
+                          : "border-gray-200 dark:border-gray-800 hover:border-[#FF5A1F]"
                           }`}>
                         <Timer
-                          className={`h-6 w-6 ${activeFilters.has("delivery-under-30") ? "text-[#DC2626]" : "text-gray-600 dark:text-gray-400"}`}
+                          className={`h-6 w-6 ${activeFilters.has("delivery-under-30") ? "text-[#FF5A1F]" : "text-gray-600 dark:text-gray-400"}`}
                           strokeWidth={1.5}
                         />
                         <span
-                          className={`text-sm font-medium ${activeFilters.has("delivery-under-30") ? "text-[#DC2626]" : "text-gray-700 dark:text-gray-300"}`}>
+                          className={`text-sm font-medium ${activeFilters.has("delivery-under-30") ? "text-[#FF5A1F]" : "text-gray-700 dark:text-gray-300"}`}>
                           {(effectiveOrderType === "takeaway" || isTakeawayPage) ? "Within 30 mins" : "Under 30 mins"}
                         </span>
                       </button>
                       <button
                         onClick={() => toggleFilter("delivery-under-45")}
                         className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-colors ${activeFilters.has("delivery-under-45")
-                          ? "border-[#DC2626] bg-[#F9F9FB] dark:bg-green-900/20"
-                          : "border-gray-200 dark:border-gray-800 hover:border-[#DC2626]"
+                          ? "border-[#FF5A1F] bg-[#F9F9FB] dark:bg-green-900/20"
+                          : "border-gray-200 dark:border-gray-800 hover:border-[#FF5A1F]"
                           }`}>
                         <Timer
-                          className={`h-6 w-6 ${activeFilters.has("delivery-under-45") ? "text-[#DC2626]" : "text-gray-600 dark:text-gray-400"}`}
+                          className={`h-6 w-6 ${activeFilters.has("delivery-under-45") ? "text-[#FF5A1F]" : "text-gray-600 dark:text-gray-400"}`}
                           strokeWidth={1.5}
                         />
                         <span
-                          className={`text-sm font-medium ${activeFilters.has("delivery-under-45") ? "text-[#DC2626]" : "text-gray-700 dark:text-gray-300"}`}>
+                          className={`text-sm font-medium ${activeFilters.has("delivery-under-45") ? "text-[#FF5A1F]" : "text-gray-700 dark:text-gray-300"}`}>
                           {(effectiveOrderType === "takeaway" || isTakeawayPage) ? "Within 45 mins" : "Under 45 mins"}
                         </span>
                       </button>
@@ -3618,42 +3618,42 @@ export default function Home({ homeMode = null, isTabActive = true }) {
                       <button
                         onClick={() => toggleFilter("rating-35-plus")}
                         className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-colors ${activeFilters.has("rating-35-plus")
-                          ? "border-[#DC2626] bg-[#F9F9FB] dark:bg-green-900/20"
-                          : "border-gray-200 dark:border-gray-800 hover:border-[#DC2626]"
+                          ? "border-[#FF5A1F] bg-[#F9F9FB] dark:bg-green-900/20"
+                          : "border-gray-200 dark:border-gray-800 hover:border-[#FF5A1F]"
                           }`}>
                         <Star
-                          className={`h-6 w-6 ${activeFilters.has("rating-35-plus") ? "text-[#DC2626] fill-[#DC2626]" : "text-gray-400 dark:text-gray-500"}`}
+                          className={`h-6 w-6 ${activeFilters.has("rating-35-plus") ? "text-[#FF5A1F] fill-[#FF5A1F]" : "text-gray-400 dark:text-gray-500"}`}
                         />
                         <span
-                          className={`text-sm font-medium ${activeFilters.has("rating-35-plus") ? "text-[#DC2626]" : "text-gray-700 dark:text-gray-300"}`}>
+                          className={`text-sm font-medium ${activeFilters.has("rating-35-plus") ? "text-[#FF5A1F]" : "text-gray-700 dark:text-gray-300"}`}>
                           Rated 3.5+
                         </span>
                       </button>
                       <button
                         onClick={() => toggleFilter("rating-4-plus")}
                         className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-colors ${activeFilters.has("rating-4-plus")
-                          ? "border-[#DC2626] bg-[#F9F9FB] dark:bg-green-900/20"
-                          : "border-gray-200 dark:border-gray-800 hover:border-[#DC2626]"
+                          ? "border-[#FF5A1F] bg-[#F9F9FB] dark:bg-green-900/20"
+                          : "border-gray-200 dark:border-gray-800 hover:border-[#FF5A1F]"
                           }`}>
                         <Star
-                          className={`h-6 w-6 ${activeFilters.has("rating-4-plus") ? "text-[#DC2626] fill-[#DC2626]" : "text-gray-400 dark:text-gray-500"}`}
+                          className={`h-6 w-6 ${activeFilters.has("rating-4-plus") ? "text-[#FF5A1F] fill-[#FF5A1F]" : "text-gray-400 dark:text-gray-500"}`}
                         />
                         <span
-                          className={`text-sm font-medium ${activeFilters.has("rating-4-plus") ? "text-[#DC2626]" : "text-gray-700 dark:text-gray-300"}`}>
+                          className={`text-sm font-medium ${activeFilters.has("rating-4-plus") ? "text-[#FF5A1F]" : "text-gray-700 dark:text-gray-300"}`}>
                           Rated 4.0+
                         </span>
                       </button>
                       <button
                         onClick={() => toggleFilter("rating-45-plus")}
                         className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-colors ${activeFilters.has("rating-45-plus")
-                          ? "border-[#DC2626] bg-[#F9F9FB] dark:bg-green-900/20"
-                          : "border-gray-200 dark:border-gray-800 hover:border-[#DC2626]"
+                          ? "border-[#FF5A1F] bg-[#F9F9FB] dark:bg-green-900/20"
+                          : "border-gray-200 dark:border-gray-800 hover:border-[#FF5A1F]"
                           }`}>
                         <Star
-                          className={`h-6 w-6 ${activeFilters.has("rating-45-plus") ? "text-[#DC2626] fill-[#DC2626]" : "text-gray-400 dark:text-gray-500"}`}
+                          className={`h-6 w-6 ${activeFilters.has("rating-45-plus") ? "text-[#FF5A1F] fill-[#FF5A1F]" : "text-gray-400 dark:text-gray-500"}`}
                         />
                         <span
-                          className={`text-sm font-medium ${activeFilters.has("rating-45-plus") ? "text-[#DC2626]" : "text-gray-700 dark:text-gray-300"}`}>
+                          className={`text-sm font-medium ${activeFilters.has("rating-45-plus") ? "text-[#FF5A1F]" : "text-gray-700 dark:text-gray-300"}`}>
                           Rated 4.5+
                         </span>
                       </button>
@@ -3672,30 +3672,30 @@ export default function Home({ homeMode = null, isTabActive = true }) {
                       <button
                         onClick={() => toggleFilter("distance-under-1km")}
                         className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-colors ${activeFilters.has("distance-under-1km")
-                          ? "border-[#DC2626] bg-[#F9F9FB] dark:bg-green-900/20"
-                          : "border-gray-200 dark:border-gray-800 hover:border-[#DC2626]"
+                          ? "border-[#FF5A1F] bg-[#F9F9FB] dark:bg-green-900/20"
+                          : "border-gray-200 dark:border-gray-800 hover:border-[#FF5A1F]"
                           }`}>
                         <MapPin
-                          className={`h-6 w-6 ${activeFilters.has("distance-under-1km") ? "text-[#DC2626]" : "text-gray-600 dark:text-gray-400"}`}
+                          className={`h-6 w-6 ${activeFilters.has("distance-under-1km") ? "text-[#FF5A1F]" : "text-gray-600 dark:text-gray-400"}`}
                           strokeWidth={1.5}
                         />
                         <span
-                          className={`text-sm font-medium ${activeFilters.has("distance-under-1km") ? "text-[#DC2626]" : "text-gray-700 dark:text-gray-300"}`}>
+                          className={`text-sm font-medium ${activeFilters.has("distance-under-1km") ? "text-[#FF5A1F]" : "text-gray-700 dark:text-gray-300"}`}>
                           Under 1 km
                         </span>
                       </button>
                       <button
                         onClick={() => toggleFilter("distance-under-2km")}
                         className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-colors ${activeFilters.has("distance-under-2km")
-                          ? "border-[#DC2626] bg-[#F9F9FB] dark:bg-green-900/20"
-                          : "border-gray-200 dark:border-gray-800 hover:border-[#DC2626]"
+                          ? "border-[#FF5A1F] bg-[#F9F9FB] dark:bg-green-900/20"
+                          : "border-gray-200 dark:border-gray-800 hover:border-[#FF5A1F]"
                           }`}>
                         <MapPin
-                          className={`h-6 w-6 ${activeFilters.has("distance-under-2km") ? "text-[#DC2626]" : "text-gray-600 dark:text-gray-400"}`}
+                          className={`h-6 w-6 ${activeFilters.has("distance-under-2km") ? "text-[#FF5A1F]" : "text-gray-600 dark:text-gray-400"}`}
                           strokeWidth={1.5}
                         />
                         <span
-                          className={`text-sm font-medium ${activeFilters.has("distance-under-2km") ? "text-[#DC2626]" : "text-gray-700 dark:text-gray-300"}`}>
+                          className={`text-sm font-medium ${activeFilters.has("distance-under-2km") ? "text-[#FF5A1F]" : "text-gray-700 dark:text-gray-300"}`}>
                           Under 2 km
                         </span>
                       </button>
@@ -3714,22 +3714,22 @@ export default function Home({ homeMode = null, isTabActive = true }) {
                       <button
                         onClick={() => toggleFilter("price-under-200")}
                         className={`px-4 py-3 rounded-xl border text-left transition-colors ${activeFilters.has("price-under-200")
-                          ? "border-[#DC2626] bg-[#F9F9FB] dark:bg-green-900/20"
-                          : "border-gray-200 dark:border-gray-800 hover:border-[#DC2626]"
+                          ? "border-[#FF5A1F] bg-[#F9F9FB] dark:bg-green-900/20"
+                          : "border-gray-200 dark:border-gray-800 hover:border-[#FF5A1F]"
                           }`}>
                         <span
-                          className={`text-sm font-medium ${activeFilters.has("price-under-200") ? "text-[#DC2626]" : "text-gray-700 dark:text-gray-300"}`}>
+                          className={`text-sm font-medium ${activeFilters.has("price-under-200") ? "text-[#FF5A1F]" : "text-gray-700 dark:text-gray-300"}`}>
                           Under ₹200
                         </span>
                       </button>
                       <button
                         onClick={() => toggleFilter("price-under-500")}
                         className={`px-4 py-3 rounded-xl border text-left transition-colors ${activeFilters.has("price-under-500")
-                          ? "border-[#DC2626] bg-[#F9F9FB] dark:bg-green-900/20"
-                          : "border-gray-200 dark:border-gray-800 hover:border-[#DC2626]"
+                          ? "border-[#FF5A1F] bg-[#F9F9FB] dark:bg-green-900/20"
+                          : "border-gray-200 dark:border-gray-800 hover:border-[#FF5A1F]"
                           }`}>
                         <span
-                          className={`text-sm font-medium ${activeFilters.has("price-under-500") ? "text-[#DC2626]" : "text-gray-700 dark:text-gray-300"}`}>
+                          className={`text-sm font-medium ${activeFilters.has("price-under-500") ? "text-[#FF5A1F]" : "text-gray-700 dark:text-gray-300"}`}>
                           Under ₹500
                         </span>
                       </button>
@@ -3750,22 +3750,22 @@ export default function Home({ homeMode = null, isTabActive = true }) {
                       <button
                         onClick={() => toggleFilter("top-rated")}
                         className={`px-4 py-3 rounded-xl border text-left transition-colors ${activeFilters.has("top-rated")
-                          ? "border-[#DC2626] bg-[#F9F9FB] dark:bg-green-900/20"
-                          : "border-gray-200 dark:border-gray-800 hover:border-[#DC2626]"
+                          ? "border-[#FF5A1F] bg-[#F9F9FB] dark:bg-green-900/20"
+                          : "border-gray-200 dark:border-gray-800 hover:border-[#FF5A1F]"
                           }`}>
                         <span
-                          className={`text-sm font-medium ${activeFilters.has("top-rated") ? "text-[#DC2626]" : "text-gray-700 dark:text-gray-300"}`}>
+                          className={`text-sm font-medium ${activeFilters.has("top-rated") ? "text-[#FF5A1F]" : "text-gray-700 dark:text-gray-300"}`}>
                           Top Rated
                         </span>
                       </button>
                       <button
                         onClick={() => toggleFilter("trusted")}
                         className={`px-4 py-3 rounded-xl border text-left transition-colors ${activeFilters.has("trusted")
-                          ? "border-[#DC2626] bg-[#F9F9FB] dark:bg-green-900/20"
-                          : "border-gray-200 dark:border-gray-800 hover:border-[#DC2626]"
+                          ? "border-[#FF5A1F] bg-[#F9F9FB] dark:bg-green-900/20"
+                          : "border-gray-200 dark:border-gray-800 hover:border-[#FF5A1F]"
                           }`}>
                         <span
-                          className={`text-sm font-medium ${activeFilters.has("trusted") ? "text-[#DC2626]" : "text-gray-700 dark:text-gray-300"}`}>
+                          className={`text-sm font-medium ${activeFilters.has("trusted") ? "text-[#FF5A1F]" : "text-gray-700 dark:text-gray-300"}`}>
                           Trusted by 1000+ users
                         </span>
                       </button>
@@ -3784,11 +3784,11 @@ export default function Home({ homeMode = null, isTabActive = true }) {
                       <button
                         onClick={() => toggleFilter("has-offers")}
                         className={`px-4 py-3 rounded-xl border text-left transition-colors ${activeFilters.has("has-offers")
-                          ? "border-[#DC2626] bg-[#F9F9FB] dark:bg-green-900/20"
-                          : "border-gray-200 dark:border-gray-800 hover:border-[#DC2626]"
+                          ? "border-[#FF5A1F] bg-[#F9F9FB] dark:bg-green-900/20"
+                          : "border-gray-200 dark:border-gray-800 hover:border-[#FF5A1F]"
                           }`}>
                         <span
-                          className={`text-sm font-medium ${activeFilters.has("has-offers") ? "text-[#DC2626]" : "text-gray-700 dark:text-gray-300"}`}>
+                          className={`text-sm font-medium ${activeFilters.has("has-offers") ? "text-[#FF5A1F]" : "text-gray-700 dark:text-gray-300"}`}>
                           Restaurants with offers
                         </span>
                       </button>
@@ -3814,7 +3814,7 @@ export default function Home({ homeMode = null, isTabActive = true }) {
                     );
                   }}
                   className={`flex-1 py-3 font-semibold rounded-xl transition-colors ${activeFilters.size > 0 || sortBy || selectedCuisine
-                    ? "bg-[#DC2626] text-white hover:bg-[#991B1B]"
+                    ? "bg-[#FF5A1F] text-white hover:bg-[#E64A0F]"
                     : "bg-gray-200 text-gray-500"
                     }`}
                   disabled={isLoadingFilterResults}>
@@ -3983,7 +3983,7 @@ export default function Home({ homeMode = null, isTabActive = true }) {
                         setIsApplyingVegMode(false);
                       }, 2000);
                     }}
-                    className="w-full bg-[#DC2626] text-white font-semibold py-2.5 rounded-xl hover:bg-[#991B1B] transition-colors mb-2 text-sm">
+                    className="w-full bg-[#FF5A1F] text-white font-semibold py-2.5 rounded-xl hover:bg-[#E64A0F] transition-colors mb-2 text-sm">
                     Apply
                   </button>
                 </motion.div>

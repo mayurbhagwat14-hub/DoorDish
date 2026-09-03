@@ -596,7 +596,7 @@ Order again from this restaurant in the ${companyName} app.`
           <h1 className="ml-4 text-xl font-semibold text-gray-800 dark:text-gray-100">Your Orders</h1>
         </div>
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-8 h-8 text-[#DC2626] animate-spin" />
+          <Loader2 className="w-8 h-8 text-[#FF5A1F] animate-spin" />
         </div>
       </div>
     )
@@ -612,7 +612,7 @@ Order again from this restaurant in the ${companyName} app.`
         <div className="px-4 py-8 text-center text-gray-600 dark:text-gray-400">
           <p>You haven't placed any orders yet</p>
           <Link to="/user">
-            <button className="mt-4 text-[#DC2626] font-medium">Start Ordering</button>
+            <button className="mt-4 text-[#FF5A1F] font-medium">Start Ordering</button>
           </Link>
         </div>
       </div>
@@ -630,7 +630,7 @@ Order again from this restaurant in the ${companyName} app.`
       {/* Search Bar */}
       <div className="p-4 bg-white dark:bg-[#121212] mt-1 border-b dark:border-gray-800">
         <div className="flex items-center bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-lg px-3 py-2 shadow-sm">
-          <Search className="w-5 h-5 text-[#DC2626]" />
+          <Search className="w-5 h-5 text-[#FF5A1F]" />
           <input
             type="text"
             placeholder="Search by restaurant or dish"
@@ -716,7 +716,7 @@ Order again from this restaurant in the ${companyName} app.`
                       )}
                       {order.restaurantId && (
                         <Link to={`/user/restaurants/${order.restaurantId}`}>
-                          <button className="text-xs text-[#DC2626] font-medium flex items-center mt-1 hover:text-[#991B1B]">
+                          <button className="text-xs text-[#FF5A1F] font-medium flex items-center mt-1 hover:text-[#E64A0F]">
                             View menu <span className="ml-0.5">&gt;</span>
                           </button>
                         </Link>
@@ -954,7 +954,7 @@ Order again from this restaurant in the ${companyName} app.`
                         <button
                           type="button"
                           onClick={() => handleOpenRating(order)}
-                          className="text-xs text-slate-500 hover:text-[#DC2626] dark:text-slate-400 font-bold flex items-center gap-1 transition-colors"
+                          className="text-xs text-slate-500 hover:text-[#FF5A1F] dark:text-slate-400 font-bold flex items-center gap-1 transition-colors"
                         >
                           <Star className="w-3.5 h-3.5 text-slate-400 fill-none" />
                           {order.orderType === "takeaway" ? "Rate Restaurant" : "Rate Restaurant & Delivery"}
@@ -963,7 +963,7 @@ Order again from this restaurant in the ${companyName} app.`
                         <div>
                           {/* Countdown Timer */}
                           {countdowns[order.id] && countdowns[order.id] > 0 && (
-                            <div className="flex items-center gap-1 text-xs text-[#DC2626] font-semibold">
+                            <div className="flex items-center gap-1 text-xs text-[#FF5A1F] font-semibold">
                               <Clock size={12} className="animate-pulse" />
                               <span>{countdowns[order.id]} min{countdowns[order.id] !== 1 ? 's' : ''} remaining</span>
                             </div>
@@ -975,7 +975,7 @@ Order again from this restaurant in the ${companyName} app.`
                     {/* Right: View Details & Reorder buttons */}
                     <div className="flex items-center gap-3 flex-shrink-0">
                       <Link to={(isDelivered || isCancelled) ? `/user/orders/${order.id}/details` : `/user/orders/${order.id}`}>
-                        <span className="text-xs font-bold text-gray-600 dark:text-gray-400 hover:text-[#DC2626] dark:hover:text-[#DC2626] transition-colors cursor-pointer flex items-center gap-0.5">
+                        <span className="text-xs font-bold text-gray-600 dark:text-gray-400 hover:text-[#FF5A1F] dark:hover:text-[#FF5A1F] transition-colors cursor-pointer flex items-center gap-0.5">
                           View Details <ChevronRight className="w-3.5 h-3.5" />
                         </span>
                       </Link>
@@ -983,7 +983,7 @@ Order again from this restaurant in the ${companyName} app.`
                       {isDelivered && !paymentFailed && (
                         <button
                           onClick={() => handleReorder(order)}
-                          className="bg-[#DC2626] hover:bg-[#991B1B] text-white px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm hover:shadow-[#DC2626]/20 transition-all duration-150 active:scale-95"
+                          className="bg-[#FF5A1F] hover:bg-[#E64A0F] text-white px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm hover:shadow-[#FF5A1F]/20 transition-all duration-150 active:scale-95"
                         >
                           <RotateCcw className="w-3 h-3" />
                           Reorder
@@ -1008,7 +1008,7 @@ Order again from this restaurant in the ${companyName} app.`
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4 animate-in fade-in duration-200">
           <div className="w-full max-w-md rounded-3xl bg-white dark:bg-[#121212] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border dark:border-gray-800">
             {/* Header with gradient */}
-            <div className="bg-gradient-to-r from-[#DC2626] to-[#991B1B] px-6 py-5">
+            <div className="bg-gradient-to-r from-[#FF5A1F] to-[#E64A0F] px-6 py-5">
               <div className="flex items-center justify-between mb-2">
                 <h2 className="text-xl font-bold text-white flex items-center gap-2">
                   <Star className="w-5 h-5 fill-white" />
@@ -1054,7 +1054,7 @@ Order again from this restaurant in the ${companyName} app.`
                   rows={2}
                   value={restaurantFeedbackText}
                   onChange={(e) => setRestaurantFeedbackText(e.target.value)}
-                  className="w-full rounded-xl border-2 border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1a1a1a] px-4 py-2 text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#DC2626] focus:border-[#DC2626] resize-none transition-all"
+                  className="w-full rounded-xl border-2 border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1a1a1a] px-4 py-2 text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF5A1F] focus:border-[#FF5A1F] resize-none transition-all"
                   placeholder="Restaurant feedback (optional)"
                 />
               </div>
@@ -1088,7 +1088,7 @@ Order again from this restaurant in the ${companyName} app.`
                     rows={2}
                     value={deliveryFeedbackText}
                     onChange={(e) => setDeliveryFeedbackText(e.target.value)}
-                    className="w-full rounded-xl border-2 border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1a1a1a] px-4 py-2 text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#DC2626] focus:border-[#DC2626] resize-none transition-all"
+                    className="w-full rounded-xl border-2 border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1a1a1a] px-4 py-2 text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF5A1F] focus:border-[#FF5A1F] resize-none transition-all"
                     placeholder="Delivery partner feedback (optional)"
                   />
                 </div>
@@ -1099,7 +1099,7 @@ Order again from this restaurant in the ${companyName} app.`
                 type="button"
                 disabled={ratingSubmitDisabled}
                 onClick={handleSubmitRating}
-                className="w-full rounded-xl bg-gradient-to-r from-[#DC2626] to-[#991B1B] text-white text-base font-bold py-3.5 hover:from-[#991B1B] hover:to-[#C44409] disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-[#DC2626]/30 flex items-center justify-center gap-2"
+                className="w-full rounded-xl bg-gradient-to-r from-[#FF5A1F] to-[#E64A0F] text-white text-base font-bold py-3.5 hover:from-[#E64A0F] hover:to-[#C44409] disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-[#FF5A1F]/30 flex items-center justify-center gap-2"
               >
                 {submittingRating ? (
                   <>
@@ -1145,7 +1145,7 @@ Order again from this restaurant in the ${companyName} app.`
                 <button
                   type="button"
                   onClick={handleSystemShareFromModal}
-                  className="w-full rounded-2xl bg-[#DC2626] px-4 py-3 text-sm font-semibold text-white flex items-center justify-center gap-2 hover:bg-[#991B1B] transition-colors"
+                  className="w-full rounded-2xl bg-[#FF5A1F] px-4 py-3 text-sm font-semibold text-white flex items-center justify-center gap-2 hover:bg-[#E64A0F] transition-colors"
                 >
                   <Share2 className="w-4 h-4" />
                   Share via apps

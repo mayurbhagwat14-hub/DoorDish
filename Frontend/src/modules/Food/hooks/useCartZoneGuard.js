@@ -11,7 +11,7 @@ const resolveRestaurantZoneId = async (cartItem) => {
   if (cachedZoneId) return normalizeZoneId(cachedZoneId)
 
   const restaurantId = cartItem?.restaurantId
-  if (!restaurantId) return ""
+  if (!restaurantId || typeof restaurantId === "object") return ""
 
   try {
     const response = await restaurantAPI.getRestaurantById(restaurantId)
@@ -23,50 +23,61 @@ const resolveRestaurantZoneId = async (cartItem) => {
 }
 
 /**
- * Clears cart when the active delivery zone no longer matches the restaurant's zone.
+ * Clears cart when the active delivery zone changes while having items from a different zone.
  */
 export function useCartZoneGuard(zoneId, zoneStatus) {
   const { cart, clearCart } = useCart()
   const { orderType } = useProfile()
   const validatingRef = useRef(false)
-  const lastCheckedKeyRef = useRef("")
+  const prevZoneIdRef = useRef(normalizeZoneId(zoneId))
 
   useEffect(() => {
-    if (orderType === "takeaway" || orderType === "dining") return
-    if (!cart.length) {
-      lastCheckedKeyRef.current = ""
+    const currentZone = normalizeZoneId(zoneId)
+
+    if (orderType === "takeaway" || orderType === "dining") {
+      prevZoneIdRef.current = currentZone
       return
     }
-    if (zoneStatus === "loading" || !zoneId) return
 
-    const checkKey = `${normalizeZoneId(zoneId)}:${cart[0]?.restaurantId || cart[0]?.restaurant || ""}:${cart.length}`
-    if (lastCheckedKeyRef.current === checkKey || validatingRef.current) return
-
-    let cancelled = false
-
-    const validateCartZone = async () => {
-      validatingRef.current = true
-      try {
-        const restaurantZoneId = await resolveRestaurantZoneId(cart[0])
-        if (cancelled || !restaurantZoneId) return
-
-        if (restaurantZoneId !== normalizeZoneId(zoneId)) {
-          clearCart()
-          toast.error("Cart cleared — this restaurant does not deliver to your selected location.")
-          lastCheckedKeyRef.current = ""
-          return
-        }
-
-        lastCheckedKeyRef.current = checkKey
-      } finally {
-        validatingRef.current = false
-      }
+    if (!cart.length) {
+      prevZoneIdRef.current = currentZone
+      return
     }
 
-    validateCartZone()
+    if (zoneStatus === "loading" || !currentZone) return
 
-    return () => {
-      cancelled = true
+    // On initial load or if prevZoneIdRef wasn't set, sync it with currentZone
+    if (!prevZoneIdRef.current) {
+      prevZoneIdRef.current = currentZone
+      return
+    }
+
+    // Only run zone validation if the active delivery zone ID has actually CHANGED while cart has items
+    if (prevZoneIdRef.current !== currentZone) {
+      prevZoneIdRef.current = currentZone
+
+      if (validatingRef.current) return
+      let cancelled = false
+
+      const validateCartZone = async () => {
+        validatingRef.current = true
+        try {
+          const restaurantZoneId = await resolveRestaurantZoneId(cart[0])
+          if (cancelled || !restaurantZoneId) return
+
+          if (restaurantZoneId !== currentZone) {
+            clearCart()
+            toast.error("Cart cleared — location changed to an area outside this restaurant's delivery zone.")
+          }
+        } finally {
+          validatingRef.current = false
+        }
+      }
+
+      validateCartZone()
+      return () => {
+        cancelled = true
+      }
     }
   }, [zoneId, zoneStatus, cart, clearCart, orderType])
 }

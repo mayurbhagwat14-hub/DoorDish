@@ -42,7 +42,7 @@ const FilterSidebar = ({
           >
             <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
               <h2 className="text-lg font-bold flex items-center gap-2">
-                <SlidersHorizontal className="w-5 h-5 text-[#DC2626]" />
+                <SlidersHorizontal className="w-5 h-5 text-[#FF5A1F]" />
                 Filters
               </h2>
               <button 
@@ -62,7 +62,7 @@ const FilterSidebar = ({
                     onClick={() => setActiveTab(tab.id)}
                     className={`w-full p-4 flex flex-col items-center gap-1 transition-all duration-200 ${
                       activeTab === tab.id 
-                        ? 'bg-white dark:bg-[#1a1a1a] text-[#DC2626] border-r-2 border-[#DC2626]' 
+                        ? 'bg-white dark:bg-[#1a1a1a] text-[#FF5A1F] border-r-2 border-[#FF5A1F]' 
                         : 'text-gray-500 hover:text-gray-700'
                     }`}
                   >
@@ -94,7 +94,7 @@ const FilterSidebar = ({
                             onChange={() => setSortBy(opt.id)}
                           />
                           <div className={`w-5 h-5 rounded-full border-2 transition-all duration-200 flex items-center justify-center ${
-                            sortBy === opt.id ? 'border-[#DC2626] bg-[#DC2626]' : 'border-gray-300 dark:border-gray-700'
+                            sortBy === opt.id ? 'border-[#FF5A1F] bg-[#FF5A1F]' : 'border-gray-300 dark:border-gray-700'
                           }`}>
                             {sortBy === opt.id && <Check className="w-3 h-3 text-white" />}
                           </div>
@@ -131,7 +131,7 @@ const FilterSidebar = ({
               </button>
               <button 
                 onClick={onApply}
-                className="flex-[2] py-3 bg-[#DC2626] text-white text-sm font-bold rounded-xl shadow-lg shadow-[#DC2626]/20 hover:bg-#991B1B transition-all active:scale-95"
+                className="flex-[2] py-3 bg-[#FF5A1F] text-white text-sm font-bold rounded-xl shadow-lg shadow-[#FF5A1F]/20 hover:bg-#E64A0F transition-all active:scale-95"
               >
                 Apply Filters
               </button>

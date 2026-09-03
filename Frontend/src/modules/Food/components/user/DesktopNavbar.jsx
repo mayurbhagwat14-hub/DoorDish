@@ -268,7 +268,7 @@ export default function DesktopNavbar({ showLogo = true }) {
                         <div className="flex-1 max-w-3xl mx-4 flex items-center gap-4">
                             {/* Search Bar */}
                             <div className="relative flex-1">
-                                <div className="relative bg-gray-100 dark:bg-[#2a2a2a] rounded-lg transition-all duration-300 focus-within:ring-2 focus-within:ring-[#DC2626] focus-within:bg-white dark:focus-within:bg-[#1a1a1a] border border-transparent focus-within:border-[#DC2626]/20">
+                                <div className="relative bg-gray-100 dark:bg-[#2a2a2a] rounded-lg transition-all duration-300 focus-within:ring-2 focus-within:ring-[#FF5A1F] focus-within:bg-white dark:focus-within:bg-[#1a1a1a] border border-transparent focus-within:border-[#FF5A1F]/20">
                                     <div className="flex items-center px-3 py-2">
                                         <Search className="h-4 w-4 text-gray-500 flex-shrink-0 mr-3" />
                                         <Input
@@ -368,15 +368,15 @@ export default function DesktopNavbar({ showLogo = true }) {
                             <Link
                                 to="/food/user"
                                 className={`flex flex-col items-center gap-1 px-2 py-1 transition-colors relative group ${isDelivery
-                                    ? "text-[#DC2626]"
-                                    : "text-gray-600 dark:text-gray-400 hover:text-[#DC2626]"
+                                    ? "text-[#FF5A1F]"
+                                    : "text-gray-600 dark:text-gray-400 hover:text-[#FF5A1F]"
                                     }`}
                             >
                                 <span className="text-sm font-bold tracking-wide uppercase">Delivery</span>
                                 {isDelivery && (
                                     <motion.div
                                         layoutId="navIndicator"
-                                        className="absolute -bottom-3 left-0 right-0 h-0.5 bg-[#DC2626]"
+                                        className="absolute -bottom-3 left-0 right-0 h-0.5 bg-[#FF5A1F]"
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
                                         transition={{ duration: 0.3 }}
@@ -388,15 +388,15 @@ export default function DesktopNavbar({ showLogo = true }) {
                             <Link
                                 to="/food/user/takeaway"
                                 className={`flex flex-col items-center gap-1 px-2 py-1 transition-colors relative group ${isTakeaway
-                                    ? "text-[#DC2626]"
-                                    : "text-gray-600 dark:text-gray-400 hover:text-[#DC2626]"
+                                    ? "text-[#FF5A1F]"
+                                    : "text-gray-600 dark:text-gray-400 hover:text-[#FF5A1F]"
                                     }`}
                             >
                                 <span className="text-sm font-bold tracking-wide uppercase">Takeaway</span>
                                 {isTakeaway && (
                                     <motion.div
                                         layoutId="navIndicator"
-                                        className="absolute -bottom-3 left-0 right-0 h-0.5 bg-[#DC2626]"
+                                        className="absolute -bottom-3 left-0 right-0 h-0.5 bg-[#FF5A1F]"
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
                                         transition={{ duration: 0.3 }}
@@ -408,15 +408,15 @@ export default function DesktopNavbar({ showLogo = true }) {
                             <Link
                                 to="/food/user/under-250"
                                 className={`flex flex-col items-center gap-1 px-2 py-1 transition-colors relative group ${isUnder250
-                                    ? "text-[#DC2626]"
-                                    : "text-gray-600 dark:text-gray-400 hover:text-[#DC2626]"
+                                    ? "text-[#FF5A1F]"
+                                    : "text-gray-600 dark:text-gray-400 hover:text-[#FF5A1F]"
                                     }`}
                             >
                                 <span className="text-sm font-bold tracking-wide uppercase">Under ₹{under250PriceLimit}</span>
                                 {isUnder250 && (
                                     <motion.div
                                         layoutId="navIndicator"
-                                        className="absolute -bottom-3 left-0 right-0 h-0.5 bg-[#DC2626]"
+                                        className="absolute -bottom-3 left-0 right-0 h-0.5 bg-[#FF5A1F]"
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
                                         transition={{ duration: 0.3 }}
@@ -429,15 +429,15 @@ export default function DesktopNavbar({ showLogo = true }) {
                             <Link
                                 to="/food/user/dining"
                                 className={`flex flex-col items-center gap-1 px-2 py-1 transition-colors relative group ${isDining
-                                    ? "text-[#DC2626]"
-                                    : "text-gray-600 dark:text-gray-400 hover:text-[#DC2626]"
+                                    ? "text-[#FF5A1F]"
+                                    : "text-gray-600 dark:text-gray-400 hover:text-[#FF5A1F]"
                                     }`}
                             >
                                 <span className="text-sm font-bold tracking-wide uppercase">Dining</span>
                                 {isDining && (
                                     <motion.div
                                         layoutId="navIndicator"
-                                        className="absolute -bottom-3 left-0 right-0 h-0.5 bg-[#DC2626]"
+                                        className="absolute -bottom-3 left-0 right-0 h-0.5 bg-[#FF5A1F]"
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
                                         transition={{ duration: 0.3 }}
@@ -457,15 +457,15 @@ export default function DesktopNavbar({ showLogo = true }) {
                                     }
                                 }}
                                 className={`flex flex-col items-center gap-1 px-2 py-1 transition-colors relative group ${isProfile
-                                    ? "text-[#DC2626]"
-                                    : "text-gray-600 dark:text-gray-400 hover:text-[#DC2626]"
+                                    ? "text-[#FF5A1F]"
+                                    : "text-gray-600 dark:text-gray-400 hover:text-[#FF5A1F]"
                                     }`}
                             >
                                 <span className="text-sm font-bold tracking-wide uppercase">Profile</span>
                                 {isProfile && (
                                     <motion.div
                                         layoutId="navIndicator"
-                                        className="absolute -bottom-3 left-0 right-0 h-0.5 bg-[#DC2626]"
+                                        className="absolute -bottom-3 left-0 right-0 h-0.5 bg-[#FF5A1F]"
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
                                         transition={{ duration: 0.3 }}

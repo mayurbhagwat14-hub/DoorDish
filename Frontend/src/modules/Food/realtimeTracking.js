@@ -24,74 +24,108 @@ function getOrderTrackingPath(orderId) {
 
 export function subscribeOrderTracking(orderId, onChange, onError) {
   if (!orderId || typeof onChange !== 'function') return () => {};
-  // Keep auth disabled on tracking pages to avoid identitytoolkit
-  // getProjectConfig calls that can fail for API-key-restricted setups.
-  ensureFirebaseInitialized({ enableAuth: false, enableRealtimeDb: true });
-  const path = getOrderTrackingPath(orderId);
-  const unsub = onValue(
-    ref(firebaseRealtimeDb, path),
-    (snapshot) => {
-      const data = snapshot.val();
-      if (!data) return;
-      onChange(data, path);
-    },
-    (error) => {
-      if (typeof onError === 'function') onError(error, path);
-    },
-  );
-  return unsub;
+  try {
+    ensureFirebaseInitialized({ enableAuth: false, enableRealtimeDb: true });
+    if (!firebaseRealtimeDb) {
+      if (typeof onError === 'function') onError(new Error("Realtime DB not available"), getOrderTrackingPath(orderId));
+      return () => {};
+    }
+    const path = getOrderTrackingPath(orderId);
+    const unsub = onValue(
+      ref(firebaseRealtimeDb, path),
+      (snapshot) => {
+        const data = snapshot.val();
+        if (!data) return;
+        onChange(data, path);
+      },
+      (error) => {
+        if (typeof onError === 'function') onError(error, path);
+      },
+    );
+    return unsub;
+  } catch (err) {
+    if (typeof onError === 'function') onError(err, getOrderTrackingPath(orderId));
+    return () => {};
+  }
 }
 
 export function subscribeDeliveryLocation(deliveryId, onChange, onError) {
   if (!deliveryId || typeof onChange !== 'function') return () => {};
-  ensureFirebaseInitialized({ enableAuth: false, enableRealtimeDb: true });
-  const path = getDeliveryLocationPath(deliveryId);
-  const unsub = onValue(
-    ref(firebaseRealtimeDb, path),
-    (snapshot) => {
-      const data = snapshot.val();
-      if (!data) return;
-      onChange(data, path);
-    },
-    (error) => {
-      if (typeof onError === 'function') onError(error, path);
-    },
-  );
-  return unsub;
+  try {
+    ensureFirebaseInitialized({ enableAuth: false, enableRealtimeDb: true });
+    if (!firebaseRealtimeDb) {
+      if (typeof onError === 'function') onError(new Error("Realtime DB not available"), getDeliveryLocationPath(deliveryId));
+      return () => {};
+    }
+    const path = getDeliveryLocationPath(deliveryId);
+    const unsub = onValue(
+      ref(firebaseRealtimeDb, path),
+      (snapshot) => {
+        const data = snapshot.val();
+        if (!data) return;
+        onChange(data, path);
+      },
+      (error) => {
+        if (typeof onError === 'function') onError(error, path);
+      },
+    );
+    return unsub;
+  } catch (err) {
+    if (typeof onError === 'function') onError(err, getDeliveryLocationPath(deliveryId));
+    return () => {};
+  }
 }
 
 export function subscribeAllDeliveryLocations(onChange, onError) {
   if (typeof onChange !== 'function') return () => {};
-  ensureFirebaseInitialized({ enableAuth: false, enableRealtimeDb: true });
-  const path = 'delivery';
-  const unsub = onValue(
-    ref(firebaseRealtimeDb, path),
-    (snapshot) => {
-      onChange(snapshot.val() || {}, path);
-    },
-    (error) => {
-      if (typeof onError === 'function') onError(error, path);
-    },
-  );
-  return unsub;
+  try {
+    ensureFirebaseInitialized({ enableAuth: false, enableRealtimeDb: true });
+    if (!firebaseRealtimeDb) {
+      if (typeof onError === 'function') onError(new Error("Realtime DB not available"), 'delivery');
+      return () => {};
+    }
+    const path = 'delivery';
+    const unsub = onValue(
+      ref(firebaseRealtimeDb, path),
+      (snapshot) => {
+        onChange(snapshot.val() || {}, path);
+      },
+      (error) => {
+        if (typeof onError === 'function') onError(error, path);
+      },
+    );
+    return unsub;
+  } catch (err) {
+    if (typeof onError === 'function') onError(err, 'delivery');
+    return () => {};
+  }
 }
 
 export function subscribeRestaurantLocation(restaurantId, onChange, onError) {
   if (!restaurantId || typeof onChange !== 'function') return () => {};
-  ensureFirebaseInitialized({ enableAuth: false, enableRealtimeDb: true });
-  const path = getRestaurantLocationPath(restaurantId);
-  const unsub = onValue(
-    ref(firebaseRealtimeDb, path),
-    (snapshot) => {
-      const data = snapshot.val();
-      if (!data) return;
-      onChange(data, path);
-    },
-    (error) => {
-      if (typeof onError === 'function') onError(error, path);
-    },
-  );
-  return unsub;
+  try {
+    ensureFirebaseInitialized({ enableAuth: false, enableRealtimeDb: true });
+    if (!firebaseRealtimeDb) {
+      if (typeof onError === 'function') onError(new Error("Realtime DB not available"), getRestaurantLocationPath(restaurantId));
+      return () => {};
+    }
+    const path = getRestaurantLocationPath(restaurantId);
+    const unsub = onValue(
+      ref(firebaseRealtimeDb, path),
+      (snapshot) => {
+        const data = snapshot.val();
+        if (!data) return;
+        onChange(data, path);
+      },
+      (error) => {
+        if (typeof onError === 'function') onError(error, path);
+      },
+    );
+    return unsub;
+  } catch (err) {
+    if (typeof onError === 'function') onError(err, getRestaurantLocationPath(restaurantId));
+    return () => {};
+  }
 }
 
 export async function writeDeliveryLocation({

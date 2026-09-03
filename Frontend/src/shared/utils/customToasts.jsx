@@ -9,7 +9,7 @@ export const showNotificationToast = ({ title, message } = {}) => {
   toast.custom(() => (
     <div className="w-[calc(100vw-32px)] sm:w-[380px] bg-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-3xl pointer-events-auto flex items-center gap-4 p-3.5 border border-gray-50 animate-in fade-in slide-in-from-top-4">
       <div className="flex-shrink-0">
-        <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-[#DC2626] to-[#991B1B] flex items-center justify-center shadow-lg">
+        <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-[#FF5A1F] to-[#E64A0F] flex items-center justify-center shadow-lg">
           <img
             src="/assets/images/doordish-toast-logo.png"
             alt="DoorDish"
@@ -38,7 +38,7 @@ export const showDoorDishBrandedToast = ({ title, message, id = "doordish-brande
     () => (
       <div className="w-[calc(100vw-32px)] sm:w-[380px] bg-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-3xl pointer-events-auto flex items-center gap-4 p-3.5 border border-gray-50 animate-in fade-in slide-in-from-top-4 z-[11000]">
         <div className="flex-shrink-0">
-          <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-[#DC2626] to-[#991B1B] flex items-center justify-center p-1.5 shadow-lg">
+          <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-[#FF5A1F] to-[#E64A0F] flex items-center justify-center p-1.5 shadow-lg">
             <img
               src="/assets/images/doordish-toast-logo.png"
               alt="DoorDish"

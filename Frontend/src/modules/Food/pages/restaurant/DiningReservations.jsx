@@ -977,7 +977,7 @@ export default function DiningReservations() {
                                                                 ['accepted', 'confirmed'].includes(String(booking.status || '').toLowerCase()) ? 'bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]' :
                                                                 String(booking.status || '').toLowerCase() === 'checked-in' ? 'bg-orange-100 text-orange-700' :
                                                                 String(booking.status || '').toLowerCase() === 'completed' ? 'bg-blue-100 text-blue-700' :
-                                                                'bg-[#FEE2E2] text-[#B91C1C] border border-[#FCA5A5]'
+                                                                'bg-[#FEE2E2] text-[#E64A0F] border border-[#FCA5A5]'
                                                             } shadow-sm`}>
                                                                 {String(booking.status || '').toLowerCase() === 'pending' ? 'APPROVAL REQ' : 
                                                                  ['accepted', 'confirmed'].includes(String(booking.status || '').toLowerCase()) ? 'CONFIRMED' : 
@@ -1063,7 +1063,7 @@ export default function DiningReservations() {
                                                     ['accepted', 'confirmed'].includes(String(booking.status || '').toLowerCase()) ? 'bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]' :
                                                     String(booking.status || '').toLowerCase() === 'checked-in' ? 'bg-orange-100 text-orange-700' :
                                                     String(booking.status || '').toLowerCase() === 'completed' ? 'bg-blue-100 text-blue-700' :
-                                                    'bg-[#FEE2E2] text-[#B91C1C] border border-[#FCA5A5]'
+                                                    'bg-[#FEE2E2] text-[#E64A0F] border border-[#FCA5A5]'
                                                 }`}>
                                                     {String(booking.status || '').toLowerCase() === 'pending' ? 'WAITING' : 
                                                      ['accepted', 'confirmed'].includes(String(booking.status || '').toLowerCase()) ? 'CONFIRMED' : 

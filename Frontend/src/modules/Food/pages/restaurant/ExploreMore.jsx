@@ -1107,7 +1107,7 @@ export default function ExploreMore() {
                       await handleLogout()
                     }}
                     disabled={isLoggingOut}
-                    className="w-full rounded-[14px] bg-[#DC2626] py-[14px] text-[15px] font-bold text-white transition-all active:scale-[0.98] disabled:opacity-50"
+                    className="w-full rounded-[14px] bg-[#FF5A1F] py-[14px] text-[15px] font-bold text-white transition-all active:scale-[0.98] disabled:opacity-50"
                   >
                     {isLoggingOut ? "Logging out..." : "Logout"}
                   </button>
@@ -1117,7 +1117,7 @@ export default function ExploreMore() {
                       await handleLogoutAllDevices()
                     }}
                     disabled={isLoggingOut}
-                    className="w-full rounded-[14px] border-[1.5px] border-[#DC2626] bg-white py-[14px] text-[15px] font-bold text-[#DC2626] transition-all active:scale-[0.98] disabled:opacity-50"
+                    className="w-full rounded-[14px] border-[1.5px] border-[#FF5A1F] bg-white py-[14px] text-[15px] font-bold text-[#FF5A1F] transition-all active:scale-[0.98] disabled:opacity-50"
                   >
                     {isLoggingOut ? "Logging out..." : "Logout from all devices"}
                   </button>
@@ -1358,7 +1358,7 @@ export default function ExploreMore() {
                       await handleLogout()
                     }}
                     disabled={isLoggingOut}
-                    className="w-full rounded-[14px] bg-[#DC2626] hover:bg-[#B91C1C] py-[14px] text-[15px] font-bold text-white transition-all active:scale-[0.98] disabled:opacity-50"
+                    className="w-full rounded-[14px] bg-[#FF5A1F] hover:bg-[#E64A0F] py-[14px] text-[15px] font-bold text-white transition-all active:scale-[0.98] disabled:opacity-50"
                   >
                     {isLoggingOut ? "Logging out..." : "Logout"}
                   </button>
@@ -1369,7 +1369,7 @@ export default function ExploreMore() {
                       await handleLogoutAllDevices()
                     }}
                     disabled={isLoggingOut}
-                    className="w-full rounded-[14px] border-[1.5px] border-[#DC2626] bg-white hover:bg-red-50 py-[14px] text-[15px] font-bold text-[#DC2626] transition-all active:scale-[0.98] disabled:opacity-50"
+                    className="w-full rounded-[14px] border-[1.5px] border-[#FF5A1F] bg-white hover:bg-red-50 py-[14px] text-[15px] font-bold text-[#FF5A1F] transition-all active:scale-[0.98] disabled:opacity-50"
                   >
                     {isLoggingOut ? "Logging out..." : "Logout from all devices"}
                   </button>

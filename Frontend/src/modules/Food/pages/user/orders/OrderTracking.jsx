@@ -421,7 +421,7 @@ const DiningAnimation = memo(({ order }) => {
           <div className="relative flex flex-col items-center">
             {/* Cloche Dome */}
             <div className="animate-cloche-float mb-0.5">
-              <svg className="w-20 h-16 text-[#DC2626] dark:text-[#E11D48] fill-red-500/10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg className="w-20 h-16 text-[#FF5A1F] dark:text-[#E11D48] fill-red-500/10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2M4 19h16M12 5a8 8 0 00-8 8h16a8 8 0 00-8-8zM12 5c-1 0-2 1-2 2h4c0-1-1-2-2-2z" />
               </svg>
             </div>
@@ -2147,7 +2147,7 @@ export default function OrderTracking() {
                 transition={{ delay: 1.5 }}
                 className="mt-8"
               >
-                <div className="w-8 h-8 border-2 border-[#DC2626] border-t-transparent rounded-full animate-spin mx-auto" />
+                <div className="w-8 h-8 border-2 border-[#FF5A1F] border-t-transparent rounded-full animate-spin mx-auto" />
                 <p className="text-sm text-gray-500 mt-3">Loading order details...</p>
               </motion.div>
 
@@ -2157,7 +2157,7 @@ export default function OrderTracking() {
                 transition={{ delay: 2.0 }}
                 className="mt-12 pt-8 border-t border-gray-100 dark:border-gray-800"
               >
-                <div className="flex items-center justify-center gap-2 text-[#DC2626] dark:text-orange-400 font-medium cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/user/profile/report-safety-emergency', { state: { returnTo: location.pathname } })}>
+                <div className="flex items-center justify-center gap-2 text-[#FF5A1F] dark:text-orange-400 font-medium cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/user/profile/report-safety-emergency', { state: { returnTo: location.pathname } })}>
                   <Shield className="w-4 h-4" />
                   <span className="text-sm">Learn about delivery partner safety</span>
                 </div>
@@ -2409,7 +2409,7 @@ export default function OrderTracking() {
         {/* Rating Logic: Show rating card after delivery */}
         {orderStatus === 'delivered' && !isOrderRated && (
           <motion.div
-            className={`bg-white dark:bg-[#1a1a1a] rounded-xl p-6 shadow-sm border-2 border-[#DC2626]/10 relative overflow-hidden group transition-all duration-200 ${
+            className={`bg-white dark:bg-[#1a1a1a] rounded-xl p-6 shadow-sm border-2 border-[#FF5A1F]/10 relative overflow-hidden group transition-all duration-200 ${
               isLocalRated 
                 ? "cursor-default opacity-95" 
                 : "cursor-pointer hover:bg-gray-50/80 dark:hover:bg-gray-800/20"
@@ -2420,11 +2420,11 @@ export default function OrderTracking() {
             onClick={isLocalRated ? undefined : handleOpenRating}
           >
             {/* Background pattern decoration */}
-            <div className="absolute -top-4 -right-4 w-24 h-24 bg-[#DC2626]/5 rounded-full blur-2xl group-hover:bg-[#DC2626]/10 transition-colors" />
+            <div className="absolute -top-4 -right-4 w-24 h-24 bg-[#FF5A1F]/5 rounded-full blur-2xl group-hover:bg-[#FF5A1F]/10 transition-colors" />
             
             <div className="flex flex-col items-center text-center relative z-10">
-              <div className="w-16 h-16 bg-[#DC2626]/10 dark:bg-[#DC2626]/20 rounded-full flex items-center justify-center mb-4 transition-transform group-hover:scale-110 duration-300">
-                <Star className="w-8 h-8 text-[#DC2626] fill-[#DC2626]" />
+              <div className="w-16 h-16 bg-[#FF5A1F]/10 dark:bg-[#FF5A1F]/20 rounded-full flex items-center justify-center mb-4 transition-transform group-hover:scale-110 duration-300">
+                <Star className="w-8 h-8 text-[#FF5A1F] fill-[#FF5A1F]" />
               </div>
               <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
                 {isLocalRated ? "Feedback Received" : "Enjoyed your food?"}
@@ -2446,7 +2446,7 @@ export default function OrderTracking() {
                 className={`w-full max-w-[200px] font-bold h-12 rounded-xl border-none shadow-lg transition-all duration-150 ${
                   isLocalRated
                     ? "bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed shadow-none"
-                    : "bg-[#DC2626] hover:bg-[#991B1B] text-white shadow-[#DC2626]/20"
+                    : "bg-[#FF5A1F] hover:bg-[#E64A0F] text-white shadow-[#FF5A1F]/20"
                 }`}
               >
                 {isLocalRated ? "Submitted" : "Give Rating"}
@@ -2727,7 +2727,7 @@ export default function OrderTracking() {
                 whileTap={{ scale: 0.9 }}
                 title="Get Directions"
               >
-                <Navigation className="w-5 h-5 text-[#DC2626]" />
+                <Navigation className="w-5 h-5 text-[#FF5A1F]" />
               </motion.button>
               <motion.button
                 className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center shadow-sm"
@@ -2735,7 +2735,7 @@ export default function OrderTracking() {
                 whileTap={{ scale: 0.9 }}
                 title="Call Restaurant"
               >
-                <Phone className="w-5 h-5 text-[#DC2626]" />
+                <Phone className="w-5 h-5 text-[#FF5A1F]" />
               </motion.button>
             </div>
           </div>
@@ -2916,9 +2916,9 @@ export default function OrderTracking() {
             {/* Delivery Instructions Section */}
             {order?.note && (
               <div className="bg-orange-50/50 rounded-xl p-4 border border-orange-100 flex gap-3">
-                <MessageSquare className="w-5 h-5 text-[#DC2626] shrink-0 mt-0.5" />
+                <MessageSquare className="w-5 h-5 text-[#FF5A1F] shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-xs text-[#DC2626] dark:text-red-400 font-bold uppercase tracking-wider mb-1">Delivery Instructions</p>
+                  <p className="text-xs text-[#FF5A1F] dark:text-red-400 font-bold uppercase tracking-wider mb-1">Delivery Instructions</p>
                   <p className="text-sm text-gray-800 leading-relaxed font-medium capitalize">
                     {order.note}
                   </p>
@@ -3048,12 +3048,12 @@ export default function OrderTracking() {
               value={deliveryInstructions}
               onChange={(e) => setDeliveryInstructions(e.target.value)}
               placeholder="E.g. Ring the doorbell, leave at the front desk..."
-              className="min-h-[120px] resize-none border-gray-200 focus:ring-[#DC2626] rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 text-base"
+              className="min-h-[120px] resize-none border-gray-200 focus:ring-[#FF5A1F] rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 text-base"
             />
             <Button 
               onClick={handleUpdateInstructions} 
               disabled={isUpdatingInstructions}
-              className="w-full bg-[#DC2626] hover:bg-[#B91C1C] text-white font-bold h-12 rounded-xl border-none transition-colors"
+              className="w-full bg-[#FF5A1F] hover:bg-[#E64A0F] text-white font-bold h-12 rounded-xl border-none transition-colors"
             >
               {isUpdatingInstructions ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Save Instructions"}
             </Button>
@@ -3066,7 +3066,7 @@ export default function OrderTracking() {
         <DialogContent className="sm:max-w-md w-[95vw] rounded-3xl p-6 border-0 shadow-2xl bg-white dark:bg-[#1a1a1a] max-h-[90vh] overflow-y-auto">
           <DialogHeader className="mb-2">
             <DialogTitle className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-              <Star className="w-6 h-6 text-[#DC2626] fill-[#DC2626]" />
+              <Star className="w-6 h-6 text-[#FF5A1F] fill-[#FF5A1F]" />
               Rate your Experience
             </DialogTitle>
           </DialogHeader>
@@ -3143,7 +3143,7 @@ export default function OrderTracking() {
             <Button
               onClick={handleSubmitRating}
               disabled={submittingRating || selectedRestaurantRating === null || (hasDeliveryPartner && selectedDeliveryRating === null)}
-              className="w-full bg-[#DC2626] hover:bg-[#991B1B] text-white font-bold h-14 rounded-2xl shadow-lg mt-4"
+              className="w-full bg-[#FF5A1F] hover:bg-[#E64A0F] text-white font-bold h-14 rounded-2xl shadow-lg mt-4"
             >
               {submittingRating ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Submit Feedback"}
             </Button>

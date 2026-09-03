@@ -153,7 +153,7 @@ export function ImageCropper({ isOpen, onClose, imageFile, onCropComplete }) {
         </div>
         <div className="p-4 bg-white dark:bg-[#1a1a1a] flex gap-3 justify-end">
           <Button variant="outline" onClick={onClose} className="rounded-xl">Cancel</Button>
-          <Button onClick={handleSave} className="rounded-xl bg-[#DC2626] hover:bg-[#991B1B] text-white">Save</Button>
+          <Button onClick={handleSave} className="rounded-xl bg-[#FF5A1F] hover:bg-[#E64A0F] text-white">Save</Button>
         </div>
       </DialogContent>
     </Dialog>

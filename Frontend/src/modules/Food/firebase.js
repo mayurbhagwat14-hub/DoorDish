@@ -61,14 +61,29 @@ export function getGoogleAuthProvider() {
  */
 export function ensureFirebaseInitialized(options = {}) {
   const { enableAuth = false, enableRealtimeDb = true } = options;
-  const firebaseApp = initializeBaseApp();
-
-  if (enableAuth) {
-    getFirebaseAuth();
+  let firebaseApp = null;
+  try {
+    firebaseApp = initializeBaseApp();
+  } catch (e) {
+    console.warn("Firebase app initialization failed:", e?.message);
+    return null;
   }
 
-  if (enableRealtimeDb && !firebaseRealtimeDb) {
-    firebaseRealtimeDb = getDatabase(firebaseApp);
+  if (enableAuth) {
+    try {
+      getFirebaseAuth();
+    } catch (e) {
+      console.warn("Firebase auth initialization failed:", e?.message);
+    }
+  }
+
+  if (enableRealtimeDb && !firebaseRealtimeDb && firebaseApp) {
+    try {
+      firebaseRealtimeDb = getDatabase(firebaseApp);
+    } catch (e) {
+      console.warn("Firebase Realtime DB initialization failed:", e?.message);
+      firebaseRealtimeDb = null;
+    }
   }
   
   return firebaseApp;

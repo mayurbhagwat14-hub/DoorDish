@@ -53,20 +53,31 @@ export function validateCalculateOrderDto(body) {
         restaurantId: z.string().optional(),
         deliveryAddress: z
             .object({
+                label: z.string().optional(),
+                name: z.string().optional(),
+                fullName: z.string().optional(),
+                street: z.string().optional(),
+                additionalDetails: z.string().optional(),
+                city: z.string().optional(),
+                state: z.string().optional(),
+                zipCode: z.string().optional(),
+                phone: z.string().optional(),
                 location: z
                     .object({
                         type: z.literal('Point').optional(),
                         coordinates: z.tuple([z.number(), z.number()]).optional()
                     })
+                    .passthrough()
                     .optional()
             })
+            .passthrough()
             .optional(),
         deliveryAddressId: z.string().optional(),
         zoneId: z.string().optional(),
         couponCode: z.string().nullable().optional(),
         deliveryFleet: z.string().optional(),
         orderType: z.enum(['delivery', 'dining', 'takeaway']).optional().default('delivery')
-    }).superRefine((data, ctx) => {
+    }).passthrough().superRefine((data, ctx) => {
         if (data.useCart === false && (!data.items || data.items.length === 0)) {
             ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'At least one item required', path: ['items'] });
         }

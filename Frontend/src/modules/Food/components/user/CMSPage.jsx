@@ -170,7 +170,7 @@ export default function CMSPage({
                 prose-headings:font-black prose-headings:text-gray-900 dark:prose-headings:text-white
                 prose-p:text-base prose-p:font-medium prose-p:text-gray-600 dark:prose-p:text-gray-300 prose-p:leading-relaxed
                 prose-strong:font-black prose-strong:text-gray-900 dark:prose-strong:text-white
-                prose-a:text-[#CB202D] dark:prose-a:text-[#DC2626]
+                prose-a:text-[#CB202D] dark:prose-a:text-[#FF5A1F]
                 prose-li:text-base prose-li:font-medium prose-li:text-gray-600 dark:prose-li:text-gray-300"
               dangerouslySetInnerHTML={{ __html: pageData.content }}
             />

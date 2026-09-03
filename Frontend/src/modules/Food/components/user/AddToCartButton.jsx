@@ -39,11 +39,11 @@ export default function AddToCartButton({ item, className = "" }) {
   if (inCart) {
     return (
       <div className={`flex items-center gap-2 ${className}`} onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
-        <div className="flex items-center gap-1 bg-[#DC2626] text-white rounded-md shadow-sm">
+        <div className="flex items-center gap-1 bg-[#FF5A1F] text-white rounded-md shadow-sm">
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-6 text-white hover:bg-[#991B1B] hover:text-white"
+            className="h-8 w-6 text-white hover:bg-[#E64A0F] hover:text-white"
             onClick={handleDecrease}
           >
             <Minus className="h-4 w-4" />
@@ -54,7 +54,7 @@ export default function AddToCartButton({ item, className = "" }) {
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-6 text-white hover:bg-[#991B1B] hover:text-white"
+            className="h-8 w-6 text-white hover:bg-[#E64A0F] hover:text-white"
             onClick={handleIncrease}
           >
             <Plus className="h-4 w-4" />
@@ -68,7 +68,7 @@ export default function AddToCartButton({ item, className = "" }) {
     <Button
       size="sm"
       onClick={handleAddToCart}
-      className="bg-[#DC2626] hover:bg-[#991B1B] text-white font-bold shadow-md transition-all active:scale-95"
+      className="bg-[#FF5A1F] hover:bg-[#E64A0F] text-white font-bold shadow-md transition-all active:scale-95"
     >
       Add to Cart
     </Button>

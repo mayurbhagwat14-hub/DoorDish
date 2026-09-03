@@ -1010,8 +1010,8 @@ export default function PageNavbar({
 
   const isReddish = variant === "reddish"
   const isTransparent = variant === "transparent"
-  const finalTextColorClass = (isReddish || isTransparent) ? "text-[#1a1a1a]" : (textColor === "white" ? "text-white" : "text-[#DC2626]")
-  const finalIconColor = (isReddish || isTransparent) ? "text-[#1a1a1a]" : (textColor === "white" ? "text-white" : "text-[#DC2626]")
+  const finalTextColorClass = (isReddish || isTransparent) ? "text-[#1a1a1a]" : (textColor === "white" ? "text-white" : "text-[#FF5A1F]")
+  const finalIconColor = (isReddish || isTransparent) ? "text-[#1a1a1a]" : (textColor === "white" ? "text-white" : "text-[#FF5A1F]")
   
   const initials = useMemo(() => {
     if (!userProfile) return ""
@@ -1104,7 +1104,7 @@ export default function PageNavbar({
                 className="h-8 w-8 sm:h-9 sm:w-9 rounded-full p-0 hover:opacity-80 transition-opacity"
                 title="Wallet"
               >
-                <div className={`h-full w-full rounded-full ${(isReddish || isTransparent) ? (isTransparent ? "bg-gradient-to-br from-[#FF4D4D] via-[#DC2626] to-[#991B1B] shadow-sm" : "bg-white shadow-sm") : "bg-white/10"} flex items-center justify-center border ${(isReddish || isTransparent) ? (isTransparent ? "border-white/10" : "border-gray-200/50") : "border-white/20"}`}>
+                <div className={`h-full w-full rounded-full ${(isReddish || isTransparent) ? (isTransparent ? "bg-gradient-to-br from-[#FF4D4D] via-[#FF5A1F] to-[#E64A0F] shadow-sm" : "bg-white shadow-sm") : "bg-white/10"} flex items-center justify-center border ${(isReddish || isTransparent) ? (isTransparent ? "border-white/10" : "border-gray-200/50") : "border-white/20"}`}>
                   <Wallet className={`h-4.5 w-4.5 sm:h-5 sm:w-5 ${isTransparent ? "text-white" : finalIconColor}`} strokeWidth={2.5} />
                 </div>
               </Button>
@@ -1123,7 +1123,7 @@ export default function PageNavbar({
                   <ShoppingCart className={`h-5 w-5 sm:h-6 sm:w-6 ${finalIconColor}`} strokeWidth={2.5} />
                 </div>
                 {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-[#DC2626] text-white text-[10px] font-bold h-4 w-4 sm:h-5 sm:w-5 rounded-full flex items-center justify-center border-2 border-white dark:border-[#1a1a1a]">
+                  <span className="absolute -top-1 -right-1 bg-[#FF5A1F] text-white text-[10px] font-bold h-4 w-4 sm:h-5 sm:w-5 rounded-full flex items-center justify-center border-2 border-white dark:border-[#1a1a1a]">
                     {cartCount > 99 ? "99+" : cartCount}
                   </span>
                 )}
@@ -1148,7 +1148,7 @@ export default function PageNavbar({
                   alt="Profile" 
                   className="object-cover"
                 />
-                <AvatarFallback className="bg-gradient-to-br from-[#DC2626] to-[#991B1B] text-white font-bold text-sm uppercase">
+                <AvatarFallback className="bg-gradient-to-br from-[#FF5A1F] to-[#E64A0F] text-white font-bold text-sm uppercase">
                   <img src="/assets/images/profile_avatar.webp" alt="Profile" className="object-cover w-full h-full" />
                 </AvatarFallback>
               </Avatar>

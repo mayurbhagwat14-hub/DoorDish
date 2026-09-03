@@ -2424,7 +2424,7 @@ export default function Cart() {
           <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-1">Your cart is empty</h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 text-center">Add items from a restaurant to start a new order</p>
           <Link to="/user">
-            <Button className="bg-[#DC2626] hover:bg-[#991B1B] text-white">Browse Restaurants</Button>
+            <Button className="bg-[#FF5A1F] hover:bg-[#E64A0F] text-white">Browse Restaurants</Button>
           </Link>
         </div>
       </AnimatedPage>
@@ -2573,19 +2573,19 @@ export default function Cart() {
                           </div>
 
                           <div className="flex flex-col items-end gap-2.5 flex-shrink-0">
-                            <div className="flex items-center border border-[#DC2626]/30 dark:border-[#DC2626]/40 rounded-lg overflow-hidden bg-white dark:bg-gray-900 shadow-sm">
+                            <div className="flex items-center border border-[#FF5A1F]/30 dark:border-[#FF5A1F]/40 rounded-lg overflow-hidden bg-white dark:bg-gray-900 shadow-sm">
                               <button
                                 onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                className="px-2.5 py-1.5 hover:bg-[#DC2626]/5 text-[#DC2626] transition-colors"
+                                className="px-2.5 py-1.5 hover:bg-[#FF5A1F]/5 text-[#FF5A1F] transition-colors"
                               >
                                 <Minus className="w-3.5 h-3.5" />
                               </button>
-                              <span className="px-2 text-sm md:text-base font-black text-[#DC2626] min-w-[28px] text-center">
+                              <span className="px-2 text-sm md:text-base font-black text-[#FF5A1F] min-w-[28px] text-center">
                                 {item.quantity}
                               </span>
                               <button
                                 onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                className="px-2.5 py-1.5 hover:bg-[#DC2626]/5 text-[#DC2626] transition-colors"
+                                className="px-2.5 py-1.5 hover:bg-[#FF5A1F]/5 text-[#FF5A1F] transition-colors"
                               >
                                 <Plus className="w-3.5 h-3.5" />
                               </button>
@@ -2606,7 +2606,7 @@ export default function Cart() {
                 {/* Add more items */}
                 <button
                   onClick={handleBack}
-                  className="flex items-center gap-2 mt-4 md:mt-6 text-[#DC2626] dark:text-[#DC2626]"
+                  className="flex items-center gap-2 mt-4 md:mt-6 text-[#FF5A1F] dark:text-[#FF5A1F]"
                 >
                   <Plus className="h-4 w-4 md:h-5 md:w-5" />
                   <span className="text-sm md:text-base font-medium">Add more items</span>
@@ -2634,7 +2634,7 @@ export default function Cart() {
                     value={restaurantNote}
                     onChange={(e) => setRestaurantNote(e.target.value)}
                     placeholder="Eg. Don't add onions, make it extra spicy, etc."
-                     className="w-full border border-gray-200 dark:border-gray-700 rounded-lg md:rounded-xl p-3 md:p-4 text-sm md:text-base resize-none h-20 md:h-24 focus:outline-none focus:border-[#DC2626] dark:focus:border-[#DC2626] bg-white dark:bg-[#0a0a0a] text-gray-900 dark:text-gray-100"
+                     className="w-full border border-gray-200 dark:border-gray-700 rounded-lg md:rounded-xl p-3 md:p-4 text-sm md:text-base resize-none h-20 md:h-24 focus:outline-none focus:border-[#FF5A1F] dark:focus:border-[#FF5A1F] bg-white dark:bg-[#0a0a0a] text-gray-900 dark:text-gray-100"
                     maxLength={240}
                   />
                   <div className="mt-2 flex items-center justify-between gap-3">
@@ -2653,7 +2653,7 @@ export default function Cart() {
                 <div className="bg-white dark:bg-[#1a1a1a] px-4 md:px-6 py-5 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800">
                   <div className="flex items-center gap-2 md:gap-3 mb-3 md:mb-4">
                     <div className="w-6 h-6 md:w-8 md:h-8 bg-gray-100 dark:bg-gray-800 rounded flex items-center justify-center">
-                       <Sparkles className="h-4 w-4 md:h-5 md:w-5 text-[#DC2626]" />
+                       <Sparkles className="h-4 w-4 md:h-5 md:w-5 text-[#FF5A1F]" />
                     </div>
                     <span className="text-sm md:text-base font-semibold text-gray-800 dark:text-gray-200">Complete your meal with</span>
                   </div>
@@ -2715,9 +2715,9 @@ export default function Cart() {
                                   restaurantId: cartRestaurantId
                                 });
                               }}
-                               className="absolute bottom-1 md:bottom-2 right-1 md:right-2 w-6 h-6 md:w-7 md:h-7 bg-white border border-[#DC2626] rounded flex items-center justify-center shadow-sm hover:bg-[#DC262605] dark:hover:bg-[#DC262610] transition-colors"
+                               className="absolute bottom-1 md:bottom-2 right-1 md:right-2 w-6 h-6 md:w-7 md:h-7 bg-white border border-[#FF5A1F] rounded flex items-center justify-center shadow-sm hover:bg-[#FF5A1F05] dark:hover:bg-[#FF5A1F10] transition-colors"
                             >
-                               <Plus className="h-3.5 w-3.5 md:h-4 md:w-4 text-[#DC2626]" />
+                               <Plus className="h-3.5 w-3.5 md:h-4 md:w-4 text-[#FF5A1F]" />
                             </button>
                           </div>
                           <p className="text-xs md:text-sm font-medium text-gray-800 dark:text-gray-200 mt-1.5 md:mt-2 line-clamp-2 leading-tight">{addon.name}</p>
@@ -2763,7 +2763,7 @@ export default function Cart() {
                             }
                             setShowCouponSheet(true)
                           }}
-                          className={`w-full py-2.5 px-4 bg-gray-50/50 hover:bg-gray-50 dark:bg-gray-900/30 dark:hover:bg-gray-900/50 border border-dashed border-gray-200 dark:border-gray-800 rounded-xl text-xs font-bold text-[#DC2626] flex items-center justify-between transition-all active:scale-[0.98] mt-2.5 ${
+                          className={`w-full py-2.5 px-4 bg-gray-50/50 hover:bg-gray-50 dark:bg-gray-900/30 dark:hover:bg-gray-900/50 border border-dashed border-gray-200 dark:border-gray-800 rounded-xl text-xs font-bold text-[#FF5A1F] flex items-center justify-between transition-all active:scale-[0.98] mt-2.5 ${
                             isCartUnavailable ? "opacity-60 grayscale pointer-events-auto" : ""
                           }`}
                         >
@@ -2791,7 +2791,7 @@ export default function Cart() {
                           }
                           setShowCouponSheet(true)
                         }}
-                        className={`w-full py-2.5 px-4 bg-gray-50/50 hover:bg-gray-50 dark:bg-gray-900/30 dark:hover:bg-gray-900/50 border border-dashed border-gray-200 dark:border-gray-800 rounded-xl text-xs font-bold text-[#DC2626] flex items-center justify-between transition-all active:scale-[0.98] ${
+                        className={`w-full py-2.5 px-4 bg-gray-50/50 hover:bg-gray-50 dark:bg-gray-900/30 dark:hover:bg-gray-900/50 border border-dashed border-gray-200 dark:border-gray-800 rounded-xl text-xs font-bold text-[#FF5A1F] flex items-center justify-between transition-all active:scale-[0.98] ${
                           isCartUnavailable ? "opacity-60 grayscale" : ""
                         }`}
                       >
@@ -2886,7 +2886,7 @@ export default function Cart() {
                           max={new Date(Date.now() + 86400000).toLocaleDateString('en-CA')}
                           value={scheduledDate}
                           onChange={(e) => setScheduledDate(e.target.value)}
-                          className="w-full text-sm p-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-[#0a0a0a] text-gray-800 dark:text-gray-200 focus:outline-none focus:border-[#DC2626]"
+                          className="w-full text-sm p-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-[#0a0a0a] text-gray-800 dark:text-gray-200 focus:outline-none focus:border-[#FF5A1F]"
                         />
                       </div>
                       <div className="flex-1">
@@ -2896,7 +2896,7 @@ export default function Cart() {
                             <select
                               value={scheduledTime}
                               onChange={(e) => setScheduledTime(e.target.value)}
-                               className="w-full text-sm p-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-[#0a0a0a] text-gray-800 dark:text-gray-200 focus:outline-none focus:border-[#DC2626] appearance-none pr-8"
+                               className="w-full text-sm p-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-[#0a0a0a] text-gray-800 dark:text-gray-200 focus:outline-none focus:border-[#FF5A1F] appearance-none pr-8"
                             >
                               {availableTimeSlots.map(slot => (
                                 <option key={slot.value} value={slot.value}>{slot.label}</option>
@@ -2920,8 +2920,8 @@ export default function Cart() {
               <div className="bg-white dark:bg-[#1a1a1a] px-4 md:px-6 py-5 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800">
                 {orderType === "takeaway" ? (
                   <div className="flex items-start gap-4">
-                    <div className="bg-[#DC262605] dark:bg-[#DC262610] p-3.5 rounded-2xl border border-[#DC262615] dark:border-[#DC262630]">
-                      <ShoppingBag className="h-6 w-6 text-[#DC2626]" />
+                    <div className="bg-[#FF5A1F05] dark:bg-[#FF5A1F10] p-3.5 rounded-2xl border border-[#FF5A1F15] dark:border-[#FF5A1F30]">
+                      <ShoppingBag className="h-6 w-6 text-[#FF5A1F]" />
                     </div>
                     <div className="flex-1">
                       <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest leading-none">PICKUP FROM</h3>
@@ -2942,8 +2942,8 @@ export default function Cart() {
                 ) : (
                   <div className="flex items-start justify-between w-full text-left">
                     <div className="flex items-start gap-4 flex-1">
-                       <div className="bg-[#DC262605] dark:bg-[#DC262610] p-2 rounded-xl mt-0.5">
-                         <MapPin className="h-5 w-5 text-[#DC2626]" />
+                       <div className="bg-[#FF5A1F05] dark:bg-[#FF5A1F10] p-2 rounded-xl mt-0.5">
+                         <MapPin className="h-5 w-5 text-[#FF5A1F]" />
                        </div>
                       <div className="flex-1">
                           <div className="flex flex-col">
@@ -2968,7 +2968,7 @@ export default function Cart() {
                                   </p>
                                 )}
                                 <div className="mt-1 flex items-center gap-2">
-                                   <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] md:text-[11px] font-semibold bg-[#DC262605] text-[#DC2626] dark:bg-[#DC262610] dark:text-[#DC2626] border border-[#DC2626]/30">
+                                   <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] md:text-[11px] font-semibold bg-[#FF5A1F05] text-[#FF5A1F] dark:bg-[#FF5A1F10] dark:text-[#FF5A1F] border border-[#FF5A1F]/30">
                                      GPS enabled
                                    </span>
                                 </div>
@@ -2980,7 +2980,7 @@ export default function Cart() {
                             )}
                           </div>
                           {!hasSavedAddress && (
-                             <p className="text-sm text-[#DC2626] mt-2 font-medium">
+                             <p className="text-sm text-[#FF5A1F] mt-2 font-medium">
                                Select a delivery location to continue
                              </p>
                           )}
@@ -3023,7 +3023,7 @@ export default function Cart() {
                                       handleSelectSavedAddress(address)
                                     }}
                                      className={`w-full text-left rounded-xl border-2 p-3 transition-colors ${isSelected
-                                       ? "border-[#DC2626] bg-[#DC262605] dark:bg-[#DC2626]/5"
+                                       ? "border-[#FF5A1F] bg-[#FF5A1F05] dark:bg-[#FF5A1F]/5"
                                        : "border-slate-100 dark:border-gray-800 hover:border-slate-200"
                                        }`}
                                   >
@@ -3037,7 +3037,7 @@ export default function Cart() {
                                         </p>
                                       </div>
                                       {isSelected && (
-                                         <span className="text-[10px] bg-[#DC2626] text-white px-2 py-0.5 rounded uppercase font-bold tracking-wider whitespace-nowrap">
+                                         <span className="text-[10px] bg-[#FF5A1F] text-white px-2 py-0.5 rounded uppercase font-bold tracking-wider whitespace-nowrap">
                                            Selected
                                          </span>
                                       )}
@@ -3052,7 +3052,7 @@ export default function Cart() {
                     <button
                       type="button"
                        onClick={openLocationSelector}
-                       className="p-2 text-[#DC2626] bg-[#DC262605] rounded-full hover:bg-[#DC262610] transition-colors dark:bg-[#DC262615] dark:hover:bg-[#DC262620]"
+                       className="p-2 text-[#FF5A1F] bg-[#FF5A1F05] rounded-full hover:bg-[#FF5A1F10] transition-colors dark:bg-[#FF5A1F15] dark:hover:bg-[#FF5A1F20]"
                        aria-label="Open location selector"
                      >
                        <ChevronRight className="h-5 w-5" />
@@ -3078,7 +3078,7 @@ export default function Cart() {
                   <button
                     type="button"
                     onClick={() => setIsEditingRecipient((prev) => !prev)}
-                     className="text-[#DC2626] text-xs md:text-sm font-semibold whitespace-nowrap"
+                     className="text-[#FF5A1F] text-xs md:text-sm font-semibold whitespace-nowrap"
                   >
                     {isEditingRecipient ? "Done" : "Change"}
                   </button>
@@ -3100,7 +3100,7 @@ export default function Cart() {
                           }))
                         }
                         placeholder="Enter recipient name"
-                         className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#111111] px-3 py-2.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-[#DC2626]"
+                         className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#111111] px-3 py-2.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-[#FF5A1F]"
                       />
                     </div>
                     <div>
@@ -3117,7 +3117,7 @@ export default function Cart() {
                           }))
                         }
                         placeholder="Enter recipient phone"
-                         className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#111111] px-3 py-2.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-[#DC2626]"
+                         className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#111111] px-3 py-2.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-[#FF5A1F]"
                       />
                     </div>
                     <p className="text-[11px] text-gray-500 dark:text-gray-400">
@@ -3133,8 +3133,8 @@ export default function Cart() {
                   className="flex items-center justify-between w-full group focus:outline-none"
                 >
                   <div className="flex items-center gap-3">
-                    <FileText className="h-5 w-5 text-gray-700 dark:text-gray-300 group-hover:text-[#DC2626] transition-colors" />
-                    <span className="text-base text-gray-900 dark:text-gray-100 font-black tracking-tight group-hover:text-[#DC2626] transition-colors">Bill Details</span>
+                    <FileText className="h-5 w-5 text-gray-700 dark:text-gray-300 group-hover:text-[#FF5A1F] transition-colors" />
+                    <span className="text-base text-gray-900 dark:text-gray-100 font-black tracking-tight group-hover:text-[#FF5A1F] transition-colors">Bill Details</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="text-right">
@@ -3146,8 +3146,8 @@ export default function Cart() {
                         )}
                       </p>
                     </div>
-                    <div className="w-7 h-7 rounded-full bg-slate-50 dark:bg-gray-800 group-hover:bg-[#DC2626]/5 flex items-center justify-center transition-all border border-slate-100 dark:border-gray-700 group-hover:border-[#DC2626]/20">
-                      <ChevronRight className={`h-4 w-4 text-gray-500 group-hover:text-[#DC2626] transition-transform duration-300 ${showBillDetails ? 'rotate-90' : 'rotate-0'}`} />
+                    <div className="w-7 h-7 rounded-full bg-slate-50 dark:bg-gray-800 group-hover:bg-[#FF5A1F]/5 flex items-center justify-center transition-all border border-slate-100 dark:border-gray-700 group-hover:border-[#FF5A1F]/20">
+                      <ChevronRight className={`h-4 w-4 text-gray-500 group-hover:text-[#FF5A1F] transition-transform duration-300 ${showBillDetails ? 'rotate-90' : 'rotate-0'}`} />
                     </div>
                   </div>
                 </button>
@@ -3169,7 +3169,7 @@ export default function Cart() {
                       <>
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-600 dark:text-gray-400">Delivery Fee</span>
-                           <span className={deliveryFee === 0 ? "text-[#DC2626] font-medium" : "text-gray-800 dark:text-gray-200 font-medium"}>
+                           <span className={deliveryFee === 0 ? "text-[#FF5A1F] font-medium" : "text-gray-800 dark:text-gray-200 font-medium"}>
                              {loadingPricing ? (
                                <span className="inline-block h-4 w-12 rounded bg-gray-200 dark:bg-gray-700 animate-pulse align-middle" />
                              ) : (
@@ -3184,10 +3184,10 @@ export default function Cart() {
                         )}
                         {Number((pricing?.freeDeliveryUpTo ?? feeSettings.freeDeliveryUpTo) || 0) > 0 && (
                           <div className="-mt-1.5">
-                            <div className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#DC2626]/10 via-[#DC2626]/20 to-[#DC2626]/10 text-[#DC2626] border border-[#DC2626]/25 px-2.5 py-1 text-[11px] font-semibold shadow-sm">
+                            <div className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#FF5A1F]/10 via-[#FF5A1F]/20 to-[#FF5A1F]/10 text-[#FF5A1F] border border-[#FF5A1F]/25 px-2.5 py-1 text-[11px] font-semibold shadow-sm">
                               <Sparkles className="h-3 w-3" />
                               <span>Free delivery at</span>
-                              <span className="text-[#991B1B]">
+                              <span className="text-[#E64A0F]">
                                 {RUPEE_SYMBOL}{Number((pricing?.freeDeliveryUpTo ?? feeSettings.freeDeliveryUpTo) || 0).toFixed(0)}+
                               </span>
                             </div>
@@ -3222,11 +3222,11 @@ export default function Cart() {
                       </div>
                     )}
                     {discount > 0 && (
-                       <div className="flex justify-between text-sm text-[#DC2626] font-medium">
+                       <div className="flex justify-between text-sm text-[#FF5A1F] font-medium">
                          <span>Coupon Discount</span>
                          <span>
                            {loadingPricing ? (
-                             <span className="inline-block h-4 w-12 rounded bg-[#DC2626]/20 animate-pulse align-middle" />
+                             <span className="inline-block h-4 w-12 rounded bg-[#FF5A1F]/20 animate-pulse align-middle" />
                            ) : (
                              `-${RUPEE_SYMBOL}${discount.toFixed(2)}`
                            )}
@@ -3256,13 +3256,13 @@ export default function Cart() {
               onClick={() => setShowPaymentSheet(true)}
             >
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-[#DC262610] dark:bg-[#DC262620] flex items-center justify-center flex-shrink-0">
+                <div className="w-9 h-9 rounded-lg bg-[#FF5A1F10] dark:bg-[#FF5A1F20] flex items-center justify-center flex-shrink-0">
                    {selectedPaymentMethod === "wallet" ? (
-                    <Wallet className="h-5 w-5 text-[#DC2626]" />
+                    <Wallet className="h-5 w-5 text-[#FF5A1F]" />
                   ) : selectedPaymentMethod === "razorpay" ? (
-                    <Zap className="h-5 w-5 text-[#DC2626]" />
+                    <Zap className="h-5 w-5 text-[#FF5A1F]" />
                   ) : (
-                    <Banknote className="h-5 w-5 text-[#DC2626]" />
+                    <Banknote className="h-5 w-5 text-[#FF5A1F]" />
                   )}
                 </div>
                 <div className="leading-tight">
@@ -3282,7 +3282,7 @@ export default function Cart() {
                 </div>
               </div>
 
-               <div className="flex items-center gap-0.5 text-[#DC2626] font-bold text-[11px] uppercase tracking-widest bg-[#DC262605] dark:bg-[#DC262610] px-2.5 py-1 rounded-lg">
+               <div className="flex items-center gap-0.5 text-[#FF5A1F] font-bold text-[11px] uppercase tracking-widest bg-[#FF5A1F05] dark:bg-[#FF5A1F10] px-2.5 py-1 rounded-lg">
                 CHANGE <ChevronRight className="h-3.5 w-3.5" />
               </div>
             </div>
@@ -3291,7 +3291,7 @@ export default function Cart() {
             <button
               onClick={handlePlaceOrder}
               disabled={isPlacingOrder || loadingPricing || isCartZoneMismatch || (selectedPaymentMethod === "wallet" && walletBalance < total) || isRestaurantClosed}
-              className="w-full bg-gradient-to-r from-[#DC2626] to-[#991B1B] hover:from-[#991B1B] hover:to-[#7F1D1D] text-white px-6 h-12 md:h-14 rounded-2xl font-black shadow-lg shadow-[#DC2626]/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-between transition-all active:scale-[0.98] border-b-4 border-red-900/30"
+              className="w-full bg-gradient-to-r from-[#FF5A1F] to-[#E64A0F] hover:from-[#E64A0F] hover:to-[#7F1D1D] text-white px-6 h-12 md:h-14 rounded-2xl font-black shadow-lg shadow-[#FF5A1F]/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-between transition-all active:scale-[0.98] border-b-4 border-red-900/30"
             >
               {(selectedPaymentMethod === "razorpay" || selectedPaymentMethod === "wallet" || selectedPaymentMethod === "cash") && (
                 <div className="text-left flex flex-col justify-center border-r-[1.5px] border-white/20 pr-4">
@@ -3382,7 +3382,7 @@ export default function Cart() {
                   <div className="relative mb-6">
                     <div className="h-2.5 bg-gray-200 rounded-full overflow-hidden">
                       <div
-                         className="h-full bg-gradient-to-r from-[#DC2626] to-[#991B1B] rounded-full transition-all duration-100 ease-linear"
+                         className="h-full bg-gradient-to-r from-[#FF5A1F] to-[#E64A0F] rounded-full transition-all duration-100 ease-linear"
                         style={{
                            width: `${orderProgress}%`,
                            boxShadow: '0 0 10px rgba(126, 56, 102, 0.5)'
@@ -3408,7 +3408,7 @@ export default function Cart() {
                     }}
                     className="w-full text-right"
                   >
-                    <span className="text-[#DC2626] font-semibold text-base hover:text-[#991B1B] transition-colors">
+                    <span className="text-[#FF5A1F] font-semibold text-base hover:text-[#E64A0F] transition-colors">
                       CANCEL
                     </span>
                   </button>
@@ -3435,7 +3435,7 @@ export default function Cart() {
                     style={{
                       left: `${Math.random() * 100}%`,
                       top: `-10%`,
-                      backgroundColor: ['#DC2626', '#3b82f6', '#f59e0b', '#ef4444', '#991B1B', '#ec4899'][Math.floor(Math.random() * 6)],
+                      backgroundColor: ['#FF5A1F', '#3b82f6', '#f59e0b', '#ef4444', '#E64A0F', '#ec4899'][Math.floor(Math.random() * 6)],
                       animation: `confettiFall ${2 + Math.random() * 2}s linear ${Math.random() * 2}s infinite`,
                       transform: `rotate(${Math.random() * 360}deg)`,
                     }}
@@ -3526,7 +3526,7 @@ export default function Cart() {
                   className="mt-12 text-center"
                   style={{ animation: 'slideUp 0.5s ease-out 0.8s both' }}
                 >
-                  <h3 className="text-3xl font-bold text-[#DC2626] dark:text-[#a65d8a] mb-2">Order Placed!</h3>
+                  <h3 className="text-3xl font-bold text-[#FF5A1F] dark:text-[#a65d8a] mb-2">Order Placed!</h3>
                   <p className="text-gray-600 dark:text-gray-300">
                     {orderType === "takeaway"
                       ? "Your delicious food is being prepared for pickup"
@@ -3537,7 +3537,7 @@ export default function Cart() {
                 {/* Action Button */}
                  <button
                   onClick={handleGoToOrders}
-                  className="mt-10 bg-[#DC2626] hover:bg-[#991B1B] text-white font-semibold py-4 px-12 rounded-xl shadow-lg shadow-[#DC2626]/20 dark:shadow-[#DC2626]/40 transition-all hover:shadow-xl hover:scale-105"
+                  className="mt-10 bg-[#FF5A1F] hover:bg-[#E64A0F] text-white font-semibold py-4 px-12 rounded-xl shadow-lg shadow-[#FF5A1F]/20 dark:shadow-[#FF5A1F]/40 transition-all hover:shadow-xl hover:scale-105"
                   style={{ animation: 'slideUp 0.5s ease-out 1s both' }}
                 >
                   Track Your Order
@@ -3611,8 +3611,8 @@ export default function Cart() {
                           name: 'Cash on Delivery',
                           description: 'Pay when order arrives',
                           icon: <Banknote className="w-5 h-5" />,
-                          color: 'bg-orange-50 text-#991B1B dark:bg-orange-900/40 dark:text-orange-400',
-                          selectedColor: 'bg-[#DC2626] text-white',
+                          color: 'bg-orange-50 text-#E64A0F dark:bg-orange-900/40 dark:text-orange-400',
+                          selectedColor: 'bg-[#FF5A1F] text-white',
                           disabled: !isPaymentMethodEnabled("cash"),
                           disabledText: 'COD Disabled',
                           hideWhenDisabled: true
@@ -3627,8 +3627,8 @@ export default function Cart() {
                             }
                           }}
                            className={`w-full flex items-center justify-between p-4 rounded-2xl border-2 transition-all duration-300 group ${selectedPaymentMethod === option.id
-                               ? 'border-[#DC2626] bg-[#DC2626] shadow-lg shadow-[#DC2626]/30'
-                               : 'border-gray-100 dark:border-gray-800/80 bg-white dark:bg-[#222222] hover:border-[#DC2626]/30 dark:hover:border-[#DC2626]/30 shadow-sm'
+                               ? 'border-[#FF5A1F] bg-[#FF5A1F] shadow-lg shadow-[#FF5A1F]/30'
+                               : 'border-gray-100 dark:border-gray-800/80 bg-white dark:bg-[#222222] hover:border-[#FF5A1F]/30 dark:hover:border-[#FF5A1F]/30 shadow-sm'
                              } ${option.disabled ? 'opacity-40 grayscale-[0.8] cursor-not-allowed' : 'cursor-pointer active:scale-[0.98]'}`}
                         >
                           <div className="flex items-center gap-4">
@@ -3681,7 +3681,7 @@ export default function Cart() {
                               ? 'bg-white border-white'
                               : 'border-gray-200 dark:border-gray-700'
                             }`}>
-                             {selectedPaymentMethod === option.id && <Check className="w-3.5 h-3.5 text-[#DC2626]" strokeWidth={4} />}
+                             {selectedPaymentMethod === option.id && <Check className="w-3.5 h-3.5 text-[#FF5A1F]" strokeWidth={4} />}
                            </div>
                         </button>
                       ))}
@@ -3693,11 +3693,11 @@ export default function Cart() {
                     >
                       <div className="flex-shrink-0">
                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">Total Pay</p>
-                         <p className="text-xl font-black text-[#DC2626] tabular-nums">{RUPEE_SYMBOL}{total.toFixed(0)}</p>
+                         <p className="text-xl font-black text-[#FF5A1F] tabular-nums">{RUPEE_SYMBOL}{total.toFixed(0)}</p>
                        </div>
                        <Button
                         onClick={() => setShowPaymentSheet(false)}
-                        className="flex-1 bg-[#DC2626] hover:bg-[#991B1B] text-white h-11 rounded-xl text-sm font-bold shadow-lg shadow-[#DC2626]/20 transition-all active:scale-[0.98]"
+                        className="flex-1 bg-[#FF5A1F] hover:bg-[#E64A0F] text-white h-11 rounded-xl text-sm font-bold shadow-lg shadow-[#FF5A1F]/20 transition-all active:scale-[0.98]"
                       >
                         Confirm Order
                       </Button>
@@ -3831,7 +3831,7 @@ export default function Cart() {
 
                     <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-900/30">
                       <div className="flex items-center gap-3">
-                        <div className="flex-1 bg-white dark:bg-gray-950 rounded-xl px-4 h-11 border border-gray-200 dark:border-gray-800 flex items-center focus-within:border-[#DC2626] focus-within:ring-1 focus-within:ring-[#DC2626]/20 transition-all">
+                        <div className="flex-1 bg-white dark:bg-gray-950 rounded-xl px-4 h-11 border border-gray-200 dark:border-gray-800 flex items-center focus-within:border-[#FF5A1F] focus-within:ring-1 focus-within:ring-[#FF5A1F]/20 transition-all">
                           <input
                             type="text"
                             value={manualCouponCode}
@@ -3843,7 +3843,7 @@ export default function Cart() {
                         <button
                           onClick={handleApplyCouponCode}
                           disabled={isCartUnavailable}
-                          className="h-11 px-5 border border-[#DC2626] text-[#DC2626] rounded-xl text-xs font-black uppercase tracking-widest hover:bg-[#DC262605] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="h-11 px-5 border border-[#FF5A1F] text-[#FF5A1F] rounded-xl text-xs font-black uppercase tracking-widest hover:bg-[#FF5A1F05] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           Apply
                         </button>
@@ -4050,7 +4050,7 @@ export default function Cart() {
                     {/* Apply Button */}
                     <button
                       onClick={handleApplyAutoCoupon}
-                      className="w-full mt-6 h-12 bg-[#DC2626] hover:bg-[#B91C1C] text-white rounded-xl text-sm font-bold uppercase tracking-widest active:scale-95 transition-all shadow-md shadow-[#DC2626]/20 relative z-10 cursor-pointer"
+                      className="w-full mt-6 h-12 bg-[#FF5A1F] hover:bg-[#E64A0F] text-white rounded-xl text-sm font-bold uppercase tracking-widest active:scale-95 transition-all shadow-md shadow-[#FF5A1F]/20 relative z-10 cursor-pointer"
                     >
                       APPLY
                     </button>
@@ -4075,7 +4075,7 @@ export default function Cart() {
                 <div className="flex flex-col items-center gap-4 text-center px-6">
                   <div className="relative">
                     <div className="w-16 h-16 rounded-full border-4 border-gray-200 dark:border-gray-800" />
-                    <div className="absolute inset-0 w-16 h-16 rounded-full border-4 border-t-[#DC2626] dark:border-t-red-500 animate-spin" />
+                    <div className="absolute inset-0 w-16 h-16 rounded-full border-4 border-t-[#FF5A1F] dark:border-t-red-500 animate-spin" />
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 dark:text-white mt-4">
                     Placing Your Order...

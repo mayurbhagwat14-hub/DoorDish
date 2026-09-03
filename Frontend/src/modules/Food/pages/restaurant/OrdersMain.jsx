@@ -727,7 +727,7 @@ function TableBookings() {
               }
               // cancelled/rejected/declined
               return {
-                style: { color: '#B91C1C', backgroundColor: '#FEE2E2', borderColor: '#FCA5A5' },
+                style: { color: '#E64A0F', backgroundColor: '#FEE2E2', borderColor: '#FCA5A5' },
                 text: 'CANCELLED'
               };
             })();
@@ -3864,7 +3864,7 @@ function OrdersMainInner() {
                   type="button"
                   onClick={handleVerifyTakeawayConfirm}
                   disabled={isSubmittingVerifyTakeaway || takeawayOtpInput.length < 4}
-                  className="flex-1 py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider text-white shadow-lg shadow-[#DC2626]/30 transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
+                  className="flex-1 py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider text-white shadow-lg shadow-[#FF5A1F]/30 transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
                   style={{ background: takeawayOtpInput.length < 4 ? '#94a3b8' : 'linear-gradient(135deg, #FA5300, #E54B00)' }}>
                   {isSubmittingVerifyTakeaway ? "Verifying…" : "Complete Order"}
                 </button>

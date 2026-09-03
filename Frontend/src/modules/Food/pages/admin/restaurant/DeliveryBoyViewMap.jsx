@@ -35,53 +35,66 @@ export default function DeliveryBoyViewMap() {
     fetchDeliveryPartnerDirectory()
     loadGoogleMaps()
 
-    const unsubscribeRealtime = subscribeAllDeliveryLocations(
-      (deliveryNode) => {
-        const nextDeliveryBoys = Object.entries(deliveryNode || {})
-          .map(([deliveryId, payload]) => {
-            const location = payload?.location || {}
-            const lat = Number(location?.lat)
-            const lng = Number(location?.lng)
-            const isOnline =
-              location?.isOnline === true ||
-              location?.status === "online" ||
-              location?.status === "busy"
+    let unsubscribeRealtime = null
+    try {
+      unsubscribeRealtime = subscribeAllDeliveryLocations(
+        (deliveryNode) => {
+          const nextDeliveryBoys = Object.entries(deliveryNode || {})
+            .map(([deliveryId, payload]) => {
+              const location = payload?.location || {}
+              const lat = Number(location?.lat)
+              const lng = Number(location?.lng)
+              const isOnline =
+                location?.isOnline === true ||
+                location?.status === "online" ||
+                location?.status === "busy"
 
-            if (!isOnline || !Number.isFinite(lat) || !Number.isFinite(lng)) {
-              return null
-            }
-
-            const meta = deliveryMetaByIdRef.current.get(String(deliveryId)) || {}
-
-            return {
-              _id: String(deliveryId),
-              name: meta.name || meta.fullName || "Delivery Partner",
-              phone: meta.phone || "N/A",
-              availability: {
-                isOnline: true,
-                currentLocation: {
-                  type: "Point",
-                  coordinates: [lng, lat],
-                  heading: Number(location?.heading) || 0,
-                  speed: Number(location?.speed) || 0,
-                  lastUpdate: Number(location?.timestamp || location?.last_updated) || Date.now()
-                },
-                lastLocationUpdate: Number(location?.timestamp || location?.last_updated) || Date.now()
+              if (!isOnline || !Number.isFinite(lat) || !Number.isFinite(lng)) {
+                return null
               }
-            }
-          })
-          .filter(Boolean)
 
-        setDeliveryBoys(nextDeliveryBoys)
-        setLoading(false)
-      },
-      (error) => {
-        debugError("Firebase delivery listener failed:", error)
-      }
-    )
+              const meta = deliveryMetaByIdRef.current.get(String(deliveryId)) || {}
+
+              return {
+                _id: String(deliveryId),
+                name: meta.name || meta.fullName || "Delivery Partner",
+                phone: meta.phone || "N/A",
+                availability: {
+                  isOnline: true,
+                  currentLocation: {
+                    type: "Point",
+                    coordinates: [lng, lat],
+                    heading: Number(location?.heading) || 0,
+                    speed: Number(location?.speed) || 0,
+                    lastUpdate: Number(location?.timestamp || location?.last_updated) || Date.now()
+                  },
+                  lastLocationUpdate: Number(location?.timestamp || location?.last_updated) || Date.now()
+                }
+              }
+            })
+            .filter(Boolean)
+
+          setDeliveryBoys(nextDeliveryBoys)
+          setLoading(false)
+        },
+        (error) => {
+          debugError("Firebase delivery listener failed:", error)
+          setLoading(false)
+        }
+      )
+    } catch (err) {
+      debugError("Realtime tracking subscribe error:", err)
+      setLoading(false)
+    }
 
     return () => {
-      if (typeof unsubscribeRealtime === "function") unsubscribeRealtime()
+      if (typeof unsubscribeRealtime === "function") {
+        try {
+          unsubscribeRealtime()
+        } catch {
+          // ignore
+        }
+      }
     }
   }, [])
 

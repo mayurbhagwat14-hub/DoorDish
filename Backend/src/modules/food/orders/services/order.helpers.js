@@ -42,11 +42,7 @@ export function assertRestaurantDeliversToZone(
   const restaurantZoneId = restaurant?.zoneId ? String(restaurant.zoneId) : "";
   const deliveryZoneId = zoneId ? String(zoneId) : "";
 
-  // Same-zone only: never allow Indore user → Punjab restaurant (or missing zone).
-  if (restaurantZoneId) {
-    if (!deliveryZoneId) {
-      throw new ValidationError("Delivery location is outside this restaurant's service zone");
-    }
+  if (restaurantZoneId && deliveryZoneId) {
     if (restaurantZoneId !== deliveryZoneId) {
       throw new ValidationError("This restaurant does not deliver to your selected location");
     }

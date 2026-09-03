@@ -55,8 +55,8 @@ function PreviewCard({ type, value }) {
       : Math.round((base + (base * num) / 100) * 100) / 100
 
   return (
-    <div className="rounded-xl border border-dashed border-[#DC2626]/40 bg-red-50 px-4 py-3">
-      <p className="text-[11px] font-bold uppercase tracking-wide text-[#DC2626]">Preview</p>
+    <div className="rounded-xl border border-dashed border-[#FF5A1F]/40 bg-red-50 px-4 py-3">
+      <p className="text-[11px] font-bold uppercase tracking-wide text-[#FF5A1F]">Preview</p>
       <p className="mt-1 text-sm text-gray-700">
         Base {RUPEE}
         {base} → Other {RUPEE}
@@ -91,7 +91,7 @@ function RuleEditor({ title, form, setForm, onSave, saving, onClear, canClear })
           onClick={() => setForm((p) => ({ ...p, type: "PERCENTAGE" }))}
           className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold ${
             form.type === "PERCENTAGE"
-              ? "bg-[#DC2626] text-white"
+              ? "bg-[#FF5A1F] text-white"
               : "bg-slate-100 text-slate-600"
           }`}
         >
@@ -102,7 +102,7 @@ function RuleEditor({ title, form, setForm, onSave, saving, onClear, canClear })
           onClick={() => setForm((p) => ({ ...p, type: "FIXED" }))}
           className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold ${
             form.type === "FIXED"
-              ? "bg-[#DC2626] text-white"
+              ? "bg-[#FF5A1F] text-white"
               : "bg-slate-100 text-slate-600"
           }`}
         >
@@ -121,7 +121,7 @@ function RuleEditor({ title, form, setForm, onSave, saving, onClear, canClear })
           step="0.01"
           value={form.value}
           onChange={(e) => setForm((p) => ({ ...p, value: e.target.value }))}
-          className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none focus:border-[#DC2626]"
+          className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none focus:border-[#FF5A1F]"
         />
       </div>
 
@@ -131,7 +131,7 @@ function RuleEditor({ title, form, setForm, onSave, saving, onClear, canClear })
         type="button"
         disabled={saving}
         onClick={onSave}
-        className="h-11 w-full rounded-xl bg-[#DC2626] font-bold text-white hover:bg-[#B91C1C]"
+        className="h-11 w-full rounded-xl bg-[#FF5A1F] font-bold text-white hover:bg-[#E64A0F]"
       >
         {saving ? (
           <span className="inline-flex items-center gap-2">
@@ -194,7 +194,7 @@ function ConfirmBulkModal({ open, count, type, value, onCancel, onConfirm, savin
             type="button"
             onClick={onConfirm}
             disabled={saving}
-            className="rounded-xl bg-[#DC2626] font-bold text-white hover:bg-[#B91C1C]"
+            className="rounded-xl bg-[#FF5A1F] font-bold text-white hover:bg-[#E64A0F]"
           >
             {saving ? (
               <span className="inline-flex items-center gap-2">
@@ -411,7 +411,7 @@ function RestaurantPricingPanel({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by name, ID, or owner"
-            className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-9 text-sm outline-none focus:border-[#DC2626]"
+            className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-9 text-sm outline-none focus:border-[#FF5A1F]"
           />
           {search ? (
             <button
@@ -459,7 +459,7 @@ function RestaurantPricingPanel({
                     checked={allVisibleSelected}
                     onChange={toggleVisibleHeader}
                     aria-label="Select visible restaurants"
-                    className="h-4 w-4 rounded border-slate-300 text-[#DC2626] focus:ring-[#DC2626]"
+                    className="h-4 w-4 rounded border-slate-300 text-[#FF5A1F] focus:ring-[#FF5A1F]"
                   />
                 </th>
                 <th className="px-3 py-3 font-semibold">Restaurant</th>
@@ -494,7 +494,7 @@ function RestaurantPricingPanel({
                           checked={checked}
                           onChange={() => toggleOne(restaurant.id)}
                           aria-label={`Select ${restaurant.name}`}
-                          className="h-4 w-4 rounded border-slate-300 text-[#DC2626] focus:ring-[#DC2626]"
+                          className="h-4 w-4 rounded border-slate-300 text-[#FF5A1F] focus:ring-[#FF5A1F]"
                         />
                       </td>
                       <td className="px-3 py-3 align-middle">
@@ -594,7 +594,7 @@ function RestaurantPricingPanel({
                   onClick={() => setBulkType("PERCENTAGE")}
                   className={`inline-flex items-center gap-1 rounded-lg px-3 py-2 text-xs font-bold ${
                     bulkType === "PERCENTAGE"
-                      ? "bg-white text-[#DC2626] shadow-sm"
+                      ? "bg-white text-[#FF5A1F] shadow-sm"
                       : "text-slate-500"
                   }`}
                 >
@@ -605,7 +605,7 @@ function RestaurantPricingPanel({
                   onClick={() => setBulkType("FIXED")}
                   className={`inline-flex items-center gap-1 rounded-lg px-3 py-2 text-xs font-bold ${
                     bulkType === "FIXED"
-                      ? "bg-white text-[#DC2626] shadow-sm"
+                      ? "bg-white text-[#FF5A1F] shadow-sm"
                       : "text-slate-500"
                   }`}
                 >
@@ -623,14 +623,14 @@ function RestaurantPricingPanel({
                   step="0.01"
                   value={bulkValue}
                   onChange={(e) => setBulkValue(e.target.value)}
-                  className="h-10 w-28 rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none focus:border-[#DC2626]"
+                  className="h-10 w-28 rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none focus:border-[#FF5A1F]"
                 />
               </div>
               <Button
                 type="button"
                 disabled={saving}
                 onClick={openConfirm}
-                className="h-10 rounded-xl bg-[#DC2626] px-4 font-bold text-white hover:bg-[#B91C1C]"
+                className="h-10 rounded-xl bg-[#FF5A1F] px-4 font-bold text-white hover:bg-[#E64A0F]"
               >
                 Apply to selected
               </Button>
@@ -971,7 +971,7 @@ function MenuItemPricingPanel({
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search menu items"
-                className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-9 text-sm outline-none focus:border-[#DC2626]"
+                className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-9 text-sm outline-none focus:border-[#FF5A1F]"
               />
               {search ? (
                 <button
@@ -1014,7 +1014,7 @@ function MenuItemPricingPanel({
             <div className="max-h-[min(62vh,640px)] overflow-auto">
               {loadingMenu ? (
                 <div className="flex items-center justify-center gap-2 px-4 py-16 text-sm text-slate-500">
-                  <Loader2 className="h-4 w-4 animate-spin text-[#DC2626]" />
+                  <Loader2 className="h-4 w-4 animate-spin text-[#FF5A1F]" />
                   Loading menu items...
                 </div>
               ) : (
@@ -1037,7 +1037,7 @@ function MenuItemPricingPanel({
                           onChange={toggleVisibleHeader}
                           disabled={!visibleIds.length}
                           aria-label="Select visible menu items"
-                          className="mx-auto h-4 w-4 rounded border-slate-300 text-[#DC2626] focus:ring-[#DC2626]"
+                          className="mx-auto h-4 w-4 rounded border-slate-300 text-[#FF5A1F] focus:ring-[#FF5A1F]"
                         />
                       </th>
                       <th className="px-2 py-3 text-center font-semibold">Menu Item</th>
@@ -1084,7 +1084,7 @@ function MenuItemPricingPanel({
                                 checked={checked}
                                 onChange={() => toggleOne(item.id)}
                                 aria-label={`Select ${item.name}`}
-                                className="mx-auto h-4 w-4 rounded border-slate-300 text-[#DC2626] focus:ring-[#DC2626]"
+                                className="mx-auto h-4 w-4 rounded border-slate-300 text-[#FF5A1F] focus:ring-[#FF5A1F]"
                               />
                             </td>
                             <td className="px-2 py-3 text-center align-middle">
@@ -1176,7 +1176,7 @@ function MenuItemPricingPanel({
                       onClick={() => setBulkType("PERCENTAGE")}
                       className={`inline-flex items-center gap-1 rounded-lg px-3 py-2 text-xs font-bold ${
                         bulkType === "PERCENTAGE"
-                          ? "bg-white text-[#DC2626] shadow-sm"
+                          ? "bg-white text-[#FF5A1F] shadow-sm"
                           : "text-slate-500"
                       }`}
                     >
@@ -1187,7 +1187,7 @@ function MenuItemPricingPanel({
                       onClick={() => setBulkType("FIXED")}
                       className={`inline-flex items-center gap-1 rounded-lg px-3 py-2 text-xs font-bold ${
                         bulkType === "FIXED"
-                          ? "bg-white text-[#DC2626] shadow-sm"
+                          ? "bg-white text-[#FF5A1F] shadow-sm"
                           : "text-slate-500"
                       }`}
                     >
@@ -1217,14 +1217,14 @@ function MenuItemPricingPanel({
                       step="0.01"
                       value={bulkValue}
                       onChange={(e) => setBulkValue(e.target.value)}
-                      className="h-10 w-28 rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none focus:border-[#DC2626]"
+                      className="h-10 w-28 rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none focus:border-[#FF5A1F]"
                     />
                   </div>
                   <Button
                     type="button"
                     disabled={saving}
                     onClick={openConfirm}
-                    className="h-10 rounded-xl bg-[#DC2626] px-4 font-bold text-white hover:bg-[#B91C1C]"
+                    className="h-10 rounded-xl bg-[#FF5A1F] px-4 font-bold text-white hover:bg-[#E64A0F]"
                   >
                     Apply to selected
                   </Button>
@@ -1534,7 +1534,7 @@ export default function PricingManagement() {
   if (zonesLoading || (selectedZoneId && loading)) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-[#DC2626]" />
+        <Loader2 className="h-6 w-6 animate-spin text-[#FF5A1F]" />
       </div>
     )
   }
@@ -1629,7 +1629,7 @@ export default function PricingManagement() {
             type="button"
             onClick={() => setTab(t.id)}
             className={`flex-1 rounded-lg px-3 py-2 text-sm font-bold transition ${
-              tab === t.id ? "bg-white text-[#DC2626] shadow-sm" : "text-slate-500"
+              tab === t.id ? "bg-white text-[#FF5A1F] shadow-sm" : "text-slate-500"
             }`}
           >
             {t.label}

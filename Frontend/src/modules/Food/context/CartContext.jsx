@@ -178,6 +178,12 @@ const normalizeCartData = (rawCart) => {
         otherPrice: Number(item.otherPrice) || 0,
         restaurant: normalizedRestaurantName,
         restaurantId: normalizedRestaurantId,
+        restaurantZoneId:
+          item.restaurantZoneId ||
+          item.restaurant_zone_id ||
+          item.restaurant?.zoneId ||
+          item.restaurant?.restaurantZoneId ||
+          null,
         image: normalizedImage,
         imageUrl: normalizedImage,
       }

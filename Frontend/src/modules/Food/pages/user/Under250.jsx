@@ -1319,7 +1319,7 @@ export default function Under250({ isTabActive = true }) {
                   alt="Profile" 
                   className="object-cover"
                 />
-                <AvatarFallback className="bg-[#FFF5E6] dark:bg-gray-800 text-[20px] font-black text-[#DC2626] leading-none tracking-tighter antialiased">
+                <AvatarFallback className="bg-[#FFF5E6] dark:bg-gray-800 text-[20px] font-black text-[#FF5A1F] leading-none tracking-tighter antialiased">
                   <img src="/assets/images/profile_avatar.webp" alt="Profile" className="object-cover w-full h-full" />
                 </AvatarFallback>
               </Avatar>
@@ -1410,10 +1410,10 @@ export default function Under250({ isTabActive = true }) {
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
               >
-                <div className={`w-14 h-14 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full overflow-hidden shadow-md transition-all flex items-center justify-center ${!activeCategory ? 'bg-gradient-to-br from-[#DC2626] to-[#991B1B] text-white ring-2 ring-[#DC2626] ring-offset-2' : 'bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-200'}`}>
+                <div className={`w-14 h-14 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full overflow-hidden shadow-md transition-all flex items-center justify-center ${!activeCategory ? 'bg-gradient-to-br from-[#FF5A1F] to-[#E64A0F] text-white ring-2 ring-[#FF5A1F] ring-offset-2' : 'bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-200'}`}>
                   <Utensils className="w-6 h-6 sm:w-10 sm:h-10 md:w-12 md:h-12" />
                 </div>
-                <span className={`text-xs sm:text-sm md:text-base font-bold text-center pb-1 ${!activeCategory ? 'text-[#DC2626]' : 'text-gray-800 dark:text-gray-200'}`}>
+                <span className={`text-xs sm:text-sm md:text-base font-bold text-center pb-1 ${!activeCategory ? 'text-[#FF5A1F]' : 'text-gray-800 dark:text-gray-200'}`}>
                   All
                 </span>
               </motion.div>
@@ -1438,7 +1438,7 @@ export default function Under250({ isTabActive = true }) {
                         whileTap={{ scale: 0.95 }}
                         transition={{ type: "spring", stiffness: 300, damping: 20 }}
                       >
-                        <div className={`w-14 h-14 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full overflow-hidden shadow-md transition-all ${isActive ? 'ring-2 ring-[#DC2626] ring-offset-2' : ''}`}>
+                        <div className={`w-14 h-14 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full overflow-hidden shadow-md transition-all ${isActive ? 'ring-2 ring-[#FF5A1F] ring-offset-2' : ''}`}>
                           <OptimizedImage
                             src={category.image}
                             alt={category.name}
@@ -1448,7 +1448,7 @@ export default function Under250({ isTabActive = true }) {
                             placeholder="blur"
                           />
                         </div>
-                        <span className={`text-xs sm:text-sm md:text-base font-semibold text-gray-800 dark:text-gray-200 text-center pb-1 ${isActive ? 'text-[#DC2626]' : ''}`}>
+                        <span className={`text-xs sm:text-sm md:text-base font-semibold text-gray-800 dark:text-gray-200 text-center pb-1 ${isActive ? 'text-[#FF5A1F]' : ''}`}>
                           {category.name.length > 7 ? `${category.name.slice(0, 7)}...` : category.name}
                         </span>
                       </motion.div>
@@ -1476,7 +1476,7 @@ export default function Under250({ isTabActive = true }) {
               variant="outline"
               onClick={() => setUnder30MinsFilter(!under30MinsFilter)}
               className={`h-8 sm:h-9 md:h-10 px-3 sm:px-4 md:px-5 rounded-md flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 font-medium transition-all text-sm md:text-base ${under30MinsFilter
-                ? 'bg-[#DC2626] text-white border border-[#DC2626] hover:bg-[#991B1B]'
+                ? 'bg-[#FF5A1F] text-white border border-[#FF5A1F] hover:bg-[#E64A0F]'
                 : 'bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300'
                 }`}
             >
@@ -1655,7 +1655,7 @@ export default function Under250({ isTabActive = true }) {
                                 </div>
                                 {quantity > 0 && !isRestaurantOffline ? (
                                   <div
-                                    className="flex items-center gap-1.5 bg-[#DC2626] text-white rounded-lg p-1 shadow-md"
+                                    className="flex items-center gap-1.5 bg-[#FF5A1F] text-white rounded-lg p-1 shadow-md"
                                     onClick={(e) => e.stopPropagation()}
                                   >
                                     <button
@@ -1691,7 +1691,7 @@ export default function Under250({ isTabActive = true }) {
                                     disabled={isOffline}
                                     className={`h-7 md:h-8 lg:h-9 px-3 md:px-4 lg:px-5 text-xs md:text-sm lg:text-base font-bold shadow-md transition-all active:scale-95 ${isOffline
                                       ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 border-gray-300 dark:border-gray-700 cursor-not-allowed opacity-50'
-                                      : 'bg-[#DC2626] text-white hover:bg-[#991B1B]'
+                                      : 'bg-[#FF5A1F] text-white hover:bg-[#E64A0F]'
                                       }`}
                                     onClick={(e) => {
                                       e.stopPropagation()
@@ -1775,7 +1775,7 @@ export default function Under250({ isTabActive = true }) {
                   <div className="flex items-center gap-3">
                     <button
                       onClick={handleClearAll}
-                      className="text-[#DC2626] dark:text-[#FEE2E2] font-medium text-sm hover:opacity-85 transition-opacity"
+                      className="text-[#FF5A1F] dark:text-[#FEE2E2] font-medium text-sm hover:opacity-85 transition-opacity"
                     >
                       Clear all
                     </button>
@@ -1799,15 +1799,15 @@ export default function Under250({ isTabActive = true }) {
                         setShowSortPopup(false);
                       }}
                       className={`px-4 py-3.5 rounded-xl border text-left transition-colors flex items-center justify-between ${selectedSort === option.id
-                        ? 'border-[#DC2626] bg-[#fdfafc] dark:bg-[#DC2626]/20'
-                        : 'border-gray-200 dark:border-gray-800 hover:border-[#DC2626]'
+                        ? 'border-[#FF5A1F] bg-[#fdfafc] dark:bg-[#FF5A1F]/20'
+                        : 'border-gray-200 dark:border-gray-800 hover:border-[#FF5A1F]'
                         }`}
                     >
-                      <span className={`text-sm font-medium ${selectedSort === option.id ? 'text-[#DC2626] dark:text-[#FEE2E2]' : 'text-gray-700 dark:text-gray-300'}`}>
+                      <span className={`text-sm font-medium ${selectedSort === option.id ? 'text-[#FF5A1F] dark:text-[#FEE2E2]' : 'text-gray-700 dark:text-gray-300'}`}>
                         {option.label}
                       </span>
                       {selectedSort === option.id && (
-                        <div className="w-5 h-5 rounded-full bg-[#DC2626] flex items-center justify-center flex-shrink-0">
+                        <div className="w-5 h-5 rounded-full bg-[#FF5A1F] flex items-center justify-center flex-shrink-0">
                           <Check className="w-3 h-3 text-white" />
                         </div>
                       )}
@@ -1825,7 +1825,7 @@ export default function Under250({ isTabActive = true }) {
                   </button>
                   <button
                     onClick={handleApply}
-                    className="flex-1 py-3 font-semibold rounded-xl transition-colors text-sm bg-[#DC2626] text-white hover:bg-[#991B1B]"
+                    className="flex-1 py-3 font-semibold rounded-xl transition-colors text-sm bg-[#FF5A1F] text-white hover:bg-[#E64A0F]"
                   >
                     Apply
                   </button>
@@ -1973,7 +1973,7 @@ export default function Under250({ isTabActive = true }) {
                 {selectedItem.customisable && (
                   <div className="flex items-center gap-2 mb-4">
                     <div className="flex-1 h-0.5 bg-gray-200 rounded-full overflow-hidden">
-                      <div className="h-full bg-[#DC2626]" style={{ width: '50%' }} />
+                      <div className="h-full bg-[#FF5A1F]" style={{ width: '50%' }} />
                     </div>
                     <span className="text-xs text-gray-600 dark:text-gray-400 font-medium whitespace-nowrap">
                       highly reordered
@@ -2047,7 +2047,7 @@ export default function Under250({ isTabActive = true }) {
                     className={`flex-1 h-[44px] md:h-[50px] lg:h-[56px] rounded-lg md:rounded-xl font-semibold flex items-center justify-center gap-2 text-sm md:text-base lg:text-lg ${
                       (shouldShowGrayscale || selectedItem.isRestaurantOffline)
                         ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-600 cursor-not-allowed opacity-50'
-                        : 'bg-[#DC2626] hover:bg-[#991B1B] dark:bg-[#DC2626] dark:hover:bg-[#991B1B] text-white'
+                        : 'bg-[#FF5A1F] hover:bg-[#E64A0F] dark:bg-[#FF5A1F] dark:hover:bg-[#E64A0F] text-white'
                         }`}
                     onClick={(e) => {
                       if (!shouldShowGrayscale && !selectedItem.isRestaurantOffline) {
@@ -2128,7 +2128,7 @@ export default function Under250({ isTabActive = true }) {
                   <button
                     key={option.id}
                     onClick={() => handleShareOption(option.id)}
-                    className="rounded-2xl border border-gray-200 dark:border-gray-700 px-4 py-3 text-sm font-medium text-gray-800 dark:text-gray-200 hover:border-[#DC2626] hover:text-[#DC2626] transition-colors"
+                    className="rounded-2xl border border-gray-200 dark:border-gray-700 px-4 py-3 text-sm font-medium text-gray-800 dark:text-gray-200 hover:border-[#FF5A1F] hover:text-[#FF5A1F] transition-colors"
                   >
                     {option.label}
                   </button>

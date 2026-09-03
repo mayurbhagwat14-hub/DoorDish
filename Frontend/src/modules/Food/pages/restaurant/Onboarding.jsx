@@ -1877,7 +1877,7 @@ export default function RestaurantOnboarding() {
                     className="w-full pl-1.5 pr-3 py-2.5 text-left text-sm hover:bg-[#FEF2F2] border-b border-gray-100 last:border-none font-medium text-gray-700 flex items-center gap-2 transition-colors rounded-xl"
                   >
                     {/* Premium red map pin icon */}
-                    <svg className="w-5 h-5 text-[#DC2626] shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <svg className="w-5 h-5 text-[#FF5A1F] shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
                       <circle cx="12" cy="10" r="3" />
                     </svg>
@@ -3013,7 +3013,7 @@ export default function RestaurantOnboarding() {
         }
         .pac-item:hover {
           background-color: #fef2f2 !important;
-          color: #dc2626 !important;
+          color: #FF5A1F !important;
         }
         .pac-item-query {
           font-size: 14px !important;
@@ -3022,7 +3022,7 @@ export default function RestaurantOnboarding() {
           padding-right: 4px !important;
         }
         .pac-item:hover .pac-item-query {
-          color: #dc2626 !important;
+          color: #FF5A1F !important;
         }
         .pac-icon {
           background-image: none !important;
@@ -3050,7 +3050,7 @@ export default function RestaurantOnboarding() {
           opacity: 0.5 !important;
         }
         .pac-matched {
-          color: #dc2626 !important;
+          color: #FF5A1F !important;
           font-weight: 700 !important;
         }
       ` }} />

@@ -853,7 +853,7 @@ export default function Profile() {
         {/* Food Orders Section */}
         <div className="mb-3">
           <div className="flex items-center gap-2 mb-2 px-1">
-            <div className="w-1 h-4 bg-[#DC2626] rounded"></div>
+            <div className="w-1 h-4 bg-[#FF5A1F] rounded"></div>
             <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               Food Orders
             </h3>
@@ -891,7 +891,7 @@ export default function Profile() {
         {/* More Section */}
         <div className="mb-8 pb-8">
           <div className="flex items-center gap-2 mb-2 px-1">
-            <div className="w-1 h-4 bg-[#DC2626] rounded"></div>
+            <div className="w-1 h-4 bg-[#FF5A1F] rounded"></div>
             <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               More
             </h3>
@@ -1145,12 +1145,12 @@ export default function Profile() {
                 setVegModeOpen(false);
               }}
               className={`w-full p-3 rounded-xl border-2 transition-all flex items-center justify-between ${!vegMode
-                ? "border-[#991B1B] bg-[#fdfafc] dark:bg-[#7F1D1D]/10"
+                ? "border-[#E64A0F] bg-[#fdfafc] dark:bg-[#7F1D1D]/10"
                 : "border-gray-200 dark:border-gray-800 bg-white hover:border-gray-300"
                 }`}>
               <div className="flex items-center gap-3">
                 <div
-                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${!vegMode ? "border-[#991B1B] bg-[#991B1B]" : "border-gray-300"
+                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${!vegMode ? "border-[#E64A0F] bg-[#E64A0F]" : "border-gray-300"
                     }`}>
                   {!vegMode && <Check className="h-3 w-3 text-white" />}
                 </div>
@@ -1232,12 +1232,12 @@ export default function Profile() {
                 setTimeout(() => setAppearance("light"), 250);
               }}
               className={`w-full p-3 rounded-xl border-2 transition-all flex items-center gap-3 ${appearance === "light"
-                ? "border-[#DC2626] bg-[#fdfafc] dark:border-[#DC2626] dark:bg-[#7F1D1D]/20"
+                ? "border-[#FF5A1F] bg-[#fdfafc] dark:border-[#FF5A1F] dark:bg-[#7F1D1D]/20"
                 : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600"
                 }`}>
               <div
                 className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${appearance === "light"
-                  ? "border-[#DC2626] bg-[#DC2626]"
+                  ? "border-[#FF5A1F] bg-[#FF5A1F]"
                   : "border-gray-300 dark:border-gray-600"
                   }`}>
                 {appearance === "light" && (
@@ -1260,12 +1260,12 @@ export default function Profile() {
                 setTimeout(() => setAppearance("dark"), 250);
               }}
               className={`w-full p-3 rounded-xl border-2 transition-all flex items-center gap-3 ${appearance === "dark"
-                ? "border-[#DC2626] dark:border-[#DC2626] bg-[#fdfafc] dark:bg-[#7F1D1D]/20"
+                ? "border-[#FF5A1F] dark:border-[#FF5A1F] bg-[#fdfafc] dark:bg-[#7F1D1D]/20"
                 : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600"
                 }`}>
               <div
                 className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${appearance === "dark"
-                  ? "border-[#DC2626] bg-[#DC2626]"
+                  ? "border-[#FF5A1F] bg-[#FF5A1F]"
                   : "border-gray-300 dark:border-gray-600"
                   }`}>
                 {appearance === "dark" && (
