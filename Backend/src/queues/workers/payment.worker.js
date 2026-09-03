@@ -8,7 +8,8 @@ import { waitForBullMQRedis, attachWorkerLifecycle } from './workerBootstrap.js'
 const start = async () => {
     const connection = await waitForBullMQRedis();
     if (!connection) {
-        process.exit(0);
+        logger.info('Payment worker idle (Redis/BullMQ disabled)');
+        setInterval(() => {}, 86400000);
         return;
     }
 
@@ -22,5 +23,5 @@ const start = async () => {
 
 start().catch((err) => {
     logger.error(`Payment worker failed to start: ${err.message}`);
-    process.exit(0);
+    setInterval(() => {}, 86400000);
 });
