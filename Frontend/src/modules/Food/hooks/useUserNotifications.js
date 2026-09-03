@@ -54,13 +54,6 @@ export const useUserNotifications = () => {
       setIsConnected(false);
       return;
     }
-    if (!userId) {
-      return;
-    }
-
-import { getSocketUrl } from "@food/utils/socketConfig";
-
-// In useEffect:
     const socketUrl = getSocketUrl();
     
     // Auth token
