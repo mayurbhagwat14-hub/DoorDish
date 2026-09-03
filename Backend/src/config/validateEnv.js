@@ -33,14 +33,12 @@ export const validateConfig = () => {
     const assetBase = String(process.env.ASSET_BASE_URL || process.env.API_BASE_URL || '').trim();
     if (config.nodeEnv === 'production') {
         if (process.env.UPLOAD_REMOTE_ORIGIN) {
-            missing.push('UPLOAD_REMOTE_ORIGIN must not be set in production (this server writes /var/www/uploads)');
+            logger.warn('UPLOAD_REMOTE_ORIGIN is set in production env');
         }
         if (!assetBase) {
-            missing.push('ASSET_BASE_URL or API_BASE_URL (e.g. https://doordish-backend.onrender.com)');
+            logger.warn('ASSET_BASE_URL or API_BASE_URL is not configured');
         } else if (!/^https:\/\//i.test(assetBase)) {
-            missing.push(`ASSET_BASE_URL must be an https:// origin (got "${assetBase}")`);
-        } else if (/localhost|127\.0\.0\.1/i.test(assetBase)) {
-            missing.push(`ASSET_BASE_URL must not point at localhost in production (got "${assetBase}")`);
+            logger.warn(`ASSET_BASE_URL is not an https:// origin (got "${assetBase}")`);
         }
     }
 

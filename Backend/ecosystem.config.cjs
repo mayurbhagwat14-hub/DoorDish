@@ -38,7 +38,7 @@ module.exports = {
     },
     {
       name: 'doordish-worker-order',
-      script: './src/shared/queues/orderQueue.worker.js',
+      script: './src/queues/workers/order.worker.js',
       cwd: __dirname,
       instances: 1,
       exec_mode: 'fork',
@@ -48,7 +48,7 @@ module.exports = {
     },
     {
       name: 'doordish-worker-payment',
-      script: './src/shared/queues/paymentQueue.worker.js',
+      script: './src/queues/workers/payment.worker.js',
       cwd: __dirname,
       instances: 1,
       exec_mode: 'fork',
@@ -58,7 +58,7 @@ module.exports = {
     },
     {
       name: 'doordish-worker-notification',
-      script: './src/shared/queues/notificationQueue.worker.js',
+      script: './src/queues/workers/notification.worker.js',
       cwd: __dirname,
       instances: 1,
       exec_mode: 'fork',
@@ -68,7 +68,7 @@ module.exports = {
     },
     {
       name: 'doordish-worker-tracking',
-      script: './src/shared/queues/trackingQueue.worker.js',
+      script: './src/queues/workers/tracking.worker.js',
       cwd: __dirname,
       instances: 1,
       exec_mode: 'fork',
@@ -78,7 +78,7 @@ module.exports = {
     },
     {
       name: 'doordish-worker-otp',
-      script: './src/shared/queues/otpQueue.worker.js',
+      script: './src/queues/workers/otp.worker.js',
       cwd: __dirname,
       instances: 1,
       exec_mode: 'fork',

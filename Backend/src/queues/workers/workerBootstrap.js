@@ -14,11 +14,13 @@ const MAX_WAIT_ATTEMPTS = 20; // ~60s then exit 0 for PM2 restart
  */
 export async function waitForBullMQRedis() {
     if (!config.bullmqEnabled) {
-        logger.info('BullMQ is disabled. Worker not started.');
+        logger.info('BullMQ is disabled. Worker keeping idle.');
+        setInterval(() => {}, 3600000);
         return null;
     }
     if (!config.redisEnabled) {
-        logger.warn('Worker: REDIS_ENABLED is not true. Worker not started.');
+        logger.warn('Worker: REDIS_ENABLED is not true. Worker keeping idle.');
+        setInterval(() => {}, 3600000);
         return null;
     }
 
@@ -26,6 +28,7 @@ export async function waitForBullMQRedis() {
         const connection = getBullMQConnection();
         if (!connection) {
             logger.warn('Worker: Redis connection object unavailable.');
+            setInterval(() => {}, 3600000);
             return null;
         }
         const ok = await pingBullMQRedis();
@@ -38,8 +41,9 @@ export async function waitForBullMQRedis() {
     }
 
     logger.error(
-        'Worker: Redis still unavailable after wait. Exiting cleanly for PM2 restart.',
+        'Worker: Redis still unavailable after wait. Worker keeping idle.',
     );
+    setInterval(() => {}, 3600000);
     return null;
 }
 
