@@ -49,10 +49,10 @@ app.use(helmet({
     crossOriginResourcePolicy: { policy: 'cross-origin' }
 }));
 const defaultOrigins = [
-    'https://doordish.com',
-    'https://www.doordish.com',
-    'http://doordish.com',
-    'http://www.doordish.com',
+    'https://doordish.in',
+    'https://www.doordish.in',
+    'http://doordish.in',
+    'http://www.doordish.in',
     'http://localhost:5173',
     'http://localhost:3000'
 ];
