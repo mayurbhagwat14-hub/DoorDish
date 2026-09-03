@@ -2623,6 +2623,9 @@ export const foodCartAPI = {
     ),
 };
 
+const userOrdersCacheMap = new Map();
+const USER_ORDERS_CACHE_MS = 4000;
+
 export const orderAPI = {
   calculateOrder: (payload) =>
     apiClient.post("/food/orders/calculate", payload ?? {}, {
@@ -2638,8 +2641,16 @@ export const orderAPI = {
     apiClient.post("/food/orders/verify-payment", body ?? {}, {
       contextModule: "user",
     }),
-  getOrders: (params = {}) =>
-    apiClient
+  getOrders: (params = {}) => {
+    const cacheKey = JSON.stringify(params || {});
+    const now = Date.now();
+    const cached = userOrdersCacheMap.get(cacheKey);
+
+    if (cached && now - cached.timestamp < USER_ORDERS_CACHE_MS) {
+      return cached.promise;
+    }
+
+    const promise = apiClient
       .get("/food/orders", {
         params: { limit: 20, page: 1, ...params },
         contextModule: "user",
@@ -2678,7 +2689,15 @@ export const orderAPI = {
         }
 
         return res;
-      }),
+      })
+      .catch((err) => {
+        userOrdersCacheMap.delete(cacheKey);
+        throw err;
+      });
+
+    userOrdersCacheMap.set(cacheKey, { promise, timestamp: now });
+    return promise;
+  },
   getOrderDetails: (() => {
     const inFlight = new Map();
     const cache = new Map();
