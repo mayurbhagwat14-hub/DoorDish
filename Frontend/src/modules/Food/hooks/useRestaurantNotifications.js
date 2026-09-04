@@ -769,7 +769,7 @@ export const useRestaurantNotifications = () => {
     if (!restaurantId) return;
     if (globalPollingIntervalId) return;
 
-    const ALERT_POLL_MS = 8000;
+    const ALERT_POLL_MS = 30000;
 
     const pollOrders = async () => {
       try {
@@ -782,6 +782,11 @@ export const useRestaurantNotifications = () => {
             updateGlobalState({ activeOrder: null });
             stopGlobalAlertLoop();
           }
+          return;
+        }
+
+        // If real-time Socket.io is connected, skip REST polling to avoid network request spam
+        if (globalSocketConnected && globalSocket && globalSocket.connected) {
           return;
         }
 
