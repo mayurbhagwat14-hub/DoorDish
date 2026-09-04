@@ -2,8 +2,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import apiClient from "@food/api/axios";
 import { shouldEnforceMaintenanceOnClient } from "@food/utils/maintenanceEnv";
 
-const POLL_WHEN_ON_MS = 2500;
-const POLL_WHEN_OFF_MS = 8000;
+const POLL_WHEN_ON_MS = 15000;
+const POLL_WHEN_OFF_MS = 120000;
 
 /**
  * Strict maintenance flag: only true when API returns maintenance_mode_enabled === true
