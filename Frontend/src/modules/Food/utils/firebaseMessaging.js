@@ -106,7 +106,7 @@ function isSupportedBrowser() {
   );
 }
 
-function isFlutterWebView() {
+export function isFlutterWebView() {
   return (
     typeof window !== "undefined" &&
     Boolean(window.flutter_inappwebview) &&
@@ -1259,15 +1259,7 @@ async function saveTokenByModule(moduleName, token, platform = "web") {
   const normalizedToken = String(token || "").trim();
   if (!normalizedToken) return;
 
-  if (getBackendSyncedToken(moduleName) === normalizedToken) {
-    pushDebugLog(PUSH_DEBUG_PREFIX, "FCM token unchanged — skip backend save", {
-      moduleName,
-      platform,
-    });
-    return;
-  }
-
-  pushDebugLog(PUSH_DEBUG_PREFIX, "saveTokenByModule starting", {
+  pushDebugLog(PUSH_DEBUG_PREFIX, "saveTokenByModule sending token to Database", {
     moduleName,
     platform,
     tokenPreview: `${normalizedToken.slice(0, 10)}...`,
@@ -1590,14 +1582,6 @@ export async function registerWebPushForCurrentModule(pathname = window.location
   if (moduleName === "admin") return;
 
   initPushNotificationClient();
-
-  const cachedToken = getSavedToken(moduleName);
-  if (cachedToken && getBackendSyncedToken(moduleName) === cachedToken) {
-    pushDebugLog(PUSH_DEBUG_PREFIX, "FCM already synced this session — skip registration", {
-      moduleName,
-    });
-    return;
-  }
 
   if (isFlutterWebView()) {
     await persistModuleFcmToken(moduleName, { maxAttempts: 6, delayMs: 350 });

@@ -29,7 +29,8 @@ import {
   Loader2,
   Camera,
   Upload,
-  LifeBuoy
+  LifeBuoy,
+  BellRing
 } from "lucide-react";
 
 import {
@@ -68,6 +69,7 @@ import { toast } from "sonner";
 import { showAccountDeletedToast } from "@/shared/utils/customToasts";
 import { resolveProfileBackPath } from "@food/utils/mainTabRoutes";
 import { DINING_ENABLED } from "@food/config/featureFlags";
+import { persistModuleFcmToken, isFlutterWebView } from "@food/utils/firebaseMessaging";
 
 const debugLog = (...args) => { };
 const debugWarn = (...args) => { };
@@ -108,6 +110,7 @@ export default function Profile() {
   const [showBalanceWarning, setShowBalanceWarning] = useState(false);
   const [balanceData, setBalanceData] = useState({ balance: 0, type: "Wallet" });
   const [isCheckingBalance, setIsCheckingBalance] = useState(false);
+  const [isTestingNotification, setIsTestingNotification] = useState(false);
 
 
 
@@ -497,6 +500,29 @@ export default function Profile() {
     } finally {
       setIsDeleting(false);
       setDeleteAccountOpen(false);
+    }
+  };
+
+  const handleTestNotification = async () => {
+    if (isTestingNotification) return;
+    setIsTestingNotification(true);
+    try {
+      // Ensure FCM token is saved to DB for current user
+      await persistModuleFcmToken("user");
+      const isMobile = isFlutterWebView();
+      const res = await userAPI.testFcmNotification({ platform: isMobile ? "mobile" : "web" });
+      const data = res?.data?.data || res?.data || {};
+
+      if (data?.successCount > 0) {
+        toast.success("🔔 Test notification sent! Check your notification tray.");
+      } else {
+        toast.success("Test notification triggered! Check your notification tray.");
+      }
+    } catch (error) {
+      console.error("Error sending test notification:", error);
+      toast.error(error?.response?.data?.message || "Failed to send test notification. Make sure permissions are granted.");
+    } finally {
+      setIsTestingNotification(false);
     }
   };
 
@@ -977,6 +1003,41 @@ export default function Profile() {
                 </Card>
               </motion.div>
             </Link>
+
+            {/* Test Push Notification */}
+            <motion.div
+              whileHover={{ x: 4, scale: 1.01 }}
+              transition={{ duration: 0.2, type: "spring", stiffness: 300 }}>
+              <Card
+                className="bg-white dark:bg-[#1a1a1a] py-0 rounded-xl shadow-sm border-0 dark:border-gray-800 cursor-pointer disabled:opacity-50"
+                onClick={handleTestNotification}>
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <motion.div
+                      className="bg-orange-100 dark:bg-orange-950/40 rounded-full p-2"
+                      whileHover={{ rotate: 15, scale: 1.1 }}
+                      transition={{ duration: 0.3 }}>
+                      <BellRing className="h-5 w-5 text-[#FF5A1F]" />
+                    </motion.div>
+                    <div className="flex flex-col">
+                      <span className="text-base font-semibold text-gray-900 dark:text-white">
+                        Test Push Notification
+                      </span>
+                      <span className="text-[11px] text-gray-500 dark:text-gray-400">
+                        Send a test notification to verify push delivery
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {isTestingNotification ? (
+                      <Loader2 className="h-5 w-5 animate-spin text-[#FF5A1F]" />
+                    ) : (
+                      <ChevronRight className="h-5 w-5 text-gray-400 dark:text-gray-500" />
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
 
             <Link to="/user/profile/settings" className="block">
               <motion.div

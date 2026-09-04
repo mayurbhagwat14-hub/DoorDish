@@ -6,6 +6,7 @@ import { Input } from "@food/components/ui/input"
 import { Button } from "@food/components/ui/button"
 import { authAPI } from "@food/api"
 import { setAuthData as setUserAuthData } from "@food/utils/auth"
+import { collectFcmTokenFast, persistModuleFcmToken } from "@food/utils/firebaseMessaging"
 
 export default function OTP() {
   const navigate = useNavigate()
@@ -134,33 +135,10 @@ export default function OTP() {
       const providedName = authData?.isSignUp ? authData?.name || null : null
       const referralCode = authData?.referralCode || null
 
-      // Try to get FCM token before verifying OTP
-      let fcmToken = null;
-      let platform = "web";
-      try {
-        if (typeof window !== "undefined") {
-          if (window.flutter_inappwebview) {
-            platform = "mobile";
-            const handlerNames = ["getFcmToken", "getFCMToken", "getPushToken", "getFirebaseToken"];
-            for (const handlerName of handlerNames) {
-              try {
-                const t = await window.flutter_inappwebview.callHandler(handlerName, { module: "user" });
-                if (t && typeof t === "string" && t.length > 20) {
-                  fcmToken = t.trim();
-                  break;
-                }
-              } catch (e) {}
-            }
-          } else {
-            fcmToken = localStorage.getItem("fcm_web_registered_token_user") || null;
-          }
-        }
-      } catch (e) {
-        console.warn("Failed to get FCM token during login", e);
-      }
-
-      setDeviceToken(fcmToken);
-      setActivePlatform(platform);
+      // Collect FCM token fast before verifying OTP
+      const { fcmToken, platform } = await collectFcmTokenFast("user")
+      setDeviceToken(fcmToken)
+      setActivePlatform(platform)
 
       const response = await authAPI.verifyOTP(
         phone,
@@ -214,6 +192,11 @@ export default function OTP() {
       sessionStorage.removeItem("userAuthData")
 
       setUserAuthData("user", accessToken, user, refreshToken)
+
+      // Ensure FCM token is persisted to backend with active auth session
+      try {
+        void persistModuleFcmToken("user", { fcmToken, platform })
+      } catch (e) {}
 
       // Dispatch custom event for same-tab updates
       window.dispatchEvent(new Event("userLoginSuccess"))
@@ -301,6 +284,11 @@ export default function OTP() {
       sessionStorage.removeItem("userAuthData")
 
       setUserAuthData("user", accessToken, user, refreshToken)
+
+      // Ensure FCM token is persisted to backend with active auth session
+      try {
+        void persistModuleFcmToken("user", { fcmToken: deviceToken, platform: activePlatform })
+      } catch (e) {}
 
       window.dispatchEvent(new Event("userLoginSuccess"))
 

@@ -320,6 +320,13 @@ export function setAuthData(module, token, user, refreshToken = null) {
       clearRestaurantSessionCache();
     }
 
+    // Force fresh FCM token backend sync for newly logged-in account
+    try {
+      if (typeof sessionStorage !== "undefined") {
+        sessionStorage.removeItem(`fcm_backend_synced_${module}`);
+      }
+    } catch (e) {}
+
     localStorage.setItem(tokenKey, token);
     if (refreshToken && typeof refreshToken === "string") {
       localStorage.setItem(refreshTokenKey, refreshToken);

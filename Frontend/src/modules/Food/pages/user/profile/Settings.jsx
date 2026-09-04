@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Trash2, AlertTriangle, User } from "lucide-react";
+import { ArrowLeft, Trash2, AlertTriangle, User, BellRing, Loader2 } from "lucide-react";
 import { Button } from "@food/components/ui/button";
-import { authAPI } from "@food/api";
+import { authAPI, userAPI } from "@food/api";
 import { clearModuleAuth } from "@food/utils/auth";
+import { persistModuleFcmToken, isFlutterWebView } from "@food/utils/firebaseMessaging";
 import { toast } from "sonner";
 import { showAccountDeletedToast } from "@/shared/utils/customToasts";
 import AnimatedPage from "@food/components/user/AnimatedPage";
@@ -14,6 +15,29 @@ export default function Settings() {
   const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
   const [deleteCaptcha, setDeleteCaptcha] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isTestingNotification, setIsTestingNotification] = useState(false);
+
+  const handleTestNotification = async () => {
+    if (isTestingNotification) return;
+    setIsTestingNotification(true);
+    try {
+      await persistModuleFcmToken("user");
+      const isMobile = isFlutterWebView();
+      const res = await userAPI.testFcmNotification({ platform: isMobile ? "mobile" : "web" });
+      const data = res?.data?.data || res?.data || {};
+
+      if (data?.successCount > 0) {
+        toast.success("🔔 Test notification sent! Check your notification tray.");
+      } else {
+        toast.success("Test notification triggered! Check your notification tray.");
+      }
+    } catch (error) {
+      console.error("Error sending test notification:", error);
+      toast.error(error?.response?.data?.message || "Failed to send test notification.");
+    } finally {
+      setIsTestingNotification(false);
+    }
+  };
 
   const handleDeleteAccount = async () => {
     if (isDeleting || deleteCaptcha !== "DELETE") return;
@@ -78,6 +102,27 @@ export default function Settings() {
               </div>
             </div>
           </Link>
+
+          {/* Test Push Notification */}
+          <div 
+            onClick={handleTestNotification}
+            className="block group cursor-pointer border-b border-gray-200/80 dark:border-gray-800/80 py-4"
+          >
+            <div className="flex items-center gap-3 transition-all duration-150">
+              <BellRing className="h-5 w-5 text-[#FF5A1F] group-hover:scale-110 transition-transform" />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-[17px] font-semibold text-gray-900 dark:text-white group-hover:text-[#FF5A1F] transition-colors">
+                    Test Push Notification
+                  </h3>
+                  {isTestingNotification && <Loader2 className="h-4 w-4 animate-spin text-[#FF5A1F]" />}
+                </div>
+                <p className="text-[13px] text-gray-500 dark:text-gray-400 mt-0.5 truncate">
+                  Tap to send a test notification to verify push delivery
+                </p>
+              </div>
+            </div>
+          </div>
 
           {/* Delete Account */}
           <div 

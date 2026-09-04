@@ -6,6 +6,7 @@ import { AdminResetOtp } from "../admin/adminResetOtp.model.js";
 import { FoodRestaurant } from "../../modules/food/restaurant/models/restaurant.model.js";
 import { FoodDeliveryPartner } from "../../modules/food/delivery/models/deliveryPartner.model.js";
 import { findDeliveryPartnerByPhone } from "../../modules/food/delivery/services/delivery.service.js";
+import { findRestaurantByPhone } from "../../modules/food/restaurant/services/restaurant.service.js";
 import { FoodReferralSettings } from "../../modules/food/admin/models/referralSettings.model.js";
 import { FoodReferralLog } from "../../modules/food/admin/models/referralLog.model.js";
 import { createOrUpdateOtp, verifyOtp, shouldUseStaticOtp } from "../otp/otp.service.js";
@@ -396,32 +397,7 @@ export const requestRestaurantOtp = async (phone) => {
 };
 
 export const verifyRestaurantOtpAndLogin = async (phone, otp, fcmToken, platform, confirmAction) => {
-  // Restaurants may store ownerPhone with country code or formatting.
-  const digits = String(phone || "").replace(/\D/g, "");
-  const last10 = digits.slice(-10);
-  const phoneCandidates = [phone, digits, last10].filter(Boolean);
-  const phoneOrFields = (field) => [
-    { [field]: { $in: phoneCandidates } },
-    ...(last10 ? [{ [field]: { $regex: new RegExp(last10 + "$") } }] : []),
-  ];
-
-  // Search for all matching restaurants to handle cases with multiple records (e.g. deleted vs active)
-  const matchingRestaurants = await FoodRestaurant.find({
-    $or: [
-      ...phoneOrFields("ownerPhone"),
-      ...phoneOrFields("primaryContactNumber"),
-    ],
-  });
-
-  // Prioritize accounts: approved > pending > rejected > deleted
-  const statusPriority = { approved: 1, pending: 2, rejected: 3, deleted: 4 };
-  const sortedRestaurants = matchingRestaurants.sort((a, b) => {
-    const pA = statusPriority[a.status] || 99;
-    const pB = statusPriority[b.status] || 99;
-    return pA - pB;
-  });
-
-  const existingRestaurant = sortedRestaurants[0] || null;
+  const existingRestaurant = await findRestaurantByPhone(phone);
 
   const isDeleted = existingRestaurant && existingRestaurant.status === "deleted";
   const preserveOtp = isDeleted && !confirmAction;
