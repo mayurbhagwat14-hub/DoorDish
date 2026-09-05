@@ -129,19 +129,19 @@ export default function SignIn() {
       </div>
 
       {/* Main Content Area */}
-      <div className="relative z-10 flex-1 flex flex-col px-6 pt-[140px] pb-6">
+      <div className="relative z-10 flex-1 flex flex-col px-6 pt-8 sm:pt-12 pb-6">
         
         {/* App Logo & Scooter */}
-        <div className="flex items-center justify-center gap-3">
-          <div className="w-[120px] h-[120px] bg-[#FF5A1F] rounded-[32px] flex flex-col items-center justify-center font-black text-4xl leading-[1] tracking-tighter shadow-lg shrink-0">
+        <div className="flex items-center justify-center gap-4">
+          <div className="w-[110px] h-[110px] bg-[#FF5A1F] rounded-[30px] flex flex-col items-center justify-center font-black text-4xl leading-[1] tracking-tighter shadow-lg shrink-0">
             <span className="text-black">Door</span>
             <span className="text-white">Dish</span>
           </div>
-          <div className="w-[130px] h-[130px] shrink-0">
+          <div className="w-[140px] h-[110px] shrink-0 flex items-center justify-center">
             <img 
-              src="/assets/images/MapRider.png" 
+              src="/assets/images/rider_horizontal.png" 
               alt="Delivery Rider" 
-              className="w-full h-full object-contain drop-shadow-lg"
+              className="w-full h-full object-contain drop-shadow-lg transform hover:scale-105 transition-transform duration-300"
             />
           </div>
         </div>

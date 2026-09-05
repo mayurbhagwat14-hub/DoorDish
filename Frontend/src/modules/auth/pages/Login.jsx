@@ -592,17 +592,17 @@ export default function UnifiedOTPFastLogin() {
         className="absolute opacity-0 w-px h-px -z-10 pointer-events-none"
       />
 
-      <div className="flex-1 flex flex-col items-center justify-center px-6 pt-[120px] pb-10 relative z-10 overflow-y-auto w-full max-w-md mx-auto">
-        <div className={`w-full flex flex-col my-auto ${step === 2 ? 'relative -top-8' : ''}`}>
-          <div className="mb-8 text-center flex flex-col items-center">
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-6 sm:py-10 relative z-10 overflow-y-auto w-full max-w-md mx-auto">
+        <div className={`w-full flex flex-col items-center ${step === 2 ? 'relative -top-4' : ''}`}>
+          <div className="mb-6 text-center flex flex-col items-center">
             {step === 1 ? (
               <>
                 <div className="flex items-center justify-center gap-4">
-                  <div className="w-[100px] h-[100px] sm:w-[110px] sm:h-[110px] shrink-0 rounded-[28px] overflow-hidden shadow-lg border border-gray-100">
+                  <div className="w-[100px] h-[100px] sm:w-[110px] sm:h-[110px] shrink-0 rounded-[28px] overflow-hidden shadow-lg border border-gray-100 bg-white">
                     <img src={logoUrl} alt="DoorDish" className="w-full h-full object-cover" />
                   </div>
-                  <div className="w-[110px] h-[110px] sm:w-[120px] sm:h-[120px] shrink-0">
-                    <img src="/assets/images/MapRider.png" alt="Rider" className="w-full h-full object-contain drop-shadow-lg scale-110 origin-bottom" />
+                  <div className="w-[145px] h-[110px] sm:w-[165px] sm:h-[120px] shrink-0 flex items-center justify-center">
+                    <img src="/assets/images/rider_horizontal.png" alt="Delivery Rider" className="w-full h-full object-contain drop-shadow-xl transform hover:scale-105 transition-transform duration-300" />
                   </div>
                 </div>
                 <div className="mt-5">
