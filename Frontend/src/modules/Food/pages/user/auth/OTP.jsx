@@ -6,7 +6,7 @@ import { Input } from "@food/components/ui/input"
 import { Button } from "@food/components/ui/button"
 import { authAPI } from "@food/api"
 import { setAuthData as setUserAuthData } from "@food/utils/auth"
-import { collectFcmTokenFast, persistModuleFcmToken } from "@food/utils/firebaseMessaging"
+import { collectFcmTokenFast, persistModuleFcmToken, markBackendSyncedToken } from "@food/utils/firebaseMessaging"
 
 export default function OTP() {
   const navigate = useNavigate()
@@ -124,6 +124,12 @@ export default function OTP() {
       return
     }
 
+    if (typeof Notification !== "undefined" && Notification.permission === "default") {
+      try {
+        await Notification.requestPermission();
+      } catch (permErr) {}
+    }
+
     submittingRef.current = true
     setIsLoading(true)
     setError("")
@@ -193,9 +199,14 @@ export default function OTP() {
 
       setUserAuthData("user", accessToken, user, refreshToken)
 
+      // Mark FCM token as synced — backend saved it during verify-OTP (called after setUserAuthData)
+      if (fcmToken) {
+        markBackendSyncedToken("user", fcmToken)
+      }
+
       // Ensure FCM token is persisted to backend with active auth session
       try {
-        void persistModuleFcmToken("user", { fcmToken, platform })
+        await persistModuleFcmToken("user", { fcmToken, platform })
       } catch (e) {}
 
       // Dispatch custom event for same-tab updates
@@ -287,7 +298,7 @@ export default function OTP() {
 
       // Ensure FCM token is persisted to backend with active auth session
       try {
-        void persistModuleFcmToken("user", { fcmToken: deviceToken, platform: activePlatform })
+        await persistModuleFcmToken("user", { fcmToken: deviceToken, platform: activePlatform })
       } catch (e) {}
 
       window.dispatchEvent(new Event("userLoginSuccess"))

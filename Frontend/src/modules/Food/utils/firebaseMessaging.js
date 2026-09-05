@@ -8,11 +8,14 @@ const pushNotificationSoundPath = "/assets/media/zomato_sms.mp3";
 const restaurantAlertSoundPath = "/assets/media/restaurant_alert.mp3";
 
 const DEFAULT_FIREBASE_CONFIG = {
-  apiKey: "",
-  authDomain: "",
-  projectId: "",
-  appId: "",
-  messagingSenderId: "",
+  apiKey: "AIzaSyCl68gSzsJlOVAvHwl_wJn-Meb8SQw6Rrw",
+  authDomain: "doordish-35114.firebaseapp.com",
+  projectId: "doordish-35114",
+  storageBucket: "doordish-35114.firebasestorage.app",
+  messagingSenderId: "746066407242",
+  appId: "1:746066407242:web:4f78c136862ba558f4dbb3",
+  measurementId: "G-QKQDC35DDL",
+  vapidKey: "BGN5HddbPpmxUt1Md2S2YSvNnNTiK-NEx4vYPAAbZGat783pXVu7tYByh1KtE-TWyMiVXUFKYM-gHt4x0OBkE9k",
 };
 
 const tokenCachePrefix = "fcm_web_registered_token_";
@@ -33,14 +36,10 @@ const PUSH_DEBUG_PREFIX = "[push-debug]";
 const notificationDedupWindowMs = 30000;
 const OS_NOTIFICATION_DEDUP_STORAGE_KEY = "os_notification_dedup_v1";
 const pushDebugLog = (prefix, message, data = {}) => {
-  if (typeof window !== "undefined" && localStorage.getItem("push_debug") === "true") {
-    console.log(`${prefix} ${message}`, data);
-  }
+  console.log(`${prefix} ${message}`, data);
 };
 const pushDebugWarn = (prefix, message, data = {}) => {
-  if (typeof window !== "undefined" && localStorage.getItem("push_debug") === "true") {
-    console.warn(`${prefix} ${message}`, data);
-  }
+  console.warn(`${prefix} ${message}`, data);
 };
 
 function normalizeModuleFromPath(pathname = window.location.pathname) {
@@ -89,21 +88,7 @@ const NOTIFICATION_ICON_PATH = "/assets/images/favicon.png";
 
 function isSupportedBrowser() {
   if (typeof window === "undefined") return false;
-
-  // iOS check (Web Push is only supported on iOS Safari/Chrome if added to the Home Screen)
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-  if (isIOS) {
-    const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
-    if (!isStandalone) {
-      return false;
-    }
-  }
-
-  return (
-    "Notification" in window &&
-    "serviceWorker" in navigator &&
-    "PushManager" in window
-  );
+  return "Notification" in window && "serviceWorker" in navigator;
 }
 
 export function isFlutterWebView() {
@@ -178,7 +163,7 @@ export function isNativeAppWebView() {
 }
 
 export const FCM_FAST_OPTIONS = { maxAttempts: 5, delayMs: 200 };
-export const FCM_COLLECT_TIMEOUT_MS = 2000;
+export const FCM_COLLECT_TIMEOUT_MS = 4000;
 export const FCM_SUBMIT_COLLECT_TIMEOUT_MS = 6000;
 
 let fcmVisibilityListenerAttached = false;
@@ -252,11 +237,6 @@ export async function collectFcmTokenForSignup(moduleName) {
     setSavedToken(moduleName, fcmToken);
   }
   return { fcmToken, platform };
-}
-
-/** @deprecated Use collectFcmTokenForSignup */
-export async function collectFcmTokenOnSignupSubmit(moduleName) {
-  return collectFcmTokenForSignup(moduleName);
 }
 
 /**
@@ -365,7 +345,12 @@ export async function persistModuleFcmToken(moduleName, options = {}) {
   let platform = options.platform || (isFlutterWebView() ? "mobile" : "web");
 
   if (!fcmToken) {
-    const collected = await collectFcmTokenFast(moduleName, options);
+    const collectTimeoutMs = options.collectTimeoutMs ?? 10000;
+    const collected = await collectFcmTokenFast(moduleName, {
+      ...options,
+      collectTimeoutMs,
+      requestPermission: options.requestPermission !== false,
+    });
     fcmToken = collected.fcmToken;
     platform = collected.platform;
   }
@@ -380,6 +365,17 @@ export async function persistModuleFcmToken(moduleName, options = {}) {
       moduleName,
     });
     return false;
+  }
+
+  // Dedup: skip /fcm-tokens/save if same token was already synced in this session
+  // (e.g. during verify-OTP the backend already saved it via upsertFirebaseDeviceToken)
+  const alreadySynced = getBackendSyncedToken(moduleName);
+  if (alreadySynced && alreadySynced === fcmToken) {
+    pushDebugLog(PUSH_DEBUG_PREFIX, "FCM token already synced to backend in this session, skipping duplicate save", {
+      moduleName,
+      platform,
+    });
+    return true;
   }
 
   try {
@@ -1032,24 +1028,27 @@ async function getFirebasePublicEnv() {
         appId: sanitize(import.meta.env.VITE_FIREBASE_APP_ID) || DEFAULT_FIREBASE_CONFIG.appId,
         messagingSenderId:
           sanitize(import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID) || DEFAULT_FIREBASE_CONFIG.messagingSenderId,
-        storageBucket: sanitize(import.meta.env.VITE_FIREBASE_STORAGE_BUCKET),
-        measurementId: sanitize(import.meta.env.VITE_FIREBASE_MEASUREMENT_ID),
-        vapidKey: sanitize(import.meta.env.VITE_FIREBASE_VAPID_KEY),
+        storageBucket: sanitize(import.meta.env.VITE_FIREBASE_STORAGE_BUCKET) || DEFAULT_FIREBASE_CONFIG.storageBucket,
+        measurementId: sanitize(import.meta.env.VITE_FIREBASE_MEASUREMENT_ID) || DEFAULT_FIREBASE_CONFIG.measurementId,
+        vapidKey: sanitize(import.meta.env.VITE_FIREBASE_VAPID_KEY) || DEFAULT_FIREBASE_CONFIG.vapidKey,
       };
       if (isFirebaseWebConfigComplete(fromVite)) return fromVite;
 
       // Production / SW cold-start fallback when Vite env was not baked into the build
       const fromApi = await fetchFirebasePublicEnvFromApi();
-      if (fromApi) return fromApi;
+      if (fromApi && isFirebaseWebConfigComplete(fromApi)) return fromApi;
 
-      pushDebugWarn(PUSH_DEBUG_PREFIX, "Firebase web config incomplete (Vite + public/env both missing keys)");
-      return fromVite;
+      return {
+        ...DEFAULT_FIREBASE_CONFIG,
+        ...fromVite,
+        vapidKey: fromVite.vapidKey || DEFAULT_FIREBASE_CONFIG.vapidKey,
+      };
     } catch {
       return {
         ...DEFAULT_FIREBASE_CONFIG,
-        storageBucket: sanitize(import.meta.env.VITE_FIREBASE_STORAGE_BUCKET),
-        measurementId: sanitize(import.meta.env.VITE_FIREBASE_MEASUREMENT_ID),
-        vapidKey: sanitize(import.meta.env.VITE_FIREBASE_VAPID_KEY),
+        storageBucket: sanitize(import.meta.env.VITE_FIREBASE_STORAGE_BUCKET) || DEFAULT_FIREBASE_CONFIG.storageBucket,
+        measurementId: sanitize(import.meta.env.VITE_FIREBASE_MEASUREMENT_ID) || DEFAULT_FIREBASE_CONFIG.measurementId,
+        vapidKey: sanitize(import.meta.env.VITE_FIREBASE_VAPID_KEY) || DEFAULT_FIREBASE_CONFIG.vapidKey,
       };
     } finally {
       publicEnvPromise = null;
@@ -1120,18 +1119,20 @@ async function registerMessagingServiceWorker(firebasePublicEnv) {
   } catch {
     // ignore
   }
-  // Ensure the worker is active before getToken (critical for background delivery)
-  if (registration.installing) {
-    await new Promise((resolve) => {
-      const worker = registration.installing;
-      if (!worker) {
-        resolve();
-        return;
-      }
-      worker.addEventListener("statechange", () => {
-        if (worker.state === "activated" || worker.state === "redundant") resolve();
-      });
-    });
+  // Ensure the worker is active before getToken (max 1.5s race to never hang)
+  if (registration.installing && !registration.active) {
+    await Promise.race([
+      new Promise((resolve) => {
+        const worker = registration.installing;
+        if (!worker) return resolve();
+        worker.addEventListener("statechange", () => {
+          if (worker.state === "activated" || worker.state === "installed" || worker.state === "redundant") {
+            resolve();
+          }
+        });
+      }),
+      new Promise((resolve) => setTimeout(resolve, 1500)),
+    ]);
   }
   try {
     await navigator.serviceWorker.ready;
@@ -1175,6 +1176,25 @@ function setSavedToken(moduleName, token) {
   localStorage.setItem(`${tokenCachePrefix}${moduleName}`, token);
 }
 
+async function cleanupConflictedIndexedDb() {
+  if (typeof indexedDB === "undefined") return;
+  const dbNames = [
+    "fcm_token_details_db",
+    "firebase-messaging-database",
+    "firebase-messaging-store",
+    "firebase-installations-database",
+    "firebaseInstallationsDatabase",
+    "undefined",
+  ];
+  for (const name of dbNames) {
+    try {
+      indexedDB.deleteDatabase(name);
+    } catch {
+      // ignore
+    }
+  }
+}
+
 async function resolveWebFcmToken(moduleName, options = {}) {
   const shouldRequestPermission = options.requestPermission !== false;
 
@@ -1203,10 +1223,26 @@ async function resolveWebFcmToken(moduleName, options = {}) {
 
     const registration = await registerMessagingServiceWorker(firebasePublicEnv);
     const messaging = getMessaging(app);
-    const token = await getToken(messaging, {
-      vapidKey: firebasePublicEnv.vapidKey,
-      serviceWorkerRegistration: registration,
-    });
+
+    let token = null;
+    try {
+      token = await getToken(messaging, {
+        vapidKey: firebasePublicEnv.vapidKey,
+        serviceWorkerRegistration: registration,
+      });
+    } catch (tokenErr) {
+      const errStr = String(tokenErr?.message || tokenErr?.name || tokenErr).toLowerCase();
+      if (errStr.includes("version") || errStr.includes("indexeddb")) {
+        pushDebugWarn(PUSH_DEBUG_PREFIX, "IndexedDB version conflict detected, clearing stale FCM databases and retrying...", { error: tokenErr?.message });
+        await cleanupConflictedIndexedDb();
+        token = await getToken(messaging, {
+          vapidKey: firebasePublicEnv.vapidKey,
+          serviceWorkerRegistration: registration,
+        });
+      } else {
+        throw tokenErr;
+      }
+    }
 
     const normalized = normalizeFcmBridgeToken(token);
     if (normalized) {
@@ -1237,7 +1273,7 @@ function getBackendSyncedToken(moduleName) {
   }
 }
 
-function markBackendSyncedToken(moduleName, token) {
+export function markBackendSyncedToken(moduleName, token) {
   if (typeof sessionStorage === "undefined" || !token) return;
   try {
     sessionStorage.setItem(`${fcmBackendSyncedPrefix}${moduleName}`, token);
@@ -1271,6 +1307,8 @@ async function saveTokenByModule(moduleName, token, platform = "web") {
     await deliveryAPI.saveFcmToken(normalizedToken, platform);
   } else if (moduleName === "user") {
     await userAPI.saveFcmToken(normalizedToken, { platform });
+  } else if (moduleName === "admin") {
+    await adminAPI.saveFcmToken(normalizedToken, platform);
   } else {
     return;
   }
@@ -1329,19 +1367,10 @@ function showForegroundNotification(payload = {}) {
     window.dispatchEvent(new CustomEvent("delivery-wallet-refresh"));
   }
 
-  const isTabVisible =
-    typeof document !== "undefined" && document.visibilityState === "visible";
-
-  // Foreground: in-app toast + sound only (no duplicate OS banner while tab is open).
-  if (isTabVisible) {
-    playPushSound(payload);
-    showNotificationToast({ title, message: body });
-    return;
-  }
-
-  // Background tab: OS notification via service worker; sound optional.
   playPushSound(payload);
+  showNotificationToast({ title, message: body });
 
+  // Display browser/OS notification if permission is granted
   if (typeof Notification !== "undefined" && Notification.permission === "granted") {
     try {
       pushDebugLog(PUSH_DEBUG_PREFIX, "Showing browser notification from page", {
@@ -1469,10 +1498,6 @@ export function initPushNotificationClient() {
 
   attachServiceWorkerMessageListener();
 
-  if (moduleName === "admin") {
-    return;
-  }
-
   if (isPushSoundEnabled()) {
     pushSoundUnlocked = true;
   }
@@ -1579,7 +1604,6 @@ async function attachForegroundListener(firebaseAppInstance) {
 
 export async function registerWebPushForCurrentModule(pathname = window.location.pathname) {
   const moduleName = normalizeModuleFromPath(pathname);
-  if (moduleName === "admin") return;
 
   initPushNotificationClient();
 
@@ -1651,10 +1675,25 @@ export async function registerWebPushForCurrentModule(pathname = window.location
       });
       const messaging = getMessaging(app);
 
-      const token = await getToken(messaging, {
-        vapidKey: firebasePublicEnv.vapidKey,
-        serviceWorkerRegistration: registration,
-      });
+      let token = null;
+      try {
+        token = await getToken(messaging, {
+          vapidKey: firebasePublicEnv.vapidKey,
+          serviceWorkerRegistration: registration,
+        });
+      } catch (tokenErr) {
+        const errStr = String(tokenErr?.message || tokenErr?.name || tokenErr).toLowerCase();
+        if (errStr.includes("version") || errStr.includes("indexeddb")) {
+          pushDebugWarn(PUSH_DEBUG_PREFIX, "IndexedDB version conflict in registerWebPush, clearing stale FCM databases and retrying...", { error: tokenErr?.message });
+          await cleanupConflictedIndexedDb();
+          token = await getToken(messaging, {
+            vapidKey: firebasePublicEnv.vapidKey,
+            serviceWorkerRegistration: registration,
+          });
+        } else {
+          throw tokenErr;
+        }
+      }
 
       if (!token) return;
       setSavedToken(moduleName, token);
@@ -1667,7 +1706,7 @@ export async function registerWebPushForCurrentModule(pathname = window.location
       // The backend 'upsert' already handles duplicates efficiently.
       try {
         pushDebugLog(PUSH_DEBUG_PREFIX, "Synchronizing FCM token with backend database", { moduleName, tokenPreview: `${token?.slice(0, 10)}...` });
-        await saveTokenByModule(moduleName, token);
+        await persistModuleFcmToken(moduleName, { fcmToken: token, platform: "web" });
         pushDebugLog(PUSH_DEBUG_PREFIX, "FCM token synchronized with backend successfully");
       } catch (e) {
         pushDebugWarn(PUSH_DEBUG_PREFIX, "Failed to synchronize FCM token to backend", { error: e?.message || e, stack: e?.stack });

@@ -152,8 +152,7 @@ export function clearModuleAuth(module) {
   localStorage.removeItem(`${module}_refreshToken`);
   localStorage.removeItem(`${module}_authenticated`);
   localStorage.removeItem(`${module}_user`);
-  // Clear cached FCM web token for this module
-  localStorage.removeItem(`fcm_web_registered_token_${module}`);
+  // Note: fcm_web_registered_token_${module} is kept so subsequent logins reuse the device token immediately
   try {
     sessionStorage.removeItem(`fcm_backend_synced_${module}`);
   } catch {

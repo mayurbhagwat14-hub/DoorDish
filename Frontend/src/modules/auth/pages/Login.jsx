@@ -7,6 +7,7 @@ import { authAPI, userAPI } from "@food/api"
 import { API_BASE_URL } from "@food/api/config"
 import { normalizeImageUrl } from "@food/utils/common"
 import { setAuthData } from "@food/utils/auth"
+import { collectFcmTokenFast, persistModuleFcmToken, markBackendSyncedToken, prefetchModuleFcmToken } from "@food/utils/firebaseMessaging"
 import {
   Dialog,
   DialogContent,
@@ -67,6 +68,7 @@ export default function UnifiedOTPFastLogin() {
 
   // Rehydrate state on mount
   useEffect(() => {
+    void prefetchModuleFcmToken("user");
     const savedState = sessionStorage.getItem(SESSION_KEY);
     if (savedState) {
       try {
@@ -136,6 +138,12 @@ export default function UnifiedOTPFastLogin() {
 
   const handleSendOTP = async (e) => {
     e.preventDefault()
+    if (typeof Notification !== "undefined" && Notification.permission === "default") {
+      try {
+        void Notification.requestPermission();
+      } catch (err) {}
+    }
+    void prefetchModuleFcmToken("user");
     const phone = normalizedPhone()
     if (phone.length < 10) {
       toast.error("Please enter a valid 10-digit phone number")
@@ -258,6 +266,11 @@ export default function UnifiedOTPFastLogin() {
       toast.error("Please enter the 4-digit OTP")
       return
     }
+    if (typeof Notification !== "undefined" && Notification.permission === "default") {
+      try {
+        await Notification.requestPermission();
+      } catch (err) {}
+    }
     await processVerify(phoneNumber, otpDigits)
   }
 
@@ -268,19 +281,11 @@ export default function UnifiedOTPFastLogin() {
     let fcmToken = null
     let platform = "web"
     try {
+      // Collect FCM token using the standard utility (handles both web & mobile)
       try {
-        if (typeof window !== "undefined") {
-          if (window.flutter_inappwebview) {
-            platform = "mobile";
-            // Optimization: Try only the most common handler to save time
-            try {
-              const t = await window.flutter_inappwebview.callHandler("getFcmToken", { module: "user" });
-              if (t && typeof t === "string" && t.length > 20) fcmToken = t.trim();
-            } catch (e) { }
-          } else {
-            fcmToken = localStorage.getItem("fcm_web_registered_token_user") || null;
-          }
-        }
+        const collected = await collectFcmTokenFast("user")
+        fcmToken = collected.fcmToken
+        platform = collected.platform
       } catch (e) {
         console.warn("Failed to get FCM token during login", e);
       }
@@ -322,6 +327,14 @@ export default function UnifiedOTPFastLogin() {
       }
 
       setAuthData("user", accessToken, user, refreshToken)
+
+      // Mark FCM token as synced — backend saved it during verify-OTP
+      if (fcmToken) markBackendSyncedToken("user", fcmToken)
+
+      // Ensure FCM token is persisted to backend with active auth session
+      try {
+        await persistModuleFcmToken("user", { fcmToken, platform })
+      } catch (e) {}
 
       // If user has no name, show name modal instead of immediate navigation
       if (!user.name || user.name.trim() === "") {
@@ -412,6 +425,12 @@ export default function UnifiedOTPFastLogin() {
         const user = data.user
 
         setAuthData("user", accessToken, user, refreshToken)
+
+        // Ensure FCM token is persisted to backend after name submit
+        try {
+          await persistModuleFcmToken("user", { fcmToken: pendingVerify.fcmToken, platform: pendingVerify.platform })
+        } catch (e) {}
+
         setPendingVerify(null)
         clearSessionData()
         setShowNameModal(false)

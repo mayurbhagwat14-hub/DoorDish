@@ -9,7 +9,7 @@ import {
   setRestaurantPendingPhone,
 } from "@food/utils/auth"
 import { clearOnboardingFromLocalStorage, clearAllFilesFromDB, checkOnboardingStatus, isRestaurantOnboardingComplete } from "@/modules/Food/utils/onboardingUtils"
-import { collectFcmTokenFast, persistModuleFcmToken } from "@food/utils/firebaseMessaging"
+import { collectFcmTokenFast, persistModuleFcmToken, markBackendSyncedToken } from "@food/utils/firebaseMessaging"
 
 const DEFAULT_COUNTRY_CODE = "+91"
 
@@ -374,6 +374,8 @@ export default function RestaurantLogin() {
         }
 
         setRestaurantAuthData("restaurant", accessToken, restaurant, data?.refreshToken)
+        // Mark FCM token as synced — backend saved it during verify-OTP
+        if (fcmToken) markBackendSyncedToken("restaurant", fcmToken)
         window.dispatchEvent(new Event("restaurantAuthChanged"))
         try {
           await persistModuleFcmToken("restaurant", { fcmToken, platform })

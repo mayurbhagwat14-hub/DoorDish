@@ -10,17 +10,40 @@ let cachedServiceAccount = null;
 
 const sanitizeString = (value) => String(value ?? '').trim();
 
+const parseServiceAccountJson = (raw) => {
+    let val = sanitizeString(raw);
+    if (!val) return null;
+    if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+        val = val.slice(1, -1).trim();
+    }
+    val = val.replace(/\\"/g, '"');
+    if (!val.endsWith('"}') && !val.endsWith('}')) {
+        if (val.endsWith('"')) val = val + '}';
+        else val = val + '"}';
+    }
+    try {
+        return JSON.parse(val);
+    } catch {
+        try {
+            const fixed = val.replace(/(?<!\\)\r?\n/g, '\\n');
+            return JSON.parse(fixed);
+        } catch {
+            return null;
+        }
+    }
+};
+
 const getServiceAccountFromEnv = () => {
     if (cachedServiceAccount) return cachedServiceAccount;
 
     const rawJson = sanitizeString(config.firebaseServiceAccount);
     if (rawJson) {
-        try {
-            cachedServiceAccount = JSON.parse(rawJson);
+        const parsed = parseServiceAccountJson(rawJson);
+        if (parsed) {
+            cachedServiceAccount = parsed;
             return cachedServiceAccount;
-        } catch (err) {
-            logger.error('Error parsing FIREBASE_SERVICE_ACCOUNT JSON:', err.message);
         }
+        logger.error('Error parsing FIREBASE_SERVICE_ACCOUNT JSON: Invalid format');
     }
 
     const pathValue = sanitizeString(config.firebaseServiceAccountPath);

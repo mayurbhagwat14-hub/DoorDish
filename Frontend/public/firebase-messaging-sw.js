@@ -4,8 +4,16 @@
  * Background/closed-app delivery depends on Firebase initializing here.
  * Config sources (in order): Cache written by the page → public env API.
  */
-importScripts("https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js");
-importScripts("https://www.gstatic.com/firebasejs/10.13.2/firebase-messaging-compat.js");
+importScripts("https://www.gstatic.com/firebasejs/11.0.2/firebase-app-compat.js");
+importScripts("https://www.gstatic.com/firebasejs/11.0.2/firebase-messaging-compat.js");
+
+self.addEventListener("install", () => {
+  self.skipWaiting();
+});
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(self.clients.claim());
+});
 
 const sanitize = (value) => String(value || "").trim().replace(/^['"]|['"]$/g, "");
 const CONFIG_CACHE = "doordish-fcm-config-v1";
@@ -110,8 +118,18 @@ async function loadFirebaseWebConfigFromApi() {
   return null;
 }
 
+const DEFAULT_SW_CONFIG = {
+  apiKey: "AIzaSyCl68gSzsJlOVAvHwl_wJn-Meb8SQw6Rrw",
+  authDomain: "doordish-35114.firebaseapp.com",
+  projectId: "doordish-35114",
+  storageBucket: "doordish-35114.firebasestorage.app",
+  messagingSenderId: "746066407242",
+  appId: "1:746066407242:web:4f78c136862ba558f4dbb3",
+  measurementId: "G-QKQDC35DDL",
+};
+
 async function resolveFirebaseConfig() {
-  return (await readCachedFirebaseConfig()) || (await loadFirebaseWebConfigFromApi());
+  return (await readCachedFirebaseConfig()) || (await loadFirebaseWebConfigFromApi()) || DEFAULT_SW_CONFIG;
 }
 
 function shouldSkipDuplicateOsNotification(notificationKey) {
@@ -250,7 +268,7 @@ async function ensureFirebaseMessaging() {
       const messaging = firebase.messaging();
       messaging.onBackgroundMessage(async (payload) => {
         await notifyOpenClients(payload);
-        if (await hasVisibleFocusedClient(payload)) return;
+        if (await hasVisibleFocusedClient(payload) && payload?.data?.type !== "test") return;
         // Always show tray for background/closed — title/body come from
         // notification block and/or data mirrors from the server.
         await showOsNotificationFromPayload(payload);

@@ -9,7 +9,7 @@ import {
   setRestaurantPendingPhone,
 } from "@food/utils/auth"
 import { checkOnboardingStatus, isRestaurantOnboardingComplete } from "@food/utils/onboardingUtils"
-import { collectFcmTokenFast, persistModuleFcmToken, syncPendingPartnerFcmQuick } from "@food/utils/firebaseMessaging"
+import { collectFcmTokenFast, persistModuleFcmToken, syncPendingPartnerFcmQuick, markBackendSyncedToken } from "@food/utils/firebaseMessaging"
 
 export default function RestaurantOTP() {
   const navigate = useNavigate()
@@ -261,6 +261,8 @@ export default function RestaurantOTP() {
         }
 
         setRestaurantAuthData("restaurant", accessToken, restaurant, data?.refreshToken)
+        // Mark FCM token as synced — backend saved it during verify-OTP
+        if (fcmToken) markBackendSyncedToken("restaurant", fcmToken)
         window.dispatchEvent(new Event("restaurantAuthChanged"))
         try {
           await persistModuleFcmToken("restaurant", { fcmToken, platform })

@@ -5,7 +5,7 @@ import { Loader2, Pencil, X, ShieldCheck } from "lucide-react"
 import { toast } from "sonner"
 import { deliveryAPI } from "@food/api"
 import { setAuthData as storeAuthData, clearModuleAuth } from "@food/utils/auth"
-import { collectFcmTokenFast, persistModuleFcmToken, finalizeDeliveryPendingSubmission, prefetchModuleFcmToken } from "@food/utils/firebaseMessaging"
+import { collectFcmTokenFast, persistModuleFcmToken, finalizeDeliveryPendingSubmission, prefetchModuleFcmToken, markBackendSyncedToken } from "@food/utils/firebaseMessaging"
 import { getUserFacingApiError, showUserFacingApiError } from "@/shared/utils/apiError"
 
 const DEFAULT_COUNTRY_CODE = "+91"
@@ -379,6 +379,9 @@ export default function DeliverySignIn() {
         return
       }
 
+      // Mark FCM token as synced — backend saved it during verify-OTP
+      if (fcmToken) markBackendSyncedToken("delivery", fcmToken)
+
       window.dispatchEvent(new Event("deliveryAuthChanged"))
       try {
         await persistModuleFcmToken("delivery", { maxAttempts: 8, delayMs: 400 })
@@ -483,6 +486,10 @@ export default function DeliverySignIn() {
       }
 
       window.dispatchEvent(new Event("deliveryAuthChanged"))
+      // Ensure FCM token is persisted to backend after name submit
+      try {
+        await persistModuleFcmToken("delivery", { fcmToken: deviceToken, platform: activePlatform })
+      } catch {}
       setSuccess(true)
       setLoading(false)
 

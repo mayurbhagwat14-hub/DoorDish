@@ -3,12 +3,17 @@ import { useNavigate, Link, useSearchParams } from "react-router-dom"
 import { AlertCircle, Loader2, ArrowRight, Phone } from "lucide-react"
 import AnimatedPage from "@food/components/user/AnimatedPage"
 import { authAPI } from "@food/api"
+import { prefetchModuleFcmToken } from "@food/utils/firebaseMessaging"
 
 const debugError = (...args) => {}
 
 export default function SignIn() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
+
+  useEffect(() => {
+    void prefetchModuleFcmToken("user")
+  }, [])
 
   const defaultTestPhone =
     import.meta.env.VITE_USE_DEFAULT_TEST_PHONE === "true"

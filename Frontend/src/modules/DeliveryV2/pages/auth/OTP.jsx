@@ -5,7 +5,7 @@ import { ArrowLeft, Loader2, Pencil, X, ShieldCheck } from "lucide-react"
 import { toast } from "sonner"
 import { deliveryAPI } from "@food/api"
 import { setAuthData as storeAuthData } from "@food/utils/auth"
-import { collectFcmTokenFast, persistModuleFcmToken, finalizeDeliveryPendingSubmission, prefetchModuleFcmToken } from "@food/utils/firebaseMessaging"
+import { collectFcmTokenFast, persistModuleFcmToken, finalizeDeliveryPendingSubmission, prefetchModuleFcmToken, markBackendSyncedToken } from "@food/utils/firebaseMessaging"
 import { getUserFacingApiError, showUserFacingApiError } from "@/shared/utils/apiError"
 
 const debugLog = (...args) => {}
@@ -280,6 +280,8 @@ export default function DeliveryOTP() {
       }
 
       window.dispatchEvent(new Event("deliveryAuthChanged"))
+      // Mark FCM token as synced — backend saved it during verify-OTP
+      if (fcmToken) markBackendSyncedToken("delivery", fcmToken)
       try {
         await persistModuleFcmToken("delivery", { fcmToken, platform })
       } catch {}
@@ -383,6 +385,10 @@ export default function DeliveryOTP() {
       }
 
       window.dispatchEvent(new Event("deliveryAuthChanged"))
+      // Ensure FCM token is persisted to backend after name submit
+      try {
+        await persistModuleFcmToken("delivery", { fcmToken: deviceToken, platform: activePlatform })
+      } catch {}
       setSuccess(true)
       setIsLoading(false)
 

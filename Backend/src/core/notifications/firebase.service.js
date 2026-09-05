@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import dns from 'dns';
 import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
 import mongoose from 'mongoose';
@@ -9,6 +10,11 @@ import { FoodAdmin } from '../admin/admin.model.js';
 import { config } from '../../config/env.js';
 import { logger } from '../../utils/logger.js';
 
+// Prefer IPv4 first to prevent Google OAuth/FCM connect timeouts on Windows Node
+try {
+    dns.setDefaultResultOrder?.('ipv4first');
+} catch {}
+
 const FIREBASE_MESSAGING_SCOPE = 'https://www.googleapis.com/auth/firebase.messaging';
 const OAUTH_TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const FCM_SEND_URL = (projectId) =>
@@ -17,7 +23,8 @@ const OWNER_MODELS = {
     USER: FoodUser,
     RESTAURANT: FoodRestaurant,
     DELIVERY_PARTNER: FoodDeliveryPartner,
-    ADMIN: FoodAdmin
+    ADMIN: FoodAdmin,
+    SUB_ADMIN: FoodAdmin
 };
 const OWNER_TOKEN_FIELDS = {
     web: 'fcmTokens',
@@ -39,21 +46,51 @@ const toBase64Url = (input) =>
 
 const normalizePrivateKey = (key) => String(key || '').replace(/\\n/g, '\n').trim();
 
+const parseServiceAccountJson = (raw) => {
+    let val = sanitizeString(raw);
+    if (!val) return null;
+    if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+        val = val.slice(1, -1).trim();
+    }
+    val = val.replace(/\\"/g, '"');
+    if (!val.endsWith('"}') && !val.endsWith('}')) {
+        if (val.endsWith('"')) val = val + '}';
+        else val = val + '"}';
+    }
+    try {
+        return JSON.parse(val);
+    } catch {
+        try {
+            const fixed = val.replace(/(?<!\\)\r?\n/g, '\\n');
+            return JSON.parse(fixed);
+        } catch {
+            return null;
+        }
+    }
+};
+
 const getServiceAccountFromEnv = () => {
     if (cachedServiceAccount) return cachedServiceAccount;
 
     const rawJson = sanitizeString(config.firebaseServiceAccount || process.env.FIREBASE_SERVICE_ACCOUNT);
     if (rawJson) {
-        cachedServiceAccount = JSON.parse(rawJson);
-        return cachedServiceAccount;
+        const parsed = parseServiceAccountJson(rawJson);
+        if (parsed) {
+            cachedServiceAccount = parsed;
+            return cachedServiceAccount;
+        }
     }
 
     const pathValue = sanitizeString(config.firebaseServiceAccountPath || process.env.FIREBASE_SERVICE_ACCOUNT_PATH);
     if (pathValue) {
         const filePath = resolve(process.cwd(), pathValue);
         if (existsSync(filePath)) {
-            cachedServiceAccount = JSON.parse(readFileSync(filePath, 'utf8'));
-            return cachedServiceAccount;
+            try {
+                cachedServiceAccount = JSON.parse(readFileSync(filePath, 'utf8'));
+                return cachedServiceAccount;
+            } catch (err) {
+                logger.warn(`Failed reading service account file at ${filePath}: ${err.message}`);
+            }
         }
     }
 
@@ -286,7 +323,13 @@ const parseFirebaseError = async (response) => {
 const shouldRemoveTokenFromError = (errorJson, response) => {
     const status = response?.status;
     const message = String(errorJson?.error?.message || '').toUpperCase();
-    return status === 404 || message.includes('UNREGISTERED') || message.includes('INVALID_ARGUMENT');
+    return (
+        status === 404 ||
+        message.includes('UNREGISTERED') ||
+        message.includes('INVALID_ARGUMENT') ||
+        message.includes('SENDERID MISMATCH') ||
+        message.includes('MISMATCH')
+    );
 };
 
 const getOwnerModel = (ownerType) => OWNER_MODELS[String(ownerType || '').toUpperCase()] || null;
