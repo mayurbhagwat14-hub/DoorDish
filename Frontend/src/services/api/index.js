@@ -2644,7 +2644,7 @@ export const foodCartAPI = {
 };
 
 const userOrdersCacheMap = new Map();
-const USER_ORDERS_CACHE_MS = 4000;
+const USER_ORDERS_CACHE_MS = 15000;
 
 export const orderAPI = {
   calculateOrder: (payload) =>

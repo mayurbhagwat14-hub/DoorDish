@@ -948,23 +948,32 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
         <div className="shrink-0 px-3 py-3 border-b border-neutral-800/60 bg-neutral-900 animate-[fadeIn_0.4s_ease-out]">
           <div className="flex items-center justify-between mb-3">
             {!isCollapsed && (
-              <div className="flex items-center gap-2 animate-[slideIn_0.3s_ease-out]">
-                <div className="w-24 h-12 rounded-lg flex items-center justify-center shadow-black/20">
+              <div className="flex items-center gap-2.5 animate-[slideIn_0.3s_ease-out] flex-1 min-w-0 mr-2">
+                <div className="w-10 h-10 shrink-0 rounded-lg bg-white/5 flex items-center justify-center shadow-lg shadow-black/20 ring-1 ring-white/10 overflow-hidden">
                   {logoUrl ? (
                     <img
                       src={logoUrl}
                       alt={companyName || "Company"}
-                      className="w-24 h-10 object-contain"
+                      className="w-10 h-10 object-contain"
                       loading="lazy"
                       onError={() => setLogoUrl(null)}
                     />
-                  ) : companyName ? (
-                    <span className="text-xs font-semibold text-white px-2 truncate">
-                      {companyName}
-                    </span>
                   ) : (
-                    <img src="/assets/images/doordish-logo.png" alt="Company" className="w-24 h-10 object-contain" loading="lazy" />
+                    <img
+                      src="/assets/images/doordish-logo.png"
+                      alt="Company"
+                      className="w-10 h-10 object-contain"
+                      loading="lazy"
+                    />
                   )}
+                </div>
+                <div className="flex items-center min-w-0 flex-1">
+                  <img
+                    src="/assets/images/ChatGPT Image Sep 7, 2026, 05_27_22 PM.png"
+                    alt={companyName || "DoorDish"}
+                    className="h-14 w-auto max-w-full object-contain"
+                    loading="lazy"
+                  />
                 </div>
               </div>
             )}

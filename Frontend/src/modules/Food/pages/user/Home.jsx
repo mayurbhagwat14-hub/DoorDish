@@ -4484,7 +4484,7 @@ export default function Home({ homeMode = null, isTabActive = true }) {
       <Footer />
       <StickyCartCard />
       {/* Live order strip: only on homepage (not in UserLayout) */}
-      <OrderTrackingCard hasBottomNav />
+      <OrderTrackingCard hasBottomNav isTabActive={isTabActive} />
     </div>
   );
 }

@@ -152,13 +152,18 @@ function ordersFingerprint(orders) {
     .join("|");
 }
 
-function OrderTrackingCardInner({ hasBottomNav = true }) {
+// Global cache and in-flight promise to prevent duplicate API calls across all component instances/tabs
+let globalLastFetchOrdersTime = 0;
+let globalFetchOrdersPromise = null;
+let globalCachedOrdersList = null;
+
+function OrderTrackingCardInner({ hasBottomNav = true, isTabActive = true }) {
   const navigate = useNavigate();
   const { orders: contextOrders } = useOrders();
   const { orderType } = useProfile();
   const [timeRemaining, setTimeRemaining] = useState(null);
-  const [apiOrders, setApiOrders] = useState([]);
-  const [hasFetchedApi, setHasFetchedApi] = useState(false);
+  const [apiOrders, setApiOrders] = useState(() => globalCachedOrdersList || []);
+  const [hasFetchedApi, setHasFetchedApi] = useState(() => Boolean(globalCachedOrdersList));
   const [activeOrderOverride, setActiveOrderOverride] = useState(null);
   const lastRefreshRef = useRef(0);
   const lastApiFingerprintRef = useRef("");
@@ -168,62 +173,90 @@ function OrderTrackingCardInner({ hasBottomNav = true }) {
   // Guard: track which order keys are currently being verified to prevent concurrent duplicate calls
   const verifyingKeysRef = useRef(new Set());
   const lastVerifyTimeRef = useRef({});
-  // Guard: prevent concurrent fetchOrders calls (StrictMode double-invoke / event storms)
-  const isFetchingOrdersRef = useRef(false);
-  const lastFetchOrdersTimeRef = useRef(0);
 
   const fetchOrders = useCallback(async () => {
     if (!isModuleAuthenticated("user")) {
       setHasFetchedApi(true);
       return;
     }
-    // Drop duplicate concurrent calls — only one fetch at a time
-    if (isFetchingOrdersRef.current) return;
-    // Throttle: don't re-fetch within 10 seconds of the last completed fetch
+
     const now = Date.now();
-    if (now - lastFetchOrdersTimeRef.current < 10000) return;
-    isFetchingOrdersRef.current = true;
-    try {
-      const response = await orderAPI.getOrders({ limit: 10, page: 1 });
-      let nextOrders = [];
+    // Throttle: don't re-fetch within 15 seconds of the last completed fetch
+    if (globalCachedOrdersList && now - globalLastFetchOrdersTime < 15000) {
+      setApiOrders(globalCachedOrdersList);
+      setHasFetchedApi(true);
+      return;
+    }
 
-      if (response?.data?.success && response?.data?.data?.orders) {
-        nextOrders = response.data.data.orders;
-      } else if (response?.data?.orders) {
-        nextOrders = response.data.orders;
-      } else if (response?.data?.data?.data && Array.isArray(response.data.data.data)) {
-        nextOrders = response.data.data.data;
-      } else if (response?.data?.data?.docs && Array.isArray(response.data.data.docs)) {
-        nextOrders = response.data.data.docs;
-      } else if (response?.data?.data && Array.isArray(response.data.data)) {
-        nextOrders = response.data.data;
+    // Reuse existing in-flight promise if another instance or call is already in progress
+    if (globalFetchOrdersPromise) {
+      try {
+        const list = await globalFetchOrdersPromise;
+        const fp = ordersFingerprint(list);
+        if (fp !== lastApiFingerprintRef.current) {
+          lastApiFingerprintRef.current = fp;
+          setApiOrders(list);
+        }
+      } catch {}
+      setHasFetchedApi(true);
+      return;
+    }
+
+    const executeFetch = async () => {
+      try {
+        const response = await orderAPI.getOrders({ limit: 10, page: 1 });
+        let nextOrders = [];
+
+        if (response?.data?.success && response?.data?.data?.orders) {
+          nextOrders = response.data.data.orders;
+        } else if (response?.data?.orders) {
+          nextOrders = response.data.orders;
+        } else if (response?.data?.data?.data && Array.isArray(response.data.data.data)) {
+          nextOrders = response.data.data.data;
+        } else if (response?.data?.data?.docs && Array.isArray(response.data.data.docs)) {
+          nextOrders = response.data.data.docs;
+        } else if (response?.data?.data && Array.isArray(response.data.data)) {
+          nextOrders = response.data.data;
+        }
+
+        const list = Array.isArray(nextOrders) ? nextOrders : [];
+        globalCachedOrdersList = list;
+        globalLastFetchOrdersTime = Date.now();
+        return list;
+      } catch (error) {
+        if (error?.response?.status === 401) {
+          localStorage.removeItem("user_accessToken");
+          localStorage.removeItem("accessToken");
+          globalCachedOrdersList = [];
+          return [];
+        }
+        throw error;
+      } finally {
+        globalFetchOrdersPromise = null;
       }
+    };
 
-      const list = Array.isArray(nextOrders) ? nextOrders : [];
+    globalFetchOrdersPromise = executeFetch();
+    try {
+      const list = await globalFetchOrdersPromise;
       const fp = ordersFingerprint(list);
       if (fp !== lastApiFingerprintRef.current) {
         lastApiFingerprintRef.current = fp;
         setApiOrders(list);
       }
-    } catch (error) {
-      if (error?.response?.status === 401) {
-        localStorage.removeItem("user_accessToken");
-        localStorage.removeItem("accessToken");
-        lastApiFingerprintRef.current = "";
-        setApiOrders([]);
-      }
+    } catch {
+      // ignore network errors
     } finally {
-      lastFetchOrdersTimeRef.current = Date.now();
-      isFetchingOrdersRef.current = false;
       setHasFetchedApi(true);
     }
   }, []);
 
   useEffect(() => {
+    if (!isTabActive) return;
     fetchOrders();
     const interval = setInterval(fetchOrders, 60000); // 60s — live updates via Socket.IO anyway
     return () => clearInterval(interval);
-  }, [fetchOrders]);
+  }, [fetchOrders, isTabActive]);
 
   const uniqueOrders = useMemo(() => {
     const isMongoObjectId = (value) => /^[a-f0-9]{24}$/i.test(String(value || ""));
