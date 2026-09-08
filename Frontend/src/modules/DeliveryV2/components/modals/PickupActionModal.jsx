@@ -324,37 +324,67 @@ export const PickupActionModal = ({
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="flex justify-center items-center gap-3 w-full">
+              <div className="flex flex-col gap-2.5 w-full">
                  {!billImageUploaded && !isUploadingBill && (
                    <>
-                      <button
-                        onClick={handleTakeCameraPhoto}
-                        className="flex-1 flex items-center justify-center gap-2 py-3 sm:py-4 rounded-2xl bg-gray-900 text-white font-bold text-[11px] sm:text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all"
-                      >
-                        <Camera className="w-5 h-5" />
-                        <span>Camera</span>
-                      </button>
-                      <button
-                        onClick={handlePickFromGallery}
-                        className="flex-1 flex items-center justify-center gap-2 py-3 sm:py-4 rounded-2xl bg-orange-50 text-orange-600 border border-orange-100 font-bold text-[11px] sm:text-xs uppercase tracking-widest active:scale-95 transition-all"
-                      >
-                        <ImageIcon className="w-5 h-5" />
-                        <span>Gallery</span>
-                      </button>
+                      <div className="flex items-center justify-center gap-1.5 py-1 px-3 bg-amber-50 border border-amber-200/70 rounded-xl text-amber-800 text-[11px] font-bold">
+                        <Camera className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                        <span>Take food parcel or bill photo to unlock pickup</span>
+                      </div>
+                      <div className="flex justify-center items-center gap-3 w-full">
+                        <button
+                          type="button"
+                          onClick={handleTakeCameraPhoto}
+                          className="flex-1 flex items-center justify-center gap-2 py-3 sm:py-4 rounded-2xl bg-gray-900 text-white font-bold text-[11px] sm:text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all"
+                        >
+                          <Camera className="w-5 h-5 text-orange-400" />
+                          <span>Camera</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handlePickFromGallery}
+                          className="flex-1 flex items-center justify-center gap-2 py-3 sm:py-4 rounded-2xl bg-orange-50 text-orange-600 border border-orange-200 font-bold text-[11px] sm:text-xs uppercase tracking-widest active:scale-95 transition-all"
+                        >
+                          <ImageIcon className="w-5 h-5" />
+                          <span>Gallery</span>
+                        </button>
+                      </div>
                    </>
                  )}
 
                  {isUploadingBill && (
-                    <div className="w-full flex items-center justify-center gap-2 py-3 sm:py-4 rounded-2xl bg-gray-50 text-gray-400 font-bold text-[11px] sm:text-xs uppercase tracking-widest">
-                       <Loader2 className="w-4 h-4 animate-spin" />
-                       <span>Uploading...</span>
+                    <div className="w-full flex items-center justify-center gap-2 py-3.5 sm:py-4 rounded-2xl bg-gray-50 border border-gray-200 text-gray-500 font-bold text-[11px] sm:text-xs uppercase tracking-widest animate-pulse">
+                       <Loader2 className="w-4 h-4 animate-spin text-orange-500" />
+                       <span>Uploading photo...</span>
                     </div>
                  )}
 
                  {billImageUploaded && (
-                    <div className="w-full flex items-center justify-center gap-2 py-3 sm:py-4 rounded-2xl bg-green-100 text-green-700 font-bold text-[11px] sm:text-xs uppercase tracking-widest">
-                       <CheckCircle2 className="w-4 h-4" />
-                       <span>Bill Uploaded</span>
+                    <div className="w-full flex items-center justify-between p-2.5 sm:p-3 bg-green-50 border border-green-200 rounded-2xl">
+                       <div className="flex items-center gap-2.5 min-w-0">
+                          {billImageUrl ? (
+                            <img 
+                              src={billImageUrl} 
+                              alt="Uploaded bill" 
+                              className="w-10 h-10 rounded-xl object-cover border border-green-300 shrink-0 shadow-xs" 
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center text-green-600 shrink-0">
+                              <CheckCircle2 className="w-5 h-5" />
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <span className="text-xs font-bold text-green-800 block truncate">Photo Attached ✓</span>
+                            <span className="text-[10px] text-green-600 font-semibold block">Pickup Unlocked</span>
+                          </div>
+                       </div>
+                       <button
+                         type="button"
+                         onClick={handleTakeCameraPhoto}
+                         className="px-3 py-1.5 rounded-xl bg-white border border-green-300 text-green-700 font-bold text-[10px] uppercase tracking-wider shadow-2xs hover:bg-green-50 active:scale-95 transition-all shrink-0 ml-2"
+                       >
+                         Retake
+                       </button>
                     </div>
                  )}
 
@@ -368,15 +398,27 @@ export const PickupActionModal = ({
               </div>
 
               <div>
-                <p className="text-center text-[10px] font-bold uppercase tracking-widest mb-3 text-green-600">
-                  Swipe to pick up
-                </p>
+                {!billImageUploaded ? (
+                  <p className="text-center text-[10px] font-bold uppercase tracking-widest mb-2.5 text-amber-600 flex items-center justify-center gap-1">
+                    <span>🔒 Upload Photo to Unlock Pick Up</span>
+                  </p>
+                ) : (
+                  <p className="text-center text-[10px] font-bold uppercase tracking-widest mb-2.5 text-green-600 flex items-center justify-center gap-1">
+                    <span>✓ Photo Verified — Swipe to Pick Up</span>
+                  </p>
+                )}
                 <ActionSlider 
-                  key="action-pickup"
-                  label="Slide to Pick Up" 
+                  key={`action-pickup-${billImageUploaded ? 'ready' : 'locked'}`}
+                  label={!billImageUploaded ? "Upload Photo First" : "Slide to Pick Up"}
                   successLabel="Picked Up!"
-                  disabled={false}
-                  onConfirm={() => onPickedUp(billImageUrl)}
+                  disabled={!billImageUploaded || isUploadingBill}
+                  onConfirm={() => {
+                    if (!billImageUploaded) {
+                      toast.error("Please upload parcel photo before picking up");
+                      return;
+                    }
+                    return onPickedUp(billImageUrl);
+                  }}
                   color="bg-orange-500"
                 />
               </div>

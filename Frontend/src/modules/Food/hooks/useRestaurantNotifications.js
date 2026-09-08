@@ -264,6 +264,29 @@ const stopGlobalAlertLoop = () => {
   stopWebViewNativeNotification();
 };
 
+let audioUnlocked = false;
+const unlockAudio = () => {
+  if (audioUnlocked) return;
+  if (!globalAudio && typeof window !== 'undefined') {
+    globalAudio = new Audio(alertSound);
+    globalAudio.preload = 'auto';
+    globalAudio.volume = 1;
+  }
+  if (globalAudio) {
+    globalAudio.play().then(() => {
+      globalAudio.pause();
+      globalAudio.currentTime = 0;
+      audioUnlocked = true;
+    }).catch(() => {});
+  }
+};
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('click', unlockAudio, { once: true, passive: true });
+  window.addEventListener('touchstart', unlockAudio, { once: true, passive: true });
+  window.addEventListener('keydown', unlockAudio, { once: true, passive: true });
+}
+
 const playGlobalNotificationSound = async (orderData = {}) => {
   try {
     if (globalIsMuted || isOrderMuted(orderData)) return;
@@ -275,35 +298,27 @@ const playGlobalNotificationSound = async (orderData = {}) => {
     }
 
     if (!globalAudio && typeof window !== 'undefined') {
-      globalAudio = new Audio();
+      globalAudio = new Audio(resolveAudioSource(alertSound));
       globalAudio.preload = 'auto';
       globalAudio.volume = 1;
-      preloadAudio().then(src => {
-        if (globalAudio) {
-          globalAudio.src = src;
-        }
-      });
     }
 
     if (globalAudio) {
+      globalAudio.src = resolveAudioSource(alertSound);
       globalAudio.muted = false;
       globalAudio.volume = 1;
       globalAudio.currentTime = 0;
-      globalAudio.play().catch(error => {
-        if (!error.message?.includes("user didn't interact") && !error.name?.includes('NotAllowedError')) {
-          try {
-            if (globalFallbackAudio) {
-              globalFallbackAudio.pause();
-              globalFallbackAudio = null;
-            }
-            globalFallbackAudio = new Audio(resolveAudioSource(alertSound));
-            globalFallbackAudio.volume = 1;
-            globalFallbackAudio.muted = false;
-            globalFallbackAudio.play().catch(() => {});
-          } catch (fallbackError) {
-            // ignore
+      globalAudio.play().catch(() => {
+        try {
+          if (globalFallbackAudio) {
+            globalFallbackAudio.pause();
+            globalFallbackAudio = null;
           }
-        }
+          globalFallbackAudio = new Audio(alertSound);
+          globalFallbackAudio.volume = 1;
+          globalFallbackAudio.muted = false;
+          globalFallbackAudio.play().catch(() => {});
+        } catch (_) {}
       });
     }
   } catch (error) {

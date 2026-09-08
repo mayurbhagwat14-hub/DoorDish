@@ -130,7 +130,7 @@ export const NewOrderModal = ({ order, onAccept, onReject, onMinimize, isMuted =
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-1000 bg-black/60 flex items-end justify-center p-0"
+      className="fixed inset-0 z-[1000] bg-black/60 flex items-end justify-center p-0"
     >
       <motion.div 
         initial={{ y: '100%' }}
@@ -152,7 +152,9 @@ export const NewOrderModal = ({ order, onAccept, onReject, onMinimize, isMuted =
           style={{ background: 'linear-gradient(33deg, #15498b 0%, #000000 100%)' }}
         >
           <div>
-            <p className="text-white/80 text-[10px] font-bold uppercase tracking-widest mb-1">Incoming Request</p>
+            <p className="text-white/80 text-[10px] font-bold uppercase tracking-widest mb-1">
+              Incoming Request {order.orderId ? `#${order.orderId}` : ''}
+            </p>
             <h2 className="text-2xl sm:text-4xl font-bold tracking-tighter">₹{Number(earnings || 0).toFixed(2)}</h2>
           </div>
           {onToggleMute && (
@@ -244,6 +246,17 @@ export const NewOrderModal = ({ order, onAccept, onReject, onMinimize, isMuted =
             </div>
           </div>
 
+          {Array.isArray(order?.items) && order.items.length > 0 && (
+            <div className="p-3 bg-gray-50 rounded-2xl border border-gray-100">
+              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-1">
+                Order Items ({order.items.length})
+              </span>
+              <p className="text-xs font-semibold text-gray-800 line-clamp-2">
+                {order.items.map((it) => `${it.quantity || 1}x ${it.name || it.itemName || 'Item'}`).join(', ')}
+              </p>
+            </div>
+          )}
+
            <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
              <div className="p-3 sm:p-4 bg-gray-50 rounded-2xl border border-gray-100 flex items-center gap-2.5 sm:gap-3">
                <Clock className="w-5 h-5 text-orange-500" />
@@ -265,7 +278,7 @@ export const NewOrderModal = ({ order, onAccept, onReject, onMinimize, isMuted =
             />
 
             <button 
-              onClick={onReject}
+              onClick={() => onReject(order)}
               className="w-full text-gray-400 font-bold text-[10px] uppercase tracking-widest hover:text-red-500 transition-colors py-2 active:scale-95"
             >
               Pass this task
@@ -276,3 +289,5 @@ export const NewOrderModal = ({ order, onAccept, onReject, onMinimize, isMuted =
     </motion.div>
   );
 };
+
+export default NewOrderModal;

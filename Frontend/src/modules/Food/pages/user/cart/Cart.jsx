@@ -697,8 +697,28 @@ export default function Cart() {
     }
     const restaurantZoneId = cart[0]?.restaurantZoneId || restaurantData?.zoneId
     if (!restaurantZoneId) return false
+
+    // If both restaurant and delivery address have valid coordinates within 50 km, allow delivery
+    const rCoords = restaurantData?.location?.coordinates
+    const dCoords = defaultAddress?.location?.coordinates
+    if (
+      Array.isArray(rCoords) &&
+      Array.isArray(dCoords) &&
+      rCoords.length === 2 &&
+      dCoords.length === 2 &&
+      Number.isFinite(Number(rCoords[0])) &&
+      Number.isFinite(Number(rCoords[1])) &&
+      Number.isFinite(Number(dCoords[0])) &&
+      Number.isFinite(Number(dCoords[1]))
+    ) {
+      const distance = calculateDistance(Number(rCoords[1]), Number(rCoords[0]), Number(dCoords[1]), Number(dCoords[0]))
+      if (Number.isFinite(distance) && distance <= 50) {
+        return false
+      }
+    }
+
     return String(restaurantZoneId).trim() !== String(zoneId).trim()
-  }, [orderType, cart, zoneId, zoneStatus, restaurantData?.zoneId])
+  }, [orderType, cart, zoneId, zoneStatus, restaurantData?.zoneId, restaurantData?.location?.coordinates, defaultAddress?.location?.coordinates])
 
   useEffect(() => {
     // Sync delivery mode from overlay/localStorage changes.
@@ -1184,7 +1204,7 @@ export default function Cart() {
           deliveryAddress: orderType === "takeaway" ? undefined : (defaultAddress || undefined),
           couponCode: resolvedCouponCode,
           orderType: orderType,
-          zoneId: zoneId || undefined,
+          zoneId: zoneId || restaurantData?.zoneId || cart[0]?.restaurantZoneId || undefined,
         }
         
         debugLog("Recalculating pricing with body:", requestBody)
@@ -1692,7 +1712,7 @@ export default function Cart() {
           deliveryAddress: orderType === "takeaway" ? undefined : defaultAddress,
           couponCode: coupon.code,
           orderType: orderType,
-          zoneId: zoneId || undefined
+          zoneId: zoneId || restaurantData?.zoneId || cart[0]?.restaurantZoneId || undefined
         })
 
         const pricingData = response?.data?.data?.pricing
@@ -1790,7 +1810,7 @@ export default function Cart() {
         deliveryAddress: orderType === "takeaway" ? undefined : defaultAddress,
         couponCode: inputCode,
         orderType: orderType,
-        zoneId: zoneId || undefined
+        zoneId: zoneId || restaurantData?.zoneId || cart[0]?.restaurantZoneId || undefined
       })
 
       const pricingData = response?.data?.data?.pricing
@@ -1852,7 +1872,7 @@ export default function Cart() {
           deliveryAddress: orderType === "takeaway" ? undefined : defaultAddress,
           couponCode: undefined,
           orderType: orderType,
-          zoneId: zoneId || undefined
+          zoneId: zoneId || restaurantData?.zoneId || cart[0]?.restaurantZoneId || undefined
         })
 
         if (response?.data?.success && response?.data?.data?.pricing) {
@@ -2127,7 +2147,7 @@ export default function Cart() {
         sendCutlery: sendCutlery !== false,
         paymentMethod: selectedPaymentMethod,
         // `useZone()` can return `null`. Zod expects string/undefined, not null.
-        zoneId: zoneId || undefined,
+        zoneId: zoneId || restaurantData?.zoneId || cart[0]?.restaurantZoneId || undefined,
         scheduledAt: isScheduled ? new Date(`${scheduledDate}T${scheduledTime}:00`).toISOString() : undefined,
         orderType: orderType || "delivery",
       };

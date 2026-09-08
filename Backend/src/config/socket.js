@@ -28,11 +28,13 @@ function maskToken(token) {
     return `${trimmed.slice(0, 12)}...${trimmed.slice(-6)}`;
 }
 
+const cleanId = (id) => (id?._id?.toString?.() || id?.toString?.() || String(id || '')).trim();
+
 const roomNames = {
-    restaurant: (id) => `restaurant:${String(id)}`,
-    user: (id) => `user:${String(id)}`,
-    delivery: (id) => `delivery:${String(id)}`,
-    tracking: (orderId) => `tracking:${String(orderId)}`
+    restaurant: (id) => `restaurant:${cleanId(id)}`,
+    user: (id) => `user:${cleanId(id)}`,
+    delivery: (id) => `delivery:${cleanId(id)}`,
+    tracking: (orderId) => `tracking:${cleanId(orderId)}`
 };
 
 /**

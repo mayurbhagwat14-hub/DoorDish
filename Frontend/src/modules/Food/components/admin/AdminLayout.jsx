@@ -165,18 +165,24 @@ export default function AdminLayout() {
       const h1 = document.querySelector("main h1");
       if (!h1) return false;
 
+      // Check if there is ALREADY any back button in the header or anywhere in the h1's parent/grandparent/great-grandparent tree
+      let current = h1;
+      for (let i = 0; i < 5 && current && current.tagName !== "MAIN"; i++) {
+        const existingBtn = 
+          current.querySelector(".global-back-btn") ||
+          current.querySelector("button[title='Back']") ||
+          current.querySelector("button[title='Go Back']") ||
+          current.querySelector("button[aria-label='Go back']") ||
+          current.querySelector(".lucide-arrow-left") ||
+          current.querySelector("svg[class*='arrow-left']");
+        if (existingBtn) {
+          return true; // Page already has a back button, do not inject duplicate!
+        }
+        current = current.parentNode;
+      }
+
       const container = findHeaderContainer(h1);
       if (container) {
-        // Prevent duplicate rendering if a back button already exists in the header container
-        const hasBackButton = container.querySelector(".global-back-btn") || 
-                            container.querySelector("button[title='Back']") || 
-                            container.querySelector("button[title='Go Back']") || 
-                            container.querySelector(".lucide-arrow-left") ||
-                            container.querySelector("svg[class*='arrow-left']");
-        if (hasBackButton) {
-          return true; // Already has back button, stop
-        }
-
         // Enforce flex layout and alignment on container
         container.style.display = "flex";
         container.style.alignItems = "center";

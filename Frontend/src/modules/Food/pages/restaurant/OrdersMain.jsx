@@ -1194,13 +1194,15 @@ function SearchResults({ query, results, isLoading, onSelectOrder, onVerifyTakea
 const isTakeawayOrder = (order) =>
   String(order?.orderType || order?.type || "").toLowerCase() === "takeaway";
 
+const DEFAULT_ACCEPT_TIMEOUT_SECONDS = 180;
+
 const resolveAcceptOrderTimeoutSeconds = (
   order,
   deliveryTimeoutSeconds,
   takeawayTimeoutSeconds,
 ) => {
-  if (isTakeawayOrder(order)) return takeawayTimeoutSeconds;
-  return deliveryTimeoutSeconds;
+  const timeout = isTakeawayOrder(order) ? takeawayTimeoutSeconds : deliveryTimeoutSeconds;
+  return Number.isFinite(timeout) && timeout > 0 ? timeout : DEFAULT_ACCEPT_TIMEOUT_SECONDS;
 };
 
 const getInitialCountdown = (order, timeoutSeconds) => {
@@ -1287,10 +1289,10 @@ function OrdersMainInner() {
   const [showNewOrderPopup, setShowNewOrderPopup] = useState(false);
   const [popupOrder, setPopupOrder] = useState(null); // Store order for popup (from Socket.IO or API)
   const [prepTime, setPrepTime] = useState(11);
-  const [deliveryAcceptOrderTimeoutSeconds, setDeliveryAcceptOrderTimeoutSeconds] = useState(null);
-  const [takeawayAcceptOrderTimeoutSeconds, setTakeawayAcceptOrderTimeoutSeconds] = useState(null);
-  const deliveryAcceptOrderTimeoutSecondsRef = useRef(null);
-  const takeawayAcceptOrderTimeoutSecondsRef = useRef(null);
+  const [deliveryAcceptOrderTimeoutSeconds, setDeliveryAcceptOrderTimeoutSeconds] = useState(180);
+  const [takeawayAcceptOrderTimeoutSeconds, setTakeawayAcceptOrderTimeoutSeconds] = useState(180);
+  const deliveryAcceptOrderTimeoutSecondsRef = useRef(180);
+  const takeawayAcceptOrderTimeoutSecondsRef = useRef(180);
   const [countdown, setCountdown] = useState(0);
   const [isDetailsExpanded, setIsDetailsExpanded] = useState(false);
   const [showRejectPopup, setShowRejectPopup] = useState(false);
@@ -1331,13 +1333,13 @@ function OrdersMainInner() {
           if (Number.isFinite(deliveryMinutes) && deliveryMinutes >= 1 && deliveryMinutes <= 60) {
             setDeliveryAcceptOrderTimeoutSeconds(Math.round(deliveryMinutes) * 60);
           } else {
-            setDeliveryAcceptOrderTimeoutSeconds(null);
+            setDeliveryAcceptOrderTimeoutSeconds(180);
           }
 
           if (Number.isFinite(takeawayMinutes) && takeawayMinutes >= 1 && takeawayMinutes <= 60) {
             setTakeawayAcceptOrderTimeoutSeconds(Math.round(takeawayMinutes) * 60);
           } else {
-            setTakeawayAcceptOrderTimeoutSeconds(null);
+            setTakeawayAcceptOrderTimeoutSeconds(180);
           }
         }
       } catch (error) {
@@ -1364,12 +1366,11 @@ function OrdersMainInner() {
             deliveryAcceptOrderTimeoutSecondsRef.current,
             takeawayAcceptOrderTimeoutSecondsRef.current,
           );
-          if (!activeTimeout || activeTimeout <= 0) return;
           setPopupOrder(nextOrder);
           setShowNewOrderPopup(true);
           setCountdown(getInitialCountdown(nextOrder, activeTimeout));
         }
-      }, 800);
+      }, 300);
       return () => clearTimeout(timer);
     }
   }, [

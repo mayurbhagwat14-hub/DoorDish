@@ -14,6 +14,7 @@ import LiveMap from '@/modules/DeliveryV2/components/map/LiveMap';
 import { PickupActionModal } from '@/modules/DeliveryV2/components/modals/PickupActionModal';
 import { DeliveryVerificationModal } from '@/modules/DeliveryV2/components/modals/DeliveryVerificationModal';
 import { OrderSummaryModal } from '@/modules/DeliveryV2/components/modals/OrderSummaryModal';
+import { NewOrderModal } from '@/modules/DeliveryV2/components/modals/NewOrderModal';
 import ActionSlider from '@/modules/DeliveryV2/components/ui/ActionSlider';
 import OrderSwitcher from '@/modules/DeliveryV2/components/orders/OrderSwitcher';
 import DeliveryBottomNav from '@/modules/DeliveryV2/components/DeliveryBottomNav';
@@ -67,7 +68,7 @@ function BottomPopup({ isOpen, onClose, title, children }) {
  */
 export default function DeliveryHomeV2({ tab = 'feed' }) {
   const navigate = useNavigate();
-  const { isOnline, toggleOnline, riderLocation, acceptedOrders, focusedOrderId, orderSessions, setRiderLocation, setAcceptedOrders, setCapacity, setFocusedOrder, updateOrderSession, updateTripStatus, removeAcceptedOrder } = useDeliveryStore();
+  const { isOnline, toggleOnline, riderLocation, acceptedOrders, focusedOrderId, orderSessions, setRiderLocation, setAcceptedOrders, setCapacity, setFocusedOrder, updateOrderSession, updateTripStatus, removeAcceptedOrder, newOrders, removeNewOrder } = useDeliveryStore();
   const activeOrder = useDeliveryStore((state) => state.getFocusedOrder());
   const tripStatus = useDeliveryStore((state) => state.getFocusedTripStatus());
   const focusedSession = focusedOrderId ? orderSessions[focusedOrderId] || {} : {};
@@ -82,10 +83,89 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
     updateOrderSession(focusedOrderId, { isModalMinimized: value });
   };
   const { isWithinRange, distanceToTarget } = useProximityCheck();
-  const { reachPickup, pickUpOrder, reachDrop, completeDelivery, resetTrip } = useOrderManager();
-  const { clearNewOrder, orderStatusUpdate, clearOrderStatusUpdate, claimedOrderId, clearClaimedOrderId, adminNotification, clearAdminNotification, isConnected: isSocketConnected, emitLocation } = useDeliveryNotificationsContext();
+  const { reachPickup, pickUpOrder, reachDrop, completeDelivery, resetTrip, acceptOrder } = useOrderManager();
+  const { 
+    clearNewOrder, 
+    orderReady, 
+    clearOrderReady, 
+    orderStatusUpdate, 
+    clearOrderStatusUpdate, 
+    claimedOrderId, 
+    clearClaimedOrderId, 
+    adminNotification, 
+    clearAdminNotification, 
+    isConnected: isSocketConnected, 
+    emitLocation, 
+    stopSound, 
+    isOrderAlertMuted, 
+    toggleOrderAlertMuted 
+  } = useDeliveryNotificationsContext();
   const companyName = useCompanyName();
   const { items: broadcastItems, unreadCount: notificationUnreadCount, markAsRead: markBroadcastAsRead, dismissAll: dismissAllBroadcast } = useNotificationInbox("delivery", { limit: 20 });
+
+  const [isNewOrderMinimized, setIsNewOrderMinimized] = useState(false);
+  const currentNewOrder = newOrders && newOrders.length > 0 ? newOrders[0] : null;
+
+  const prevNewOrderKeyRef = useRef(null);
+  useEffect(() => {
+    const currentKey = resolveOrderKey(currentNewOrder);
+    if (currentKey && currentKey !== prevNewOrderKeyRef.current) {
+      prevNewOrderKeyRef.current = currentKey;
+      setIsNewOrderMinimized(false);
+    }
+  }, [currentNewOrder]);
+
+  const handleAcceptNewOrder = useCallback(async (orderToAccept) => {
+    const target = orderToAccept || currentNewOrder;
+    if (!target) return;
+    try {
+      await acceptOrder(target);
+      stopSound?.();
+      clearNewOrder?.(target);
+      setIsNewOrderMinimized(false);
+    } catch (err) {
+      console.error('Failed to accept order:', err);
+    }
+  }, [currentNewOrder, acceptOrder, stopSound, clearNewOrder]);
+
+  const handleRejectNewOrder = useCallback((orderToReject) => {
+    const target = orderToReject || currentNewOrder;
+    if (!target) return;
+    const orderKey = resolveOrderKey(target);
+    removeNewOrder(orderKey || target);
+    clearNewOrder?.(target);
+    stopSound?.();
+    setIsNewOrderMinimized(false);
+    toast.info('Order skipped');
+  }, [currentNewOrder, removeNewOrder, clearNewOrder, stopSound]);
+
+  useEffect(() => {
+    if (claimedOrderId) {
+      removeNewOrder(claimedOrderId);
+      stopSound?.();
+      toast.info('An order offer was accepted by another delivery partner');
+      clearClaimedOrderId?.();
+    }
+  }, [claimedOrderId, removeNewOrder, stopSound, clearClaimedOrderId]);
+
+  useEffect(() => {
+    if (orderReady) {
+      const orderId = orderReady.orderId || orderReady.orderMongoId || orderReady.id;
+      toast.success(`Order #${orderId || ''} is ready for pickup!`, {
+        description: orderReady.restaurantName ? `At ${orderReady.restaurantName}` : undefined,
+      });
+      clearOrderReady?.();
+    }
+  }, [orderReady, clearOrderReady]);
+
+  useEffect(() => {
+    if (adminNotification) {
+      toast.info(adminNotification.title || 'Notification', {
+        description: adminNotification.message,
+      });
+      clearAdminNotification?.();
+    }
+  }, [adminNotification, clearAdminNotification]);
 
   const [cashLimitNotice, setCashLimitNotice] = useState(null);
   const [currentTab, setCurrentTab] = useState(tab);
@@ -1182,8 +1262,51 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
          </div>
       </BottomPopup>
 
+      {/* Incoming Order Offer Popup (NewOrderModal) */}
+      <AnimatePresence>
+        {currentTab === 'feed' && currentNewOrder && !isNewOrderMinimized && (
+          <NewOrderModal
+            order={currentNewOrder}
+            onAccept={handleAcceptNewOrder}
+            onReject={handleRejectNewOrder}
+            onMinimize={() => setIsNewOrderMinimized(true)}
+            isMuted={isOrderAlertMuted ? isOrderAlertMuted(currentNewOrder) : false}
+            onToggleMute={toggleOrderAlertMuted ? () => toggleOrderAlertMuted(currentNewOrder) : undefined}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Floating Incoming Order Offer Banner if Minimized */}
+      {currentTab === 'feed' && currentNewOrder && isNewOrderMinimized && (
+        <motion.div 
+          initial={{ y: 100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="fixed bottom-[100px] inset-x-0 z-[320] px-4 max-w-lg mx-auto pointer-events-auto"
+        >
+          <div 
+            onClick={() => setIsNewOrderMinimized(false)}
+            className="w-full bg-linear-to-r from-gray-950 to-gray-900 text-white rounded-2xl p-4 flex items-center justify-between shadow-2xl border border-white/10 cursor-pointer active:scale-[0.98] transition-all"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-green-500/20 text-green-400 flex items-center justify-center font-bold text-lg shrink-0 border border-green-500/30 animate-pulse">
+                ₹
+              </div>
+              <div className="min-w-0">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-orange-400 block">New Order Offer Available</span>
+                <span className="text-xs font-bold text-white truncate block">
+                  ₹{Number(currentNewOrder.earnings || currentNewOrder.riderEarning || (currentNewOrder.orderAmount ? currentNewOrder.orderAmount * 0.1 : 0)).toFixed(2)} • {currentNewOrder.restaurantName || 'Restaurant'}
+                </span>
+              </div>
+            </div>
+            <div className="bg-orange-500 px-3 py-1.5 rounded-xl text-white text-xs font-bold shrink-0 ml-2">
+              View
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       {/* Floating Minimize/Restore Toggle - Above navbar (feed tab only) */}
-      {currentTab === 'feed' && isModalMinimized && (activeOrder || showVerification) && (
+      {currentTab === 'feed' && isModalMinimized && (activeOrder || showVerification) && !currentNewOrder && (
         <motion.div 
            initial={{ y: 100, opacity: 0 }}
            animate={{ y: 0, opacity: 1 }}

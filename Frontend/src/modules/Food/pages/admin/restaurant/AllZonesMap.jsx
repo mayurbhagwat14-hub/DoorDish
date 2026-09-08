@@ -384,21 +384,13 @@ export default function AllZonesMap() {
     <div className="min-h-screen bg-slate-50">
       <div className="p-4 lg:p-6">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-6">
-          <button
-            onClick={() => navigate("/admin/food/zone-setup")}
-            className="p-2 hover:bg-slate-200 rounded-lg transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5 text-slate-600" />
-          </button>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center">
-              <MapPin className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900">All Zones Map</h1>
-              <p className="text-sm text-slate-600">View all restaurant delivery zones on map</p>
-            </div>
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center">
+            <MapPin className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">All Zones Map</h1>
+            <p className="text-sm text-slate-600">View all restaurant delivery zones on map</p>
           </div>
         </div>
 

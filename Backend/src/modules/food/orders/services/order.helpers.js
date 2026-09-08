@@ -42,21 +42,36 @@ export function assertRestaurantDeliversToZone(
   const restaurantZoneId = restaurant?.zoneId ? String(restaurant.zoneId) : "";
   const deliveryZoneId = zoneId ? String(zoneId) : "";
 
-  if (restaurantZoneId && deliveryZoneId) {
-    if (restaurantZoneId !== deliveryZoneId) {
-      throw new ValidationError("This restaurant does not deliver to your selected location");
+  const hasRestaurantCoords =
+    Array.isArray(restaurant?.location?.coordinates) &&
+    restaurant.location.coordinates.length === 2 &&
+    Number.isFinite(Number(restaurant.location.coordinates[0])) &&
+    Number.isFinite(Number(restaurant.location.coordinates[1]));
+
+  const hasDeliveryCoords =
+    Array.isArray(deliveryAddress?.location?.coordinates) &&
+    deliveryAddress.location.coordinates.length === 2 &&
+    Number.isFinite(Number(deliveryAddress.location.coordinates[0])) &&
+    Number.isFinite(Number(deliveryAddress.location.coordinates[1]));
+
+  // If both coordinate pairs exist, evaluate physical reachability via distance
+  if (hasRestaurantCoords && hasDeliveryCoords) {
+    const [rLng, rLat] = restaurant.location.coordinates;
+    const [dLng, dLat] = deliveryAddress.location.coordinates;
+    const distanceKm = haversineKm(Number(rLat), Number(rLng), Number(dLat), Number(dLng));
+    if (Number.isFinite(distanceKm)) {
+      if (distanceKm > MAX_DELIVERY_DISTANCE_KM) {
+        throw new ValidationError("Delivery address is too far from this restaurant");
+      }
+      // Within delivery radius, allow delivery
+      return;
     }
   }
 
-  if (
-    restaurant?.location?.coordinates?.length === 2 &&
-    deliveryAddress?.location?.coordinates?.length === 2
-  ) {
-    const [rLng, rLat] = restaurant.location.coordinates;
-    const [dLng, dLat] = deliveryAddress.location.coordinates;
-    const distanceKm = haversineKm(rLat, rLng, dLat, dLng);
-    if (Number.isFinite(distanceKm) && distanceKm > MAX_DELIVERY_DISTANCE_KM) {
-      throw new ValidationError("Delivery address is too far from this restaurant");
+  // Fallback to zone ID matching when coordinates are not both available
+  if (restaurantZoneId && deliveryZoneId) {
+    if (restaurantZoneId !== deliveryZoneId) {
+      throw new ValidationError("This restaurant does not deliver to your selected location");
     }
   }
 }
@@ -448,17 +463,23 @@ export async function notifyRestaurantNewOrder(orderDoc) {
   try {
     if (!orderDoc || !canExposeOrderToRestaurant(orderDoc)) return;
 
+    const restaurantId =
+      orderDoc.restaurantId?._id?.toString?.() ||
+      orderDoc.restaurantId?.toString?.() ||
+      String(orderDoc.restaurantId || "");
+    if (!restaurantId) return;
+
     const io = getIO();
     if (io) {
       const payload = toRestaurantFacingOrder(orderDoc);
       logger.info(
-        `[RestaurantOrders] Emitting new_order to ${rooms.restaurant(orderDoc.restaurantId)} for order ${orderDoc._id?.toString?.() || ''}`,
+        `[RestaurantOrders] Emitting new_order to ${rooms.restaurant(restaurantId)} for order ${orderDoc._id?.toString?.() || ''}`,
       );
-      io.to(rooms.restaurant(orderDoc.restaurantId)).emit("new_order", payload);
+      io.to(rooms.restaurant(restaurantId)).emit("new_order", payload);
     }
 
     await notifyOwnersSafely(
-      [{ ownerType: "RESTAURANT", ownerId: orderDoc.restaurantId }],
+      [{ ownerType: "RESTAURANT", ownerId: restaurantId }],
       {
         title: "🔔 New order received",
         body: `Order #${orderDoc.order_id || orderDoc._id} is waiting for review.`,
