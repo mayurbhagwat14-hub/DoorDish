@@ -658,7 +658,6 @@ export async function createOrder(userId, dto) {
   }
 
   const dispatchableStatuses = [
-    "preparing",
     "ready_for_pickup",
     "ready",
     "picked_up",
@@ -723,14 +722,16 @@ export async function verifyPayment(userId, dto) {
   // Payment is verified, but the order stays "created" (Pending) so the
   // restaurant/admin still has to accept it — same flow as COD orders.
   order.payment.status = "paid";
-  if (!order.payment.razorpay) order.payment.razorpay = {};
-  if (!order.payment.razorpay.orderId) order.payment.razorpay.orderId = clientOrderId;
-  order.payment.razorpay.paymentId = dto.razorpayPaymentId;
-  order.payment.razorpay.signature = dto.razorpaySignature;
-  order.markModified("payment");
+  order.payment.razorpay = {
+    orderId: clientOrderId,
+    paymentId: dto.razorpayPaymentId,
+    signature: dto.razorpaySignature,
+    paidAt: new Date(),
+  };
+  order.payment.amountDue = 0;
   pushStatusHistory(order, {
     byRole: "USER",
-    byId: userId,
+    byId: new mongoose.Types.ObjectId(userId),
     from: order.orderStatus,
     to: order.orderStatus,
     note: "Payment verified",
@@ -762,7 +763,6 @@ export async function verifyPayment(userId, dto) {
 
   const settings = await getDispatchSettings();
   const dispatchableStatuses = [
-    "preparing",
     "ready_for_pickup",
     "ready",
     "picked_up",
@@ -1582,52 +1582,64 @@ export async function updateOrderStatusRestaurant(
   // NOTE: Takeaway orders never need delivery dispatch — guard all delivery logic.
   try {
     const io = getIO();
-    if (io) {
-      // Restaurant accept moves the order into preparing. Delivery dispatch must
-      // not start from the initial user-placed "confirmed" state.
-      // Only delivery orders get a rider — takeaway & dining are excluded.
-      if (
-        String(orderStatus) === "preparing" &&
-        String(from) !== "preparing" &&
-        order.orderType === "delivery"
-      ) {
-        console.log(
-          `[DEBUG] Order ${order._id.toString()} status changed to '${orderStatus}'. Triggering central delivery dispatch.`,
-        );
-        
-        try {
-            await tryAutoAssign(order._id);
-            // Refresh local order state after assignment search
-            order = await FoodOrder.findById(order._id); 
-        } catch (err) {
-            console.error(`[DEBUG] Auto-assign in updateOrderStatusRestaurant failed:`, err);
-        }
-      }
 
-      // When ready for pickup -> ping assigned delivery partner.
-      // TAKEAWAY GUARD: No delivery partner involved in takeaway orders.
-      if (
-        String(orderStatus) === 'ready_for_pickup' &&
-        String(from) !== 'ready_for_pickup' &&
-        order.orderType !== 'takeaway'
-      ) {
-          console.log(`[DEBUG] Order ${order._id.toString()} changed to 'ready_for_pickup'.`);
-          const assignedId = order.dispatch?.deliveryPartnerId?.toString?.() || order.dispatch?.deliveryPartnerId;
-          if (assignedId) {
-              console.log(`[DEBUG] Notifying assigned partner ${assignedId} that order is ready.`);
-              const restaurant = await FoodRestaurant.findById(order.restaurantId).select('restaurantName location addressLine1 area city state').lean();
-              const payload = buildDeliverySocketPayload(order, restaurant);
-              logger.info(
-                `[DeliveryDispatch] Emitting order_ready to ${rooms.delivery(assignedId)} for order ${order._id.toString()}`,
-              );
-              io.to(rooms.delivery(assignedId)).emit('order_ready', payload);
-          } else {
-              console.log(`[DEBUG] Order ${order._id.toString()} is ready (delivery) but no partner assigned.`);
-          }
+    // When status changes to 'preparing', restaurant has started cooking.
+    // We DO NOT dispatch to riders yet — riders are dispatched only when food is READY.
+    if (
+      String(orderStatus) === "preparing" &&
+      String(from) !== "preparing" &&
+      order.orderType === "delivery"
+    ) {
+      logger.info(`[RestaurantOrders] Order ${order._id.toString()} is now PREPARING in kitchen.`);
+    }
+
+    // When restaurant marks order as 'ready_for_pickup' (or 'ready') -> Food is ready!
+    // Dispatch to delivery partners now.
+    if (
+      (String(orderStatus) === 'ready_for_pickup' || String(orderStatus) === 'ready') &&
+      String(from) !== 'ready_for_pickup' &&
+      String(from) !== 'ready' &&
+      order.orderType !== 'takeaway'
+    ) {
+      logger.info(`[DeliveryDispatch] Order ${order._id.toString()} is READY FOR PICKUP. Triggering rider dispatch.`);
+      const assignedId = order.dispatch?.deliveryPartnerId?.toString?.() || order.dispatch?.deliveryPartnerId;
+
+      if (assignedId) {
+        // Rider already assigned: notify them that food is ready for pickup
+        const restaurant = await FoodRestaurant.findById(order.restaurantId).select('restaurantName location addressLine1 area city state').lean();
+        if (io) {
+          const payload = buildDeliverySocketPayload(order, restaurant);
+          io.to(rooms.delivery(assignedId)).emit('order_ready', payload);
+        }
+
+        void notifyOwnerSafely(
+          { ownerType: 'DELIVERY_PARTNER', ownerId: String(assignedId) },
+          {
+            title: '🍲 Food is Ready for Pickup!',
+            body: `Order #${order.order_id || order._id} is ready at ${restaurant?.restaurantName || 'the restaurant'}. Please pick it up!`,
+            sound: 'default',
+            channelId: 'delivery_orders',
+            sendToAllDevices: true,
+            data: {
+              type: 'order_ready',
+              orderId: order.order_id || order._id.toString(),
+              orderMongoId: order._id.toString(),
+              link: '/food/delivery',
+            },
+          },
+        );
+      } else {
+        // No rider assigned yet: trigger auto-assign now that food is ready
+        try {
+          await tryAutoAssign(order._id);
+          order = await FoodOrder.findById(order._id);
+        } catch (err) {
+          logger.error(`[DeliveryDispatch] Auto-assign on ready_for_pickup failed:`, err);
+        }
       }
     }
   } catch (err) {
-      console.error('[DEBUG] Error in delivery notification logic:', err);
+    logger.error('[DeliveryDispatch] Error in delivery notification logic:', err);
   }
 
     enqueueOrderEvent('restaurant_order_status_updated', {

@@ -259,7 +259,6 @@ export async function tryAutoAssign(orderId, options = {}) {
   const lockTimeout = 55000; // 55 seconds lock interval
 
   const dispatchableStatuses = new Set([
-    'preparing',
     'ready_for_pickup',
     'ready',
     'picked_up',
