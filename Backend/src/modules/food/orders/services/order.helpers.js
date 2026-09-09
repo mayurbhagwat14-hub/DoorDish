@@ -455,8 +455,8 @@ export function buildDeliverySocketPayload(orderDoc, restaurantDoc = null) {
 export function canExposeOrderToRestaurant(orderLike) {
   const method = String(orderLike?.payment?.method || "").toLowerCase();
   const status = String(orderLike?.payment?.status || "").toLowerCase();
-  if (["cash", "wallet"].includes(method)) return true;
-  return ["paid", "authorized", "captured", "settled"].includes(status);
+  if (["cash", "wallet", "cod"].includes(method)) return true;
+  return ["paid", "authorized", "captured", "settled", "cod_pending"].includes(status);
 }
 
 export async function notifyRestaurantNewOrder(orderDoc) {
@@ -478,11 +478,14 @@ export async function notifyRestaurantNewOrder(orderDoc) {
       io.to(rooms.restaurant(restaurantId)).emit("new_order", payload);
     }
 
+    const orderDisplayId = orderDoc.order_id || orderDoc._id?.toString?.() || "";
+    logger.info(`[FCM-Restaurant] Triggering new order push notification for restaurant ${restaurantId}, order #${orderDisplayId}`);
+
     await notifyOwnersSafely(
       [{ ownerType: "RESTAURANT", ownerId: restaurantId }],
       {
-        title: "🔔 New order received",
-        body: `Order #${orderDoc.order_id || orderDoc._id} is waiting for review.`,
+        title: "🔔 New Order Received!",
+        body: `Order #${orderDisplayId} is waiting for your review. Tap to view details.`,
         sound: "default",
         channelId: "restaurant_orders",
         sendToAllDevices: true,
@@ -494,8 +497,8 @@ export async function notifyRestaurantNewOrder(orderDoc) {
         },
       },
     );
-  } catch {
-    // Do not block order/payment flow if notification fails.
+  } catch (error) {
+    logger.error(`[FCM-Restaurant] notifyRestaurantNewOrder failed: ${error?.message || error}`);
   }
 }
 

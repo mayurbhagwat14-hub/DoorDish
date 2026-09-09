@@ -300,7 +300,9 @@ function emitOrderUpdate(order, deliveryPartnerId, options = {}) {
         {
           title: riderTitle,
           body: riderBody,
-          dataOnly: true,
+          sound: 'default',
+          channelId: 'delivery_orders',
+          sendToAllDevices: true,
           data: {
             type: status === 'delivered' ? 'order_completed' : 'order_status_update',
             orderId: displayOrderId,
