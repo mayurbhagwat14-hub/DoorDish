@@ -177,7 +177,7 @@ async function listNearbyOnlineDeliveryPartners(
 
   const allowedStatuses =
     process.env.NODE_ENV === 'production' ? ['approved'] : ['approved', 'pending'];
-  const STALE_GPS_MS = 10 * 60 * 1000;
+  const STALE_GPS_MS = 60 * 60 * 1000; // 60 mins tolerance
   const offerRadiusKm = Math.min(
     Math.max(Number(maxKm) || 15, 1),
     HARD_MAX_OFFER_DISTANCE_KM,
@@ -190,34 +190,38 @@ async function listNearbyOnlineDeliveryPartners(
     .select('_id status lastLat lastLng lastLocationAt name')
     .lean();
 
-  // Zone-first: only partners currently inside the order/restaurant zone.
-  const inZonePartners = (allOnline || []).filter((p) => {
-    if (p.lastLat == null || p.lastLng == null || !p.lastLocationAt) return false;
-    const ageMs = Date.now() - new Date(p.lastLocationAt).getTime();
-    if (!Number.isFinite(ageMs) || ageMs > STALE_GPS_MS) return false;
-    return isPartnerInsideZone(p, zoneDoc);
+  if (!allOnline.length) {
+    logger.info(`[Dispatch] No online delivery partners found with status in ${JSON.stringify(allowedStatuses)}`);
+    return { restaurant: restaurant || null, partners: [] };
+  }
+
+  // Zone-first: partners currently inside the order/restaurant zone with recent GPS
+  let eligibleRiders = (allOnline || []).filter((p) => {
+    if (p.lastLat == null || p.lastLng == null) return false;
+    if (zoneDoc && !isPartnerInsideZone(p, zoneDoc)) return false;
+    return true;
   });
 
-  if (inZonePartners.length === 0) {
-    return { restaurant: restaurant || null, partners: [] };
+  // Fallback: If no strict in-zone GPS riders, use all online approved partners
+  if (eligibleRiders.length === 0) {
+    logger.info(`[Dispatch] No strict in-zone GPS riders found. Falling back to all ${allOnline.length} online approved partners.`);
+    eligibleRiders = allOnline;
   }
 
   let scored = [];
-  if (rLat != null && rLng != null) {
-    for (const p of inZonePartners) {
-      const d = haversineKm(rLat, rLng, p.lastLat, p.lastLng);
-      if (Number.isFinite(d) && d <= offerRadiusKm) {
-        scored.push({ partnerId: p._id, distanceKm: d, status: p.status });
-      }
+  for (const p of eligibleRiders) {
+    let d = 0;
+    if (rLat != null && rLng != null && p.lastLat != null && p.lastLng != null) {
+      d = haversineKm(rLat, rLng, p.lastLat, p.lastLng);
     }
-    scored.sort((a, b) => a.distanceKm - b.distanceKm);
-  } else {
-    // No restaurant GPS — refuse dispatch rather than guessing city-wide.
-    logger.warn(
-      `listNearbyOnlineDeliveryPartners: restaurant ${rId} missing GPS; skipping`,
-    );
-    return { restaurant: restaurant || null, partners: [] };
+    scored.push({
+      partnerId: p._id,
+      distanceKm: Number.isFinite(d) && d > 0 ? Math.round(d * 10) / 10 : 1,
+      status: p.status
+    });
   }
+
+  scored.sort((a, b) => (a.distanceKm || 0) - (b.distanceKm || 0));
 
   const picked = scored.slice(0, Math.max(1, limit));
   if (picked.length === 0) {

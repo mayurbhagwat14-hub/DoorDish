@@ -2220,6 +2220,36 @@ export async function assignDeliveryPartnerAdmin(
     order.dispatch.assignedAt = new Date();
     pushStatusHistory(order, { byRole: 'ADMIN', byId: adminId, from: order.dispatch.status, to: 'assigned' });
     await order.save();
+
+    try {
+      const io = getIO();
+      if (io) {
+        const restaurant = await FoodRestaurant.findById(order.restaurantId).select('restaurantName location addressLine1 area city state').lean();
+        const payload = buildDeliverySocketPayload(order, restaurant);
+        io.to(rooms.delivery(deliveryPartnerId)).emit('new_order', payload);
+        io.to(rooms.delivery(deliveryPartnerId)).emit('new_order_available', payload);
+      }
+
+      void notifyOwnerSafely(
+        { ownerType: 'DELIVERY_PARTNER', ownerId: String(deliveryPartnerId) },
+        {
+          title: '🛵 New Order Assigned!',
+          body: `You have been assigned order #${order.order_id || order._id}. Tap to view details and proceed to pickup.`,
+          sound: 'default',
+          channelId: 'delivery_orders',
+          sendToAllDevices: true,
+          data: {
+            type: 'order_assigned',
+            orderId: order.order_id || order._id.toString(),
+            orderMongoId: order._id.toString(),
+            link: '/food/delivery',
+          },
+        },
+      );
+    } catch (notifErr) {
+      logger.warn(`Failed notifying assigned partner ${deliveryPartnerId}: ${notifErr?.message || notifErr}`);
+    }
+
     enqueueOrderEvent('delivery_partner_assigned', {
         orderMongoId: order._id?.toString?.(),
         orderId: order._id.toString(),

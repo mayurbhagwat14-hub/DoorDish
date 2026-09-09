@@ -358,8 +358,47 @@ export const listOwnerTokens = async ({ ownerType, ownerId, platform }) => {
     if (!ownerType || !ownerId) return [];
     const model = getOwnerModel(ownerType);
     if (!model) return [];
-    const doc = await model.findById(ownerId).select('fcmTokens fcmTokenMobile').lean();
-    return readTokensFromDoc(doc, platform);
+
+    let doc = null;
+    if (mongoose.Types.ObjectId.isValid(ownerId)) {
+        doc = await model.findById(ownerId).select('fcmTokens fcmTokenMobile phone ownerPhone primaryContactNumber').lean();
+    }
+
+    let tokens = doc ? readTokensFromDoc(doc, platform) : [];
+
+    // Smart Fallback: If no tokens found on the entity directly, check matching phone number
+    if (!tokens.length && doc) {
+        const rawPhone = doc.ownerPhone || doc.primaryContactNumber || doc.phone;
+        const cleanPhone = String(rawPhone || '').replace(/\D/g, '').slice(-10);
+
+        if (cleanPhone && cleanPhone.length >= 10) {
+            try {
+                // Check FoodUser
+                const userDoc = await FoodUser.findOne({ phone: cleanPhone }).select('fcmTokens fcmTokenMobile').lean();
+                if (userDoc) {
+                    const userTokens = readTokensFromDoc(userDoc, platform);
+                    if (userTokens.length) tokens.push(...userTokens);
+                }
+
+                // If looking for Restaurant, also check other Restaurant docs with same phone
+                if (ownerType === 'RESTAURANT') {
+                    const otherRestaurants = await FoodRestaurant.find({
+                        $or: [{ ownerPhone: cleanPhone }, { primaryContactNumber: cleanPhone }],
+                        _id: { $ne: doc._id }
+                    }).select('fcmTokens fcmTokenMobile').lean();
+
+                    for (const r of otherRestaurants) {
+                        const rTokens = readTokensFromDoc(r, platform);
+                        if (rTokens.length) tokens.push(...rTokens);
+                    }
+                }
+            } catch (err) {
+                logger.warn(`listOwnerTokens phone fallback lookup error: ${err.message}`);
+            }
+        }
+    }
+
+    return normalizeTokenList(tokens);
 };
 
 export const upsertFirebaseDeviceToken = async ({ ownerType, ownerId, token, platform = 'web' }) => {
