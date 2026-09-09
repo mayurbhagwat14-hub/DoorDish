@@ -30,7 +30,23 @@ export function haversineKm(lat1, lon1, lat2, lon2) {
   return R * c;
 }
 
-const MAX_DELIVERY_DISTANCE_KM = 50;
+export const normalizeGeoPoint = (coords) => {
+  if (!Array.isArray(coords) || coords.length < 2) return null;
+  const c0 = Number(coords[0]);
+  const c1 = Number(coords[1]);
+  if (!Number.isFinite(c0) || !Number.isFinite(c1)) return null;
+  if (Math.abs(c0) < 0.0001 && Math.abs(c1) < 0.0001) return null; // [0, 0] is invalid dummy coordinate
+
+  // Detect if [lat, lng] was passed instead of [lng, lat]
+  // In India: Latitude is ~8 to 38, Longitude is ~65 to 100.
+  if (c0 >= 5 && c0 <= 40 && c1 >= 60 && c1 <= 105) {
+    return { lat: c0, lng: c1 };
+  }
+  // Otherwise GeoJSON [lng, lat]
+  return { lng: c0, lat: c1 };
+};
+
+const MAX_DELIVERY_DISTANCE_KM = 100;
 
 export function assertRestaurantDeliversToZone(
   restaurant,
@@ -42,28 +58,17 @@ export function assertRestaurantDeliversToZone(
   const restaurantZoneId = restaurant?.zoneId ? String(restaurant.zoneId) : "";
   const deliveryZoneId = zoneId ? String(zoneId) : "";
 
-  const hasRestaurantCoords =
-    Array.isArray(restaurant?.location?.coordinates) &&
-    restaurant.location.coordinates.length === 2 &&
-    Number.isFinite(Number(restaurant.location.coordinates[0])) &&
-    Number.isFinite(Number(restaurant.location.coordinates[1]));
+  const rPoint = normalizeGeoPoint(restaurant?.location?.coordinates);
+  const dPoint = normalizeGeoPoint(deliveryAddress?.location?.coordinates);
 
-  const hasDeliveryCoords =
-    Array.isArray(deliveryAddress?.location?.coordinates) &&
-    deliveryAddress.location.coordinates.length === 2 &&
-    Number.isFinite(Number(deliveryAddress.location.coordinates[0])) &&
-    Number.isFinite(Number(deliveryAddress.location.coordinates[1]));
-
-  // If both coordinate pairs exist, evaluate physical reachability via distance
-  if (hasRestaurantCoords && hasDeliveryCoords) {
-    const [rLng, rLat] = restaurant.location.coordinates;
-    const [dLng, dLat] = deliveryAddress.location.coordinates;
-    const distanceKm = haversineKm(Number(rLat), Number(rLng), Number(dLat), Number(dLng));
+  // If both coordinate pairs exist and are valid, evaluate physical reachability
+  if (rPoint && dPoint) {
+    const distanceKm = haversineKm(rPoint.lat, rPoint.lng, dPoint.lat, dPoint.lng);
+    logger.info(`[DeliveryDistance] Computed distance: ${distanceKm?.toFixed(2)} km (Restaurant: [${rPoint.lat}, ${rPoint.lng}], Customer: [${dPoint.lat}, ${dPoint.lng}])`);
     if (Number.isFinite(distanceKm)) {
       if (distanceKm > MAX_DELIVERY_DISTANCE_KM) {
-        throw new ValidationError("Delivery address is too far from this restaurant");
+        throw new ValidationError(`Delivery address is too far (${distanceKm.toFixed(1)} km) from this restaurant.`);
       }
-      // Within delivery radius, allow delivery
       return;
     }
   }

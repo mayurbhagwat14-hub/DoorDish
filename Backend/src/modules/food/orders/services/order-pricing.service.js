@@ -4,7 +4,7 @@ import { FoodRestaurant } from '../../restaurant/models/restaurant.model.js';
 import { FoodOffer } from '../../admin/models/offer.model.js';
 import { FoodOfferUsage } from '../../admin/models/offerUsage.model.js';
 import { ValidationError } from '../../../../core/auth/errors.js';
-import { haversineKm, assertRestaurantDeliversToZone } from './order.helpers.js';
+import { haversineKm, assertRestaurantDeliversToZone, normalizeGeoPoint } from './order.helpers.js';
 import { fetchDrivingDistanceKm } from '../utils/googleMaps.js';
 import { resolveFeeSettingsForZone } from '../../admin/services/zoneScopedSettings.service.js';
 import {
@@ -73,20 +73,18 @@ export async function calculateOrderPricing(userId, dto) {
 
   const freeUpTo = Number(feeSettings.freeDeliveryUpTo || 0);
   let distanceKm = null;
-  if (
-    restaurant?.location?.coordinates?.length === 2 &&
-    dto?.deliveryAddress?.location?.coordinates?.length === 2
-  ) {
-    const [rLng, rLat] = restaurant.location.coordinates;
-    const [dLng, dLat] = dto.deliveryAddress.location.coordinates;
+  const rPoint = normalizeGeoPoint(restaurant?.location?.coordinates);
+  const dPoint = normalizeGeoPoint(dto?.deliveryAddress?.location?.coordinates);
+
+  if (rPoint && dPoint) {
     const drivingKm = await fetchDrivingDistanceKm(
-      { lat: rLat, lng: rLng },
-      { lat: dLat, lng: dLng },
+      { lat: rPoint.lat, lng: rPoint.lng },
+      { lat: dPoint.lat, lng: dPoint.lng },
     );
     if (Number.isFinite(drivingKm) && drivingKm > 0) {
       distanceKm = drivingKm;
     } else {
-      const d = haversineKm(rLat, rLng, dLat, dLng);
+      const d = haversineKm(rPoint.lat, rPoint.lng, dPoint.lat, dPoint.lng);
       distanceKm = Number.isFinite(d) ? d : null;
     }
   }
