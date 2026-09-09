@@ -17,13 +17,15 @@ const orderItemSchema = z.object({
 });
 
 const addressSchema = z.object({
-    label: z.enum(['Home', 'Office', 'Other']).optional(),
+    label: z.string().optional(),
     name: z.string().optional(),
     fullName: z.string().optional(),
-    street: z.string().min(1, 'Street required'),
+    street: z.string().optional().default(''),
+    address: z.string().optional(),
+    formattedAddress: z.string().optional(),
     additionalDetails: z.string().optional(),
-    city: z.string().min(1, 'City required'),
-    state: z.string().min(1, 'State required'),
+    city: z.string().optional().default(''),
+    state: z.string().optional().default(''),
     zipCode: z.string().optional(),
     phone: z.string().optional(),
     location: z
@@ -31,8 +33,9 @@ const addressSchema = z.object({
             type: z.literal('Point').optional(),
             coordinates: z.tuple([z.number(), z.number()]).optional()
         })
+        .passthrough()
         .optional()
-});
+}).passthrough();
 
 const pricingSchema = z.object({
     subtotal: z.number().min(0).optional(),
@@ -44,7 +47,7 @@ const pricingSchema = z.object({
     total: z.number().min(0).optional(),
     currency: z.string().optional(),
     couponCode: z.string().nullable().optional()
-}).optional();
+}).passthrough().optional();
 
 export function validateCalculateOrderDto(body) {
     const schema = z.object({
@@ -100,6 +103,7 @@ export function validateCreateOrderDto(body) {
         useCart: z.boolean().optional().default(true),
         items: z.array(orderItemSchema).optional().default([]),
         address: addressSchema.optional(),
+        deliveryAddress: addressSchema.optional(),
         orderType: z.enum(['delivery', 'dining', 'takeaway']).optional().default('delivery'),
         restaurantId: z.string().optional(),
         restaurantName: z.string().optional(),
@@ -112,13 +116,17 @@ export function validateCreateOrderDto(body) {
         restaurantNote: z.string().optional(),
         sendCutlery: z.boolean().optional(),
         // 'razorpay_qr' means COD-style flow, but payment is collected via Razorpay QR at delivery.
-        paymentMethod: z.enum(['cash', 'razorpay', 'razorpay_qr', 'card', 'wallet']),
+        paymentMethod: z.string().transform(v => {
+            const low = String(v || 'cash').toLowerCase().trim();
+            if (low === 'cod') return 'cash';
+            return low;
+        }).pipe(z.enum(['cash', 'razorpay', 'razorpay_qr', 'card', 'wallet'])),
         zoneId: z.string().nullable().optional(),
-        scheduledAt: z.string().datetime({ offset: true }).nullable().optional(),
+        scheduledAt: z.union([z.string(), z.date()]).nullable().optional(),
         razorpayOrderId: z.string().optional(),
         razorpayPaymentId: z.string().optional(),
         razorpaySignature: z.string().optional()
-    }).superRefine((data, ctx) => {
+    }).passthrough().superRefine((data, ctx) => {
         if (data.useCart === false && (!data.items || data.items.length === 0)) {
             ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'At least one item required', path: ['items'] });
         }
@@ -129,7 +137,9 @@ export function validateCreateOrderDto(body) {
     const result = schema.safeParse(body);
     if (!result.success) {
         const first = result.error.issues?.[0];
-        const msg = first?.message || result.error.errors?.[0]?.message || 'Validation failed';
+        const path = first?.path?.length ? first.path.join('.') : '';
+        const msg = path ? `${path}: ${first?.message || 'Validation failed'}` : first?.message || 'Validation failed';
+        logger.warn(`[OrderValidate] Create order validation error: ${msg}`);
         throw new ValidationError(msg);
     }
     return result.data;

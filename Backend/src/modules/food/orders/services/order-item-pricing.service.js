@@ -190,12 +190,14 @@ export async function resolveCheckoutItems(userId, dto = {}) {
 
   if (useCart) {
     const fromCart = await buildOrderItemsFromFoodCart(userId);
-    return {
-      items: fromCart.items,
-      restaurantId: fromCart.restaurantId || dto.restaurantId || null,
-      restaurantName: fromCart.restaurantName || dto.restaurantName || '',
-      couponCode: String(dto.couponCode || fromCart.couponCode || '').trim(),
-    };
+    if (fromCart.items && fromCart.items.length > 0) {
+      return {
+        items: fromCart.items,
+        restaurantId: fromCart.restaurantId || dto.restaurantId || null,
+        restaurantName: fromCart.restaurantName || dto.restaurantName || '',
+        couponCode: String(dto.couponCode || fromCart.couponCode || '').trim(),
+      };
+    }
   }
 
   if (!clientItems.length) {
@@ -205,7 +207,7 @@ export async function resolveCheckoutItems(userId, dto = {}) {
   return {
     items: clientItems.map((item) => ({
       ...item,
-      itemId: String(item.itemId || item.id || ''),
+      itemId: String(item.itemId || item.id || item._id || ''),
       quantity: Math.max(1, Number(item.quantity) || 1),
     })),
     restaurantId: dto.restaurantId || null,
