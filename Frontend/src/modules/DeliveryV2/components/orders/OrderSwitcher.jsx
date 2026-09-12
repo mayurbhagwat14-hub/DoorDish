@@ -1,7 +1,7 @@
 import React from 'react';
 import { resolveOrderKey } from '@/modules/DeliveryV2/store/useDeliveryStore';
 
-export default function OrderSwitcher({ orders = [], focusedOrderId }) {
+export default function OrderSwitcher({ orders = [], focusedOrderId, onSelect }) {
   if (!Array.isArray(orders) || orders.length <= 1) return null;
 
   return (
@@ -12,17 +12,19 @@ export default function OrderSwitcher({ orders = [], focusedOrderId }) {
           const label = order?.orderId || order?.displayOrderId || orderId;
           const isFocused = focusedOrderId === orderId;
           return (
-            <div
+            <button
               key={orderId}
-              className={`shrink-0 rounded-full px-4 py-2 text-[11px] font-black uppercase tracking-wider pointer-events-none select-none ${
+              type="button"
+              onClick={() => onSelect?.(orderId)}
+              className={`shrink-0 rounded-full px-4 py-1.5 text-[11px] font-black uppercase tracking-wider transition-all cursor-pointer active:scale-95 ${
                 isFocused
-                  ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30'
-                  : 'bg-white/10 text-white/70 border border-white/15'
+                  ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30 ring-2 ring-white/30'
+                  : 'bg-white/10 text-white/70 border border-white/15 hover:bg-white/20'
               }`}
               aria-current={isFocused ? 'true' : undefined}
             >
               #{label}
-            </div>
+            </button>
           );
         })}
       </div>

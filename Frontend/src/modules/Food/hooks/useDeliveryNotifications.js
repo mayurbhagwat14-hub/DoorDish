@@ -618,8 +618,37 @@ export const useDeliveryNotifications = () => {
       });
       return;
     }
-    activeOrderRef.current = mappedOrder || { id: Date.now() };
+    const acceptedList = useDeliveryStore.getState().acceptedOrders || [];
+    const activeOrder = useDeliveryStore.getState().getFocusedOrder?.();
+    const isBusyWithDelivery = acceptedList.length > 0 || Boolean(activeOrder);
+
     useDeliveryStore.getState().addNewOrder(mappedOrder);
+
+    if (isBusyWithDelivery) {
+      debugLog('Delivery partner is currently busy with active delivery. Order added to queue without alert loop:', {
+        orderId: mappedOrder?.orderId || mappedOrder?._id,
+      });
+      if (typeof window !== 'undefined') {
+        import('sonner').then(({ toast }) => {
+          toast.info('New order request in queue', {
+            description: `Order #${mappedOrder?.orderId || mappedOrder?._id || ''} added to your Orders queue.`,
+            id: `new-order-queue-${mappedOrder?.orderId || mappedOrder?._id}`,
+            duration: 5000,
+            action: {
+              label: 'View Queue',
+              onClick: () => {
+                if (typeof window !== 'undefined') {
+                  window.location.href = '/food/delivery/orders';
+                }
+              },
+            },
+          });
+        }).catch(() => {});
+      }
+      return;
+    }
+
+    activeOrderRef.current = mappedOrder || { id: Date.now() };
     // Play first, then schedule loop (loop must not pause the first play)
     playNotificationSound(mappedOrder);
     startAlertLoop(playNotificationSound);

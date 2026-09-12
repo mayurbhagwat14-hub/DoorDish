@@ -83,7 +83,7 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
     updateOrderSession(focusedOrderId, { isModalMinimized: value });
   };
   const { isWithinRange, distanceToTarget } = useProximityCheck();
-  const { reachPickup, pickUpOrder, reachDrop, completeDelivery, resetTrip, acceptOrder } = useOrderManager();
+  const { reachPickup, pickUpOrder, reachDrop, completeDelivery, resetTrip, acceptOrder, switchFocusedOrder } = useOrderManager();
   const { 
     clearNewOrder, 
     orderReady, 
@@ -98,10 +98,14 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
     emitLocation, 
     stopSound, 
     isOrderAlertMuted, 
-    toggleOrderAlertMuted 
+    toggleOrderAlertMuted,
+    triggerOrderAlertFor10Sec
   } = useDeliveryNotificationsContext();
   const companyName = useCompanyName();
   const { items: broadcastItems, unreadCount: notificationUnreadCount, markAsRead: markBroadcastAsRead, dismissAll: dismissAllBroadcast } = useNotificationInbox("delivery", { limit: 20 });
+
+  // Delivery partner is considered free only when there are no active/accepted deliveries
+  const isDeliveryPartnerFree = (!acceptedOrders || acceptedOrders.length === 0) && !activeOrder;
 
   const [isNewOrderMinimized, setIsNewOrderMinimized] = useState(false);
   const currentNewOrder = newOrders && newOrders.length > 0 ? newOrders[0] : null;
@@ -114,6 +118,18 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
       setIsNewOrderMinimized(false);
     }
   }, [currentNewOrder]);
+
+  // When partner becomes free after completing active delivery and has waiting offers in queue, present offer and ring for 10s
+  const prevIsFreeRef = useRef(isDeliveryPartnerFree);
+  useEffect(() => {
+    if (isDeliveryPartnerFree && !prevIsFreeRef.current && currentNewOrder) {
+      setIsNewOrderMinimized(false);
+      if (!isOrderAlertMuted?.(currentNewOrder)) {
+        triggerOrderAlertFor10Sec?.(currentNewOrder);
+      }
+    }
+    prevIsFreeRef.current = isDeliveryPartnerFree;
+  }, [isDeliveryPartnerFree, currentNewOrder, isOrderAlertMuted, triggerOrderAlertFor10Sec]);
 
   const handleAcceptNewOrder = useCallback(async (orderToAccept) => {
     const target = orderToAccept || currentNewOrder;
@@ -861,6 +877,7 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
           <OrderSwitcher
             orders={acceptedOrders}
             focusedOrderId={focusedOrderId}
+            onSelect={switchFocusedOrder}
           />
         )}
       </div>
@@ -1262,9 +1279,9 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
          </div>
       </BottomPopup>
 
-      {/* Incoming Order Offer Popup (NewOrderModal) */}
+      {/* Incoming Order Offer Popup (NewOrderModal) - Only shown when delivery partner is free */}
       <AnimatePresence>
-        {currentTab === 'feed' && currentNewOrder && !isNewOrderMinimized && (
+        {currentTab === 'feed' && isDeliveryPartnerFree && currentNewOrder && !isNewOrderMinimized && (
           <NewOrderModal
             order={currentNewOrder}
             onAccept={handleAcceptNewOrder}
@@ -1276,8 +1293,8 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
         )}
       </AnimatePresence>
 
-      {/* Floating Incoming Order Offer Banner if Minimized */}
-      {currentTab === 'feed' && currentNewOrder && isNewOrderMinimized && (
+      {/* Floating Incoming Order Offer Banner if Minimized - Only shown when delivery partner is free */}
+      {currentTab === 'feed' && isDeliveryPartnerFree && currentNewOrder && isNewOrderMinimized && (
         <motion.div 
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -1306,7 +1323,7 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
       )}
 
       {/* Floating Minimize/Restore Toggle - Above navbar (feed tab only) */}
-      {currentTab === 'feed' && isModalMinimized && (activeOrder || showVerification) && !currentNewOrder && (
+      {currentTab === 'feed' && isModalMinimized && (activeOrder || showVerification) && (!currentNewOrder || !isDeliveryPartnerFree) && (
         <motion.div 
            initial={{ y: 100, opacity: 0 }}
            animate={{ y: 0, opacity: 1 }}

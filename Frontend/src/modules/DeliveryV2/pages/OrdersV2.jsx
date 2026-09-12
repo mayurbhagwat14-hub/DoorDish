@@ -69,9 +69,9 @@ export default function OrdersV2() {
     void hydrateOrders();
   }, [hydrateOrders]);
 
-  // When opening Orders tab, if unaccepted new orders exist and are unmuted, ring for 10s
+  // When opening Orders tab, if unaccepted new orders exist and partner is free, ring for 10s
   useEffect(() => {
-    if (visibleNewOrders.length > 0) {
+    if (visibleNewOrders.length > 0 && acceptedOrders.length === 0) {
       const firstOrder = visibleNewOrders[0];
       if (!isOrderAlertMuted(firstOrder)) {
         triggerOrderAlertFor10Sec?.(firstOrder);
@@ -79,17 +79,19 @@ export default function OrdersV2() {
     }
   }, []);
 
-  // Auto-switch to New Orders tab when a live offer arrives
+  // When a live offer arrives: auto-switch to New Orders only if partner is free
   useEffect(() => {
     if (visibleNewOrders.length > prevNewCountRef.current) {
-      setActiveTab('new');
-      const latestOrder = visibleNewOrders[visibleNewOrders.length - 1];
-      if (latestOrder && !isOrderAlertMuted(latestOrder)) {
-        triggerOrderAlertFor10Sec?.(latestOrder);
+      if (acceptedOrders.length === 0) {
+        setActiveTab('new');
+        const latestOrder = visibleNewOrders[visibleNewOrders.length - 1];
+        if (latestOrder && !isOrderAlertMuted(latestOrder)) {
+          triggerOrderAlertFor10Sec?.(latestOrder);
+        }
       }
     }
     prevNewCountRef.current = visibleNewOrders.length;
-  }, [visibleNewOrders, isOrderAlertMuted, triggerOrderAlertFor10Sec]);
+  }, [visibleNewOrders, acceptedOrders.length, isOrderAlertMuted, triggerOrderAlertFor10Sec]);
 
   // Drop expanded card if the order was claimed/removed
   useEffect(() => {
