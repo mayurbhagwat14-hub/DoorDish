@@ -1269,12 +1269,13 @@ export default function Under250({ isTabActive = true }) {
   return (
 
     <div className={`relative min-h-screen bg-white dark:bg-[#0a0a0a] ${shouldShowGrayscale ? 'grayscale opacity-75' : ''}`}>
+      {/* Mobile Sticky Top Header */}
       <div
         ref={stickyHeaderRef}
-        className="fixed top-0 left-0 right-0 z-40 w-full px-4 py-2 sm:py-3 rounded-b-[2rem] shadow-lg bg-[#D91F3A]"
+        className="sticky top-0 z-40 w-full px-4 py-2.5 sm:py-3 md:hidden bg-gradient-to-r from-[#D91F3A] via-[#E12B47] to-[#D91F3A] text-white shadow-md border-b border-red-700/20 antialiased"
       >
         <div className="relative z-10 max-w-7xl mx-auto flex items-center justify-between">
-          {/* Left: Takeaway-style heading (location only changeable from Delivery home) */}
+          {/* Left: Takeaway-style heading */}
           <div className="flex flex-col min-w-0">
             <span className="text-[10px] font-bold text-white/80 uppercase tracking-[0.2em] drop-shadow-md">
               Budget Meals
@@ -1328,63 +1329,65 @@ export default function Under250({ isTabActive = true }) {
         </div>
       </div>
 
-      {/* Banner Section */}
-      <div
-        ref={bannerShellRef}
-        data-banner-shell="true"
-        className="relative w-full overflow-hidden h-[clamp(210px,34vw,430px)] animate-fade-in"
-      >
-        {/* Sliding Banner Container */}
+      {/* Banner Section - Modern Card Presentation */}
+      <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 pt-2 sm:pt-3">
         <div
-          className="flex w-full h-full"
-          style={{
-            transform: `translateX(-${currentBannerIndex * 100}%)`,
-            transition: isTransitionEnabled ? "transform 500ms cubic-bezier(0.25, 1, 0.5, 1)" : "none"
-          }}
+          ref={bannerShellRef}
+          data-banner-shell="true"
+          className="relative w-full overflow-hidden rounded-2xl sm:rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800/80 h-[clamp(160px,32vw,360px)] animate-fade-in bg-gray-100 dark:bg-gray-800"
         >
-          {(bannerImages.length > 1 ? [...bannerImages, bannerImages[0]] : (bannerImages.length > 0 ? bannerImages : [under250Banner])).map((imgSrc, index) => (
-            <div key={`${index}-${imgSrc}`} className="w-full h-full flex-shrink-0 relative">
-              <OptimizedImage
-                src={imgSrc}
-                alt={`Under 250 Banner ${index + 1}`}
-                priority={index === 0}
-                className="w-full h-full"
-                objectFit="cover"
-                style={{ objectPosition: "center 90%" }}
-              />
-            </div>
-          ))}
-        </div>
-
-        {/* Subtle gradient overlay to ensure navbar readability if needed */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/10 to-transparent pointer-events-none z-10" />
-
-        {/* Bottom Right Carousel Pagination Dots */}
-        {bannerImages.length > 1 && (
-          <div className="absolute bottom-3 right-3 z-20 flex items-center gap-1.5 pointer-events-auto">
-            {bannerImages.map((_, dotIndex) => {
-              const activeDotIndex = currentBannerIndex === bannerImages.length ? 0 : currentBannerIndex;
-              return (
-                <button
-                  key={dotIndex}
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsTransitionEnabled(true);
-                    setCurrentBannerIndex(dotIndex);
-                    resetBannerAutoSlide();
-                  }}
-                  className={`transition-all duration-300 rounded-full ${
-                    activeDotIndex === dotIndex
-                      ? "w-4 h-1.5 bg-white shadow-sm"
-                      : "w-1.5 h-1.5 bg-white/50 hover:bg-white/80"
-                  }`}
-                  aria-label={`Go to banner ${dotIndex + 1}`}
+          {/* Sliding Banner Container */}
+          <div
+            className="flex w-full h-full"
+            style={{
+              transform: `translateX(-${currentBannerIndex * 100}%)`,
+              transition: isTransitionEnabled ? "transform 500ms cubic-bezier(0.25, 1, 0.5, 1)" : "none"
+            }}
+          >
+            {(bannerImages.length > 1 ? [...bannerImages, bannerImages[0]] : (bannerImages.length > 0 ? bannerImages : [under250Banner])).map((imgSrc, index) => (
+              <div key={`${index}-${imgSrc}`} className="w-full h-full flex-shrink-0 relative">
+                <OptimizedImage
+                  src={imgSrc}
+                  alt={`Under 250 Banner ${index + 1}`}
+                  priority={index === 0}
+                  className="w-full h-full"
+                  objectFit="cover"
+                  style={{ objectPosition: "center center" }}
                 />
-              );
-            })}
+              </div>
+            ))}
           </div>
-        )}
+
+          {/* Subtle gradient overlay to ensure readability */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent pointer-events-none z-10" />
+
+          {/* Bottom Right Carousel Pagination Dots */}
+          {bannerImages.length > 1 && (
+            <div className="absolute bottom-2.5 right-3 z-20 flex items-center gap-1.5 pointer-events-auto bg-black/25 backdrop-blur-sm px-2 py-1 rounded-full">
+              {bannerImages.map((_, dotIndex) => {
+                const activeDotIndex = currentBannerIndex === bannerImages.length ? 0 : currentBannerIndex;
+                return (
+                  <button
+                    key={dotIndex}
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsTransitionEnabled(true);
+                      setCurrentBannerIndex(dotIndex);
+                      resetBannerAutoSlide();
+                    }}
+                    className={`transition-all duration-300 rounded-full ${
+                      activeDotIndex === dotIndex
+                        ? "w-4 h-1.5 bg-white shadow-sm"
+                        : "w-1.5 h-1.5 bg-white/60 hover:bg-white/90"
+                    }`}
+                    aria-label={`Go to banner ${dotIndex + 1}`}
+                  />
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Content Section — large bottom padding on mobile so the last dishes are
