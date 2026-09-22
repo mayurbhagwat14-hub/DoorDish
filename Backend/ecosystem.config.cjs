@@ -1,6 +1,4 @@
 /**
- * PM2 ecosystem for Ometto API + BullMQ workers.
- *
  * PM2 ecosystem for DoorDish API + BullMQ workers.
  *
  * Usage:

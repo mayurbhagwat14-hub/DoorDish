@@ -74,7 +74,6 @@ const FoodAdminRedirect = () => {
   return <Navigate to={`${targetPath}${location.search}`} replace />;
 };
 
-const MasterLandingPage = lazy(() => import('./MasterLandingPage'))
 const AdminRouter = lazy(() => import('../modules/Food/components/admin/AdminRouter'))
 
 const AppRoutes = () => {

@@ -14,6 +14,8 @@ import { refreshSidebarBadges } from "@food/components/admin/AdminSidebar"
 import { useAdminBadgeListRefresh } from "@food/hooks/useAdminBadgeListRefresh"
 import { toast } from "sonner"
 import AdminListPagination from "@food/components/admin/AdminListPagination"
+import dishFallbackImage from "@food/assets/dish_fallback.webp"
+import { normalizeImageUrl } from "@food/utils/common"
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}
@@ -49,14 +51,19 @@ const ComparisonField = ({ label, oldVal, newVal, type = 'text' }) => {
 };
 
 const ImageComparison = ({ oldImage, newImage, oldImages = [], newImages = [] }) => {
+    const normOld = oldImage ? normalizeImageUrl(oldImage) : "";
+    const normNew = newImage ? normalizeImageUrl(newImage) : "";
+    
     // Single image comparison
-    const isSingleImageChanged = oldImage !== newImage;
+    const isSingleImageChanged = normOld !== normNew;
     
     // Array images comparison
-    const oldSet = new Set(oldImages || []);
-    const newSet = new Set(newImages || []);
-    const removed = (oldImages || []).filter(img => !newSet.has(img));
-    const added = (newImages || []).filter(img => !oldSet.has(img));
+    const normalizedOldList = (oldImages || []).map(normalizeImageUrl).filter(Boolean);
+    const normalizedNewList = (newImages || []).map(normalizeImageUrl).filter(Boolean);
+    const oldSet = new Set(normalizedOldList);
+    const newSet = new Set(normalizedNewList);
+    const removed = normalizedOldList.filter(img => !newSet.has(img));
+    const added = normalizedNewList.filter(img => !oldSet.has(img));
     
     const hasChanges = isSingleImageChanged || removed.length > 0 || added.length > 0;
     if (!hasChanges) return null;
@@ -68,15 +75,37 @@ const ImageComparison = ({ oldImage, newImage, oldImages = [], newImages = [] })
                 {isSingleImageChanged && (
                     <div className="flex gap-4 items-center p-3 bg-slate-50 rounded-xl border border-dashed border-gray-200">
                         <div className="relative">
-                            <img src={oldImage} className="w-20 h-20 object-cover rounded-lg border-2 border-red-100 opacity-40 grayscale" alt="Old" />
-                            <div className="absolute inset-0 flex items-center justify-center"><XCircle className="w-6 h-6 text-red-500/50" /></div>
+                            {normOld ? (
+                                <img 
+                                    src={normOld} 
+                                    onError={(e) => { e.currentTarget.src = dishFallbackImage; }}
+                                    className="w-20 h-20 object-cover rounded-lg border-2 border-red-100 opacity-60 grayscale" 
+                                    alt="Old" 
+                                />
+                            ) : (
+                                <div className="w-20 h-20 rounded-lg border-2 border-dashed border-red-200 bg-red-50/50 flex flex-col items-center justify-center text-gray-400">
+                                    <span className="text-[10px] font-bold text-red-400 uppercase">No Image</span>
+                                </div>
+                            )}
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none"><XCircle className="w-6 h-6 text-red-500/50" /></div>
                             <span className="absolute -top-2 -left-2 bg-red-100 text-red-600 text-[8px] font-bold px-1.5 py-0.5 rounded">OLD</span>
                         </div>
                         <div className="text-gray-300">
                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="9 5l7 7-7 7" /></svg>
                         </div>
                         <div className="relative">
-                            <img src={newImage} className="w-20 h-20 object-cover rounded-lg border-2 border-green-400 shadow-md transition-transform hover:scale-105" alt="New" />
+                            {normNew ? (
+                                <img 
+                                    src={normNew} 
+                                    onError={(e) => { e.currentTarget.src = dishFallbackImage; }}
+                                    className="w-20 h-20 object-cover rounded-lg border-2 border-green-400 shadow-md transition-transform hover:scale-105" 
+                                    alt="New" 
+                                />
+                            ) : (
+                                <div className="w-20 h-20 rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 flex flex-col items-center justify-center text-gray-400">
+                                    <span className="text-[10px] font-bold text-gray-400 uppercase">No Image</span>
+                                </div>
+                            )}
                             <span className="absolute -top-2 -left-2 bg-green-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded shadow-sm">NEW</span>
                         </div>
                     </div>
@@ -84,15 +113,25 @@ const ImageComparison = ({ oldImage, newImage, oldImages = [], newImages = [] })
                 
                 {removed.map((img, idx) => (
                     <div key={`rem-${idx}`} className="relative opacity-60">
-                        <img src={img} className="w-20 h-20 object-cover rounded-lg border-2 border-red-200 grayscale" alt="Removed" />
-                        <div className="absolute inset-0 flex items-center justify-center"><XCircle className="w-6 h-6 text-red-500" /></div>
+                        <img 
+                            src={img} 
+                            onError={(e) => { e.currentTarget.src = dishFallbackImage; }}
+                            className="w-20 h-20 object-cover rounded-lg border-2 border-red-200 grayscale" 
+                            alt="Removed" 
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none"><XCircle className="w-6 h-6 text-red-500" /></div>
                         <span className="absolute -bottom-4 left-0 right-0 text-[8px] text-center text-red-500 font-bold">REMOVED</span>
                     </div>
                 ))}
                 
                 {added.map((img, idx) => (
                     <div key={`add-${idx}`} className="relative">
-                        <img src={img} className="w-20 h-20 object-cover rounded-lg border-2 border-green-500 shadow-sm" alt="Added" />
+                        <img 
+                            src={img} 
+                            onError={(e) => { e.currentTarget.src = dishFallbackImage; }}
+                            className="w-20 h-20 object-cover rounded-lg border-2 border-green-500 shadow-sm" 
+                            alt="Added" 
+                        />
                         <span className="absolute -bottom-4 left-0 right-0 text-[8px] text-center text-green-600 font-bold">ADDED</span>
                     </div>
                 ))}
@@ -642,16 +681,23 @@ export default function FoodApproval() {
                           Images ({allImages.length})
                         </label>
                         <div className="flex flex-wrap gap-3">
-                          {allImages.map((img, idx) => (
+                          {allImages.map((img, idx) => {
+                            const normalizedSrc = normalizeImageUrl(img) || dishFallbackImage;
+                            return (
                               <img 
                                 key={idx}
-                                src={img} 
+                                src={normalizedSrc} 
                                 alt="Item preview"
                                 className="w-24 h-24 object-cover rounded-xl border border-gray-100 shadow-sm hover:scale-105 transition-transform cursor-zoom-in"
-                                onClick={() => window.open(img, '_blank')}
-                                onError={(e) => { e.target.style.display = 'none'; }}
+                                onClick={() => window.open(normalizedSrc, '_blank')}
+                                onError={(e) => { 
+                                  if (e.currentTarget.src !== dishFallbackImage) {
+                                    e.currentTarget.src = dishFallbackImage;
+                                  }
+                                }}
                               />
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
                     ) : null;
