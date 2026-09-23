@@ -64,7 +64,8 @@ export async function enforceMinimumFoodItemPrices(items = [], restaurantId = nu
     }
 
     const hasVariantsInDB = doc.variants && doc.variants.length > 0;
-    if (hasVariantsInDB && !item.variantId) {
+    const docHasBasePrice = (Number(doc.price) || 0) > 0 || (Number(doc.basePrice) || 0) > 0;
+    if (hasVariantsInDB && !item.variantId && !docHasBasePrice) {
       throw new ValidationError(`Please select an option for "${label}" before adding to cart.`);
     }
 
@@ -105,6 +106,11 @@ export async function enforceMinimumFoodItemPrices(items = [], restaurantId = nu
       if (!(liveMarkupAmount > 0) && liveSellingPrice > basePrice + 0.01) {
         liveMarkupAmount = Math.round((liveSellingPrice - basePrice) * 100) / 100;
       }
+      item.variantId = String(variant.id || variant._id);
+      item.variantName = String(variant.name || '').trim();
+    } else {
+      item.variantId = '';
+      item.variantName = '';
     }
 
     // Prefer cart pricing snapshot when base matches.
@@ -169,6 +175,8 @@ export async function enforceMinimumFoodItemPrices(items = [], restaurantId = nu
     item.price = sellingPrice;
     item.basePrice = basePrice;
     item.variantPrice = sellingPrice;
+    item.variantId = item.variantId || '';
+    item.variantName = item.variantName || '';
     item.otherPrice = 0;
     item.markupAmount = markupAmount;
     if (!item.image && doc.image) item.image = doc.image;
@@ -208,6 +216,8 @@ export async function resolveCheckoutItems(userId, dto = {}) {
     items: clientItems.map((item) => ({
       ...item,
       itemId: String(item.itemId || item.id || item._id || ''),
+      variantId: item.variantId ? String(item.variantId) : '',
+      variantName: item.variantName ? String(item.variantName) : '',
       quantity: Math.max(1, Number(item.quantity) || 1),
     })),
     restaurantId: dto.restaurantId || null,

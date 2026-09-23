@@ -123,19 +123,9 @@ function deriveBaseFromAppliedPricingRule(price, item = {}) {
 export function resolveRestaurantItemUnitPrice(item = {}) {
   const price = Number(item?.price) || 0;
   const markup = Number(item?.markupAmount) || 0;
-  const other = Number(item?.otherPrice) || 0;
   const base = Number(item?.basePrice);
-  const hasAdminScope =
-    item?.pricingScope && String(item.pricingScope).toUpperCase() !== 'LEGACY';
 
   if (Number.isFinite(base) && base >= 0) {
-    if (markup > 0 || (hasAdminScope && other > base + 0.01) || base < price - 0.01) {
-      return base;
-    }
-    if (Math.abs(base - price) < 0.01) {
-      const derived = deriveBaseFromAppliedPricingRule(price, item);
-      if (derived != null && derived < price - 0.01) return derived;
-    }
     return base;
   }
 
@@ -165,6 +155,7 @@ export function toRestaurantFacingOrder(orderDoc) {
         }
         return {
           ...item,
+          variantName: item?.variantName || item?.variant?.name || item?.variant || '',
           customerPrice: customerUnit,
           price: restaurantUnit,
           variantPrice: restaurantUnit,

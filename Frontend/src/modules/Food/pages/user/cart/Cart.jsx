@@ -116,7 +116,31 @@ export default function Cart() {
     );
   }
 
-  const { cart, updateQuantity, addToCart, getCartCount, clearCart, cleanCartForRestaurant } = cartContext;
+  const { cart, updateQuantity, updateCartItemVariant, addToCart, getCartCount, clearCart, cleanCartForRestaurant } = cartContext;
+  const [updatingVariantLineId, setUpdatingVariantLineId] = useState(null);
+
+  const handleSelectVariety = async (item, targetVariantId) => {
+    if (!updateCartItemVariant) return;
+    const lineKey = item.lineItemId || item.id;
+    try {
+      setUpdatingVariantLineId(lineKey);
+      const res = await updateCartItemVariant(item, targetVariantId);
+      if (res?.ok === false) {
+        toast.error(res.error || "Failed to update variety");
+      } else {
+        const selectedVar = (item.variants || []).find((v) => String(v.id || v._id) === String(targetVariantId));
+        if (selectedVar) {
+          toast.success(`Selected "${selectedVar.name}"`);
+        } else {
+          toast.success("Selected regular option");
+        }
+      }
+    } catch (err) {
+      toast.error("Failed to update variety");
+    } finally {
+      setUpdatingVariantLineId(null);
+    }
+  };
   const { getDefaultAddress, getDefaultPaymentMethod, setDefaultAddress, addresses, paymentMethods, userProfile, orderType, setOrderType } = useProfile()
   const { createOrder } = useOrders()
   const { openLocationSelector } = useLocationSelector()
@@ -2574,7 +2598,53 @@ export default function Cart() {
                               </div>
                             <div className="min-w-0 flex-1">
                               <h3 className="text-sm md:text-base font-bold text-gray-900 dark:text-gray-100 leading-tight">{item.name}</h3>
-                              {item.variantName ? (
+                              {Array.isArray(item.variants) && item.variants.length > 0 ? (
+                                <div className="mt-2 flex flex-col gap-1">
+                                  <div className="flex flex-wrap items-center gap-1.5">
+                                    {/* Regular / Base option */}
+                                    <button
+                                      type="button"
+                                      disabled={updatingVariantLineId === (item.lineItemId || item.id)}
+                                      onClick={() => handleSelectVariety(item, "")}
+                                      className={`text-[11px] px-2.5 py-1 rounded-lg font-semibold border transition-all flex items-center gap-1 cursor-pointer ${
+                                        !item.variantId
+                                          ? "bg-[#FF5A1F] text-white border-[#FF5A1F] shadow-sm"
+                                          : "bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-[#FF5A1F]/50"
+                                      } ${updatingVariantLineId === (item.lineItemId || item.id) ? "opacity-50 cursor-wait" : ""}`}
+                                    >
+                                      {!item.variantId && <Check className="w-3 h-3 stroke-[3px]" />}
+                                      <span>Regular</span>
+                                      <span className="font-normal opacity-90">
+                                        · {RUPEE_SYMBOL}{item.itemBasePrice || item.basePrice || item.price}
+                                      </span>
+                                    </button>
+
+                                    {/* Each Variant option */}
+                                    {item.variants.map((v) => {
+                                      const isSelected = String(item.variantId) === String(v.id || v._id);
+                                      return (
+                                        <button
+                                          key={v.id || v._id}
+                                          type="button"
+                                          disabled={updatingVariantLineId === (item.lineItemId || item.id)}
+                                          onClick={() => handleSelectVariety(item, v.id || v._id)}
+                                          className={`text-[11px] px-2.5 py-1 rounded-lg font-semibold border transition-all flex items-center gap-1 cursor-pointer ${
+                                            isSelected
+                                              ? "bg-[#FF5A1F] text-white border-[#FF5A1F] shadow-sm"
+                                              : "bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-[#FF5A1F]/50"
+                                          } ${updatingVariantLineId === (item.lineItemId || item.id) ? "opacity-50 cursor-wait" : ""}`}
+                                        >
+                                          {isSelected && <Check className="w-3 h-3 stroke-[3px]" />}
+                                          <span>{v.name}</span>
+                                          <span className="font-normal opacity-90">
+                                            · {RUPEE_SYMBOL}{v.price}
+                                          </span>
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              ) : item.variantName ? (
                                 <p className="text-[10px] md:text-xs text-red-600 dark:text-red-300 mt-1 font-semibold bg-red-50 dark:bg-red-950/20 border border-red-100/50 dark:border-red-900/30 w-fit px-2.5 py-0.5 rounded-full whitespace-nowrap">
                                   {item.variantName}
                                 </p>

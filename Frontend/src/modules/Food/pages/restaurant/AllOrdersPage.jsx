@@ -187,6 +187,7 @@ export default function AllOrdersPage() {
     // Format items
     const items = (order.items || []).map(item => ({
       name: item.name || 'Item',
+      variantName: item.variantName || item.variant?.name || item.variant || '',
       quantity: item.quantity || 1,
       price: item.price || 0
     }))
@@ -684,6 +685,11 @@ export default function AllOrdersPage() {
                 <div key={idx} className="flex items-center justify-between">
                   <span className="text-sm text-gray-900">
                     {item.quantity} x {item.name}
+                    {item.variantName ? (
+                      <span className="ml-1.5 text-xs text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded font-medium border border-amber-200">
+                        {item.variantName}
+                      </span>
+                    ) : null}
                   </span>
                   <span className="text-sm text-gray-500">{formatMoney(item.price)}</span>
                 </div>

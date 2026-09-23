@@ -38,6 +38,10 @@ const defaultCartContext = {
   updateQuantity: () => {
     debugWarn("CartProvider not available - updateQuantity called")
   },
+  updateCartItemVariant: () => {
+    debugWarn("CartProvider not available - updateCartItemVariant called")
+    return Promise.resolve({ ok: false })
+  },
   getCartCount: () => 0,
   isInCart: () => false,
   getCartItem: () => null,
@@ -178,6 +182,10 @@ const normalizeCartData = (rawCart) => {
         otherPrice: Number(item.otherPrice) || 0,
         restaurant: normalizedRestaurantName,
         restaurantId: normalizedRestaurantId,
+        variants: Array.isArray(item.variants)
+          ? item.variants
+          : (Array.isArray(item.variations) ? item.variations : []),
+        itemBasePrice: Number(item.itemBasePrice ?? item.basePrice ?? item.price) || 0,
         restaurantZoneId:
           item.restaurantZoneId ||
           item.restaurant_zone_id ||
@@ -652,6 +660,66 @@ export function CartProvider({ children }) {
     }
   }, [applyServerCart])
 
+  const updateCartItemVariant = useCallback(
+    async (cartItem, newVariantId = "") => {
+      if (!cartItem) return { ok: false }
+      const lineId = cartItem.lineItemId || cartItem.id
+      const quantity = Number(cartItem.quantity) || 1
+      const normalizedVarId = String(newVariantId || "").trim()
+
+      if (!isUserAuthenticated()) {
+        const variantsList = Array.isArray(cartItem.variants) ? cartItem.variants : []
+        const targetVariant = variantsList.find((v) => String(v.id || v._id) === normalizedVarId)
+        const newVariantName = targetVariant?.name || ""
+        const newPrice = targetVariant
+          ? Number(targetVariant.price)
+          : Number(cartItem.itemBasePrice ?? cartItem.basePrice ?? cartItem.price)
+        const newLineId = buildCartLineId(cartItem.itemId || cartItem.productId || cartItem.id, normalizedVarId)
+
+        setCart((prev) => {
+          const safePrev = normalizeCartData(prev)
+          const filtered = safePrev.filter((i) => i.id !== lineId)
+          const existingTarget = filtered.find((i) => i.id === newLineId)
+          if (existingTarget) {
+            return filtered.map((i) =>
+              i.id === newLineId ? { ...i, quantity: i.quantity + quantity } : i
+            )
+          }
+          return [
+            ...filtered,
+            {
+              ...cartItem,
+              id: newLineId,
+              lineItemId: newLineId,
+              variantId: normalizedVarId,
+              variantName: newVariantName,
+              variantPrice: newPrice,
+              price: newPrice,
+              quantity,
+            },
+          ]
+        })
+        return { ok: true }
+      }
+
+      const seq = ++mutationSeqRef.current
+      try {
+        const response = await foodCartAPI.updateItem(lineId, {
+          variantId: normalizedVarId,
+          quantity,
+        })
+        if (seq !== mutationSeqRef.current) return { ok: true }
+        const payload = extractCartPayload(response)
+        applyServerCart(payload)
+        return { ok: true, cart: payload.items }
+      } catch (err) {
+        debugError("updateCartItemVariant failed", err)
+        return { ok: false, error: apiErrorMessage(err) }
+      }
+    },
+    [applyServerCart, normalizedCart]
+  )
+
   const replaceCart = useCallback(
     async (items) => {
       const normalizedItems = normalizeCartData(items).filter((item) => {
@@ -790,6 +858,7 @@ export function CartProvider({ children }) {
       addToCart,
       removeFromCart,
       updateQuantity,
+      updateCartItemVariant,
       getCartCount,
       isInCart,
       getCartItem,

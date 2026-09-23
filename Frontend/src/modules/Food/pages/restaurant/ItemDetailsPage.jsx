@@ -212,7 +212,7 @@ export default function ItemDetailsPage() {
         break
       }
     }
-    setBasePrice(itemVariants.length === 0 ? resolvedBasePrice : "")
+    setBasePrice(resolvedBasePrice || "")
     setPreparationTime(item.preparationTime || "")
     setGst(item.gst?.toString() || "5.0")
     setIsRecommended(
@@ -779,9 +779,11 @@ export default function ItemDetailsPage() {
 
     const hasVariants = normalizedVariants.length > 0
     const parsedBasePrice = Number(basePrice)
-    if (!hasVariants && (!Number.isFinite(parsedBasePrice) || parsedBasePrice < 0)) {
-      toast.error("Please enter a valid base price")
-      return
+    if (!Number.isFinite(parsedBasePrice) || parsedBasePrice < 0) {
+      if (!hasVariants) {
+        toast.error("Please enter a valid base price")
+        return
+      }
     }
 
     const variantPayload = normalizedVariants.map((variant) => ({
@@ -864,11 +866,16 @@ export default function ItemDetailsPage() {
 
       // Create/update FoodItem in DB (single call per explicit Save; no autosave spam)
       let itemId
+      const effectivePrice = Number.isFinite(parsedBasePrice) && parsedBasePrice >= 0
+        ? parsedBasePrice
+        : (hasVariants ? normalizedVariants[0].price : 0)
+
       if (isNewItem) {
         const createRes = await restaurantAPI.createFood({
           name: itemName.trim(),
           description: itemDescription.trim(),
-          price: hasVariants ? undefined : parsedBasePrice,
+          price: effectivePrice,
+          basePrice: effectivePrice,
           variants: variantPayload,
           image: allImageUrls.length > 0 ? allImageUrls[0] : "",
           foodType: effectiveFoodType,
@@ -891,7 +898,8 @@ export default function ItemDetailsPage() {
         await restaurantAPI.updateFood(itemId, {
           name: itemName.trim(),
           description: itemDescription.trim(),
-          price: hasVariants ? undefined : parsedBasePrice,
+          price: effectivePrice,
+          basePrice: effectivePrice,
           variants: variantPayload,
           image: allImageUrls.length > 0 ? allImageUrls[0] : "",
           foodType: effectiveFoodType,
@@ -1266,42 +1274,48 @@ export default function ItemDetailsPage() {
               Item price
             </label>
             <div className="space-y-3">
-              {variants.length === 0 ? (
-                <>
-                  <div className="relative">
-                    <label className="block text-xs text-gray-600 mb-1">Base price</label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={basePrice}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/[\u20B9\s,]/g, '').replace(/[^0-9.]/g, '')
-                          const parts = value.split('.')
-                          const cleanedValue = parts.length > 2
-                            ? parts[0] + '.' + parts.slice(1).join('')
-                            : value
-                          setBasePrice(cleanedValue)
-                        }}
-                        onFocus={(e) => {
-                          if (e.target.value.startsWith('\u20B9')) {
-                            e.target.value = e.target.value.replace(/[\u20B9\s]+/g, '')
-                          }
-                        }}
-                        placeholder="Enter price"
-                        className="w-full pl-8 pr-12 py-3 border border-gray-300 rounded-lg text-sm text-gray-900 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#FA5300] focus:border-transparent"
-                      />
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-600">{"\u20B9"}</span>
-                      <button className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-gray-100">
-                        <EditIcon className="w-4 h-4 text-gray-500" />
-                      </button>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <div className="rounded-lg border border-orange-100 bg-orange-50 px-3 py-2 text-sm text-orange-700">
-                  Customers will see the lowest variant price first.
+              <div className="relative">
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-semibold text-gray-700">
+                    Base price {variants.length > 0 ? "(Normal / Regular price without add-ons)" : ""}
+                  </label>
+                  {variants.length > 0 && (
+                    <span className="text-[11px] text-orange-600 font-medium bg-orange-50 px-2 py-0.5 rounded-full border border-orange-200">
+                      Standard item price
+                    </span>
+                  )}
                 </div>
-              )}
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={basePrice}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[\u20B9\s,]/g, '').replace(/[^0-9.]/g, '')
+                      const parts = value.split('.')
+                      const cleanedValue = parts.length > 2
+                        ? parts[0] + '.' + parts.slice(1).join('')
+                        : value
+                      setBasePrice(cleanedValue)
+                    }}
+                    onFocus={(e) => {
+                      if (e.target.value.startsWith('\u20B9')) {
+                        e.target.value = e.target.value.replace(/[\u20B9\s]+/g, '')
+                      }
+                    }}
+                    placeholder="Enter base price (e.g., 115)"
+                    className="w-full pl-8 pr-12 py-3 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#FA5300] focus:border-transparent"
+                  />
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-600">{"\u20B9"}</span>
+                  <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-gray-100">
+                    <EditIcon className="w-4 h-4 text-gray-500" />
+                  </button>
+                </div>
+                {variants.length > 0 && (
+                  <p className="text-[11px] text-gray-500 mt-1">
+                    Customers who do not choose any variant/add-on will pay this base price.
+                  </p>
+                )}
+              </div>
 
               <div className="rounded-xl border border-gray-200 bg-white p-3 space-y-3">
                 <div className="flex items-center justify-between gap-3">

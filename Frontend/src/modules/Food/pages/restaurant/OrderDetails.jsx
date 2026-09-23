@@ -237,7 +237,7 @@ export default function OrderDetails() {
               price: resolveRestaurantItemUnitPrice(item),
               image: item.image,
               type: item.isVeg || item.foodType === 'Veg' ? 'Veg' : 'Non-Veg',
-              variantName: item.variantName || ''
+              variantName: item.variantName || item.variant?.name || item.variant || ''
             })) || [],
             billing: {
               itemSubtotal,
@@ -436,7 +436,7 @@ export default function OrderDetails() {
     // Items Table
     const itemsTableData = orderData.items.map(item => [
       `${item.quantity}x`,
-      item.name,
+      item.variantName ? `${item.name} (${item.variantName})` : item.name,
       item.type || "-",
       formatMoney(item.price)
     ])

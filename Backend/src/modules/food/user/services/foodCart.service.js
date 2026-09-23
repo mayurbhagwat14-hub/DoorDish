@@ -313,7 +313,14 @@ export async function hydrateFoodCart(cartDoc) {
       productId: String(doc._id),
       variantId: variant.variantId,
       variantName: variant.variantName,
-      variantPrice: unitPrice,
+      variants: (doc.variants || []).map((v) => ({
+        id: String(v._id || v.id),
+        _id: String(v._id || v.id),
+        name: v.name,
+        price: Number(v.price) || 0,
+        basePrice: Number(v.basePrice ?? v.price) || 0,
+      })),
+      itemBasePrice: Number(doc.price) || 0,
       name: doc.name,
       quantity,
       price: unitPrice,
@@ -507,9 +514,13 @@ export async function updateFoodCartItem(userId, lineId, body = {}) {
   if (idx < 0) throw new NotFoundError('Cart item not found');
 
   const quantity = Number(body.quantity);
-  if (!Number.isFinite(quantity)) throw new ValidationError('Quantity is required');
+  const hasQty = Number.isFinite(quantity);
+  const hasVariant = body.variantId !== undefined;
+  if (!hasQty && !hasVariant) throw new ValidationError('Quantity or variant is required');
 
-  if (quantity <= 0) {
+  const effectiveQty = hasQty ? quantity : cart.items[idx].quantity;
+
+  if (effectiveQty <= 0) {
     cart.items.splice(idx, 1);
     if (!cart.items.length) {
       cart.restaurantId = null;
@@ -523,9 +534,34 @@ export async function updateFoodCartItem(userId, lineId, body = {}) {
   const itemDoc = await loadItemDoc(line.itemId);
   assertItemSellable(itemDoc);
   await assertRestaurantAccepting(itemDoc.restaurantId);
-  resolveVariant(itemDoc, line.variantId);
 
-  cart.items[idx].quantity = Math.min(MAX_QTY, Math.floor(quantity));
+  let targetVariantId = normalizeVariantId(line.variantId);
+  if (hasVariant) {
+    targetVariantId = normalizeVariantId(body.variantId);
+    const existingIdx = (cart.items || []).findIndex(
+      (l, i) => i !== idx && String(l.itemId) === String(line.itemId) && normalizeVariantId(l.variantId) === targetVariantId
+    );
+    if (existingIdx >= 0) {
+      cart.items[existingIdx].quantity = Math.min(MAX_QTY, (cart.items[existingIdx].quantity || 1) + effectiveQty);
+      cart.items.splice(idx, 1);
+      await cart.save();
+      return hydrateFoodCart(cart);
+    }
+
+    line.variantId = targetVariantId;
+    line.pricingCapturedAt = null;
+    line.basePrice = null;
+    line.sellingPrice = null;
+    line.markupAmount = null;
+    line.appliedPricingType = null;
+    line.appliedPricingValue = null;
+    line.pricingScope = null;
+    line.pricingRule = null;
+  }
+
+  resolveVariant(itemDoc, targetVariantId);
+
+  cart.items[idx].quantity = Math.min(MAX_QTY, Math.floor(effectiveQty));
   await cart.save();
   return hydrateFoodCart(cart);
 }
