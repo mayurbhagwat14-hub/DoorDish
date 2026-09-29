@@ -2,6 +2,7 @@ import express from 'express';
 import crypto from 'crypto';
 import { upload } from '../../../middleware/upload.js';
 import { authMiddleware } from '../../../core/auth/auth.middleware.js';
+import { verifyAccessToken } from '../../../core/auth/token.util.js';
 import { config } from '../../../config/env.js';
 import { sendError } from '../../../utils/response.js';
 import { uploadImageController, deleteUploadController } from '../controllers/upload.controller.js';
@@ -25,10 +26,18 @@ const requireUploadSecret = (req, res, next) => {
 
 const optionalAuthMiddleware = (req, res, next) => {
     const authHeader = req.headers.authorization || '';
-    if (!authHeader) {
+    const token = authHeader.startsWith('Bearer ') ? authHeader.substring(7) : null;
+    if (!token) {
         return next();
     }
-    return authMiddleware(req, res, next);
+    // Verify token first. If it's expired or invalid on an optional route,
+    // do not block image upload with 401 — proceed unauthenticated.
+    try {
+        verifyAccessToken(token);
+        return authMiddleware(req, res, next);
+    } catch {
+        return next();
+    }
 };
 
 router.post('/image', optionalAuthMiddleware, upload.single('file'), uploadImageController);

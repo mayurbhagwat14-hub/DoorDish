@@ -2606,14 +2606,23 @@ export const uploadAPI = {
       formData.append("replaceUrl", options.replaceUrl);
     }
 
-    return apiClient.post("/uploads/image", formData, {
+    const config = {
       headers: { "Content-Type": "multipart/form-data" },
       timeout: 60000,
-    });
+    };
+    if (options.contextModule) {
+      config.contextModule = options.contextModule;
+    }
+
+    return apiClient.post("/uploads/image", formData, config);
   },
-  deleteMedia: (url) => {
+  deleteMedia: (url, options = {}) => {
     if (!url) return Promise.resolve();
-    return apiClient.delete("/uploads", { data: { url } });
+    const config = { data: { url } };
+    if (options?.contextModule) {
+      config.contextModule = options.contextModule;
+    }
+    return apiClient.delete("/uploads", config);
   },
 };
 /** Order API (user app – Bearer USER token). Minimal calls: single create/verify, list/details cached by caller. */

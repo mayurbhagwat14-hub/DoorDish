@@ -69,9 +69,27 @@ function getModuleFromUrl(url = "") {
   return "user";
 }
 
+function getModuleFromBrowserLocation() {
+  if (typeof window === "undefined" || !window.location) return null;
+  const path = (window.location.pathname || "").toLowerCase();
+  if (path.startsWith("/admin") || path.startsWith("/food/admin")) return "admin";
+  if (path.startsWith("/food/restaurant") || path.startsWith("/restaurant")) return "restaurant";
+  if (path.startsWith("/food/delivery") || path.startsWith("/delivery")) return "delivery";
+  return null;
+}
+
 function getModuleFromConfig(config) {
   if (config?.contextModule) return config.contextModule;
-  return getModuleFromUrl(config?.url);
+  const urlModule = getModuleFromUrl(config?.url);
+  // If the API URL directly identified admin, restaurant, or delivery, use it.
+  if (urlModule && urlModule !== "user") return urlModule;
+
+  // For shared/generic endpoints (e.g. /uploads/image, /uploads, etc.),
+  // infer context from current browser location if on admin, restaurant, or delivery portal.
+  const browserModule = getModuleFromBrowserLocation();
+  if (browserModule) return browserModule;
+
+  return urlModule || "user";
 }
 
 function getAccessToken(config) {
@@ -82,10 +100,17 @@ function getAccessToken(config) {
     const moduleToken = localStorage.getItem(key);
     if (moduleToken) return moduleToken;
 
-    // 2. Fallback to any active module token (restaurant, admin, delivery, user)
+    // 2. Fallback to active browser module token
+    const browserModule = getModuleFromBrowserLocation();
+    if (browserModule && browserModule !== module) {
+      const browserToken = localStorage.getItem(`${browserModule}_accessToken`);
+      if (browserToken) return browserToken;
+    }
+
+    // 3. Fallback to any active module token
     const fallbackToken =
-      localStorage.getItem("restaurant_accessToken") ||
       localStorage.getItem("admin_accessToken") ||
+      localStorage.getItem("restaurant_accessToken") ||
       localStorage.getItem("delivery_accessToken") ||
       localStorage.getItem("user_accessToken") ||
       localStorage.getItem("accessToken");
@@ -194,7 +219,7 @@ apiClient.interceptors.response.use(
     if (err?.response?.status !== 401 || !original || original._retry) {
       return Promise.reject(err);
     }
-    const module = original.contextModule || getModuleFromUrl(original.url);
+    const module = original.contextModule || getModuleFromConfig(original);
     const refreshToken = getRefreshToken(module);
     if (!refreshToken) {
       clearModuleAuth(module);

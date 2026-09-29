@@ -469,7 +469,7 @@ export default function AddRestaurant() {
   // Upload handler for images
   const handleUpload = async (file, folder) => {
     try {
-      const res = await uploadAPI.uploadMedia(file, { folder })
+      const res = await uploadAPI.uploadMedia(file, { folder, contextModule: "admin" })
       const d = res?.data?.data || res?.data
       return { url: d.url, publicId: d.publicId }
     } catch (err) {
