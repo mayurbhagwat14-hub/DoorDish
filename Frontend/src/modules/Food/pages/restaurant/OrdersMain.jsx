@@ -742,7 +742,7 @@ function TableBookings() {
                       {booking.user?.name}
                     </h3>
                     <p className="text-[11px] text-gray-500">
-                      {booking.user?.phone || "No phone"}
+                      Contact via Admin Support
                     </p>
                   </div>
                   <span

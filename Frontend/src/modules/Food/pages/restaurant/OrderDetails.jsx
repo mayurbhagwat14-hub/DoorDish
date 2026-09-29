@@ -237,7 +237,9 @@ export default function OrderDetails() {
               price: resolveRestaurantItemUnitPrice(item),
               image: item.image,
               type: item.isVeg || item.foodType === 'Veg' ? 'Veg' : 'Non-Veg',
-              variantName: item.variantName || item.variant?.name || item.variant || ''
+              variantName: item.variantName || item.variant?.name || item.variant || '',
+              addons: Array.isArray(item.addons) ? item.addons : Array.isArray(item.selectedAddons) ? item.selectedAddons : [],
+              lineTotal: getRestaurantItemLineTotal(item),
             })) || [],
             billing: {
               itemSubtotal,
@@ -434,12 +436,18 @@ export default function OrderDetails() {
     yPosition += 5
 
     // Items Table
-    const itemsTableData = orderData.items.map(item => [
-      `${item.quantity}x`,
-      item.variantName ? `${item.name} (${item.variantName})` : item.name,
-      item.type || "-",
-      formatMoney(item.price)
-    ])
+    const itemsTableData = orderData.items.map(item => {
+      const addonsText = item.addons?.length
+        ? `\n+ ${item.addons.map(a => `${a.name}${a.price ? ` (₹${a.price})` : ''}`).join(', ')}`
+        : ''
+      const nameText = `${item.variantName ? `${item.name} (${item.variantName})` : item.name}${addonsText}`
+      return [
+        `${item.quantity}x`,
+        nameText,
+        item.type || "-",
+        formatMoney(item.lineTotal ?? item.price)
+      ]
+    })
 
     // Use autoTable with the doc instance
     autoTable(doc, {
@@ -895,9 +903,23 @@ export default function OrderDetails() {
                         {item.variantName && (
                           <p className="text-xs text-gray-500 font-medium mt-0.5">{item.variantName}</p>
                         )}
+                        {item.addons && item.addons.length > 0 && (
+                          <div className="mt-1 flex flex-wrap gap-1">
+                            {item.addons.map((addon, aIdx) => (
+                              <span key={aIdx} className="inline-flex items-center text-[11px] font-semibold text-slate-700 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded">
+                                + {addon.name} {addon.price ? `(₹${addon.price})` : ''}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
-                    <p className="text-sm font-semibold text-gray-900">{formatMoney(item.price)}</p>
+                    <div className="text-right">
+                      <p className="text-sm font-semibold text-gray-900">{formatMoney(item.lineTotal ?? item.price)}</p>
+                      {item.addons && item.addons.length > 0 && (
+                        <p className="text-[10px] text-gray-500">Base: {formatMoney(item.price)}</p>
+                      )}
+                    </div>
                   </div>
                   {item.type && (
                     <div className="flex items-center gap-2 text-xs text-gray-500">

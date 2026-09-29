@@ -4,7 +4,6 @@ import useAppBackNavigation from "@food/hooks/useAppBackNavigation"
 import {
   ArrowLeft,
   ShoppingBag,
-  Phone,
   Copy,
   Download,
   User,
@@ -15,6 +14,7 @@ import {
   FileText,
   X,
   Check,
+  HelpCircle,
 } from "lucide-react"
 import { orderAPI, restaurantAPI } from "@food/api"
 import { useCart } from "@food/context/CartContext"
@@ -228,20 +228,13 @@ export default function UserOrderDetails() {
     (pricing.originalItemTotal || 0) -
     (pricing.subtotal || 0)
 
-  // Restaurant phone (multiple fallbacks) - use fetched restaurant data first
-  const restaurantPhone =
-    restaurantObj.primaryContactNumber ||
-    restaurantObj.phone ||
-    restaurantObj.contactNumber ||
-    order.restaurantPhone ||
-    ""
-
-  const handleCallRestaurant = () => {
-    if (!restaurantPhone) {
-      toast.error("Restaurant phone number not available")
-      return
+  const handleContactSupport = () => {
+    const targetId = order.orderId || order._id || orderIdDisplay || orderId;
+    if (targetId) {
+      navigate(`/food/user/help/orders/${targetId}`);
+    } else {
+      navigate('/food/user/help');
     }
-    window.location.href = `tel:${restaurantPhone}`
   }
 
   const handleDownloadSummary = async () => {
@@ -492,10 +485,12 @@ export default function UserOrderDetails() {
 
             <button
               type="button"
-              onClick={handleCallRestaurant}
-              className="w-8 h-8 rounded-full border border-[#FF5A1F]/20 flex items-center justify-center text-[#FF5A1F] hover:bg-[#FF5A1F]/5"
+              onClick={handleContactSupport}
+              title="Report an issue / Support"
+              className="px-3 py-1.5 rounded-lg border border-[#FF5A1F]/30 bg-[#FF5A1F]/5 flex items-center gap-1.5 text-xs font-semibold text-[#FF5A1F] hover:bg-[#FF5A1F]/10 transition-colors"
             >
-              <Phone className="w-4 h-4" />
+              <HelpCircle className="w-3.5 h-3.5" />
+              <span>Support</span>
             </button>
           </div>
 

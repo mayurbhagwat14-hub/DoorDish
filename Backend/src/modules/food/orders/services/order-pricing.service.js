@@ -41,14 +41,21 @@ export async function calculateOrderPricing(userId, dto) {
     .trim()
     .toUpperCase();
 
+  const getItemAddonsSum = (it) =>
+    (Array.isArray(it.addons) ? it.addons : []).reduce(
+      (s, a) => s + (Number(a.price) || 0) * (Number(a.quantity) || 1),
+      0,
+    );
+
   const subtotal = items.reduce(
-    (sum, it) => sum + (Number(it.price) || 0) * (Number(it.quantity) || 1),
+    (sum, it) =>
+      sum + ((Number(it.price) || 0) + getItemAddonsSum(it)) * (Number(it.quantity) || 1),
     0,
   );
   const baseSubtotal = items.reduce((sum, it) => {
     const base = Number(it.basePrice);
     const unit = Number.isFinite(base) && base >= 0 ? base : Number(it.price) || 0;
-    return sum + unit * (Number(it.quantity) || 1);
+    return sum + (unit + getItemAddonsSum(it)) * (Number(it.quantity) || 1);
   }, 0);
   const markupTotal = items.reduce(
     (sum, it) =>

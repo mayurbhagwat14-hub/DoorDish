@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import { FoodCart } from '../models/foodCart.model.js';
 import { FoodItem } from '../../admin/models/food.model.js';
+import { FoodAddon } from '../../restaurant/models/foodAddon.model.js';
 import { FoodRestaurant } from '../../restaurant/models/restaurant.model.js';
 import { ValidationError, NotFoundError } from '../../../../core/auth/errors.js';
 import {
@@ -40,7 +41,32 @@ async function loadItemDoc(itemId) {
   const item = await FoodItem.findById(oid)
     .select('restaurantId name price otherPrice priceOnOtherPlatforms image images foodType isAvailable approvalStatus variants categoryId categoryName')
     .lean();
-  if (!item) throw new NotFoundError('Item not found');
+  if (!item) {
+    const addon = await FoodAddon.findOne({
+      _id: oid,
+      isDeleted: { $ne: true },
+      approvalStatus: 'approved',
+      isAvailable: true,
+    }).lean();
+    if (addon) {
+      const p = addon.published || addon.draft || {};
+      return {
+        _id: addon._id,
+        restaurantId: addon.restaurantId,
+        name: p.name || 'Add-on',
+        price: Number(p.price) || 0,
+        otherPrice: 0,
+        image: p.image || (Array.isArray(p.images) ? p.images[0] : ''),
+        images: Array.isArray(p.images) ? p.images : [],
+        foodType: 'Veg',
+        isAvailable: addon.isAvailable !== false,
+        approvalStatus: addon.approvalStatus,
+        variants: [],
+        isAddon: true,
+      };
+    }
+    throw new NotFoundError('Item not found');
+  }
   return item;
 }
 
@@ -186,6 +212,33 @@ export async function hydrateFoodCart(cartDoc) {
     : [];
   const docMap = new Map(docs.map((d) => [String(d._id), d]));
 
+  const missingIds = itemIds.filter((id) => !docMap.has(String(id)));
+  if (missingIds.length > 0) {
+    const addons = await FoodAddon.find({
+      _id: { $in: missingIds },
+      isDeleted: { $ne: true },
+      approvalStatus: 'approved',
+      isAvailable: true,
+    }).lean();
+    for (const a of addons) {
+      const p = a.published || a.draft || {};
+      docMap.set(String(a._id), {
+        _id: a._id,
+        restaurantId: a.restaurantId,
+        name: p.name || 'Add-on',
+        price: Number(p.price) || 0,
+        otherPrice: 0,
+        image: p.image || (Array.isArray(p.images) ? p.images[0] : ''),
+        images: Array.isArray(p.images) ? p.images : [],
+        foodType: 'Veg',
+        isAvailable: a.isAvailable !== false,
+        approvalStatus: a.approvalStatus,
+        variants: [],
+        isAddon: true,
+      });
+    }
+  }
+
   let restaurant = null;
   if (cartDoc.restaurantId) {
     restaurant = await FoodRestaurant.findById(cartDoc.restaurantId)
@@ -294,6 +347,8 @@ export async function hydrateFoodCart(cartDoc) {
       itemId: line.itemId,
       variantId: variant.variantId,
       quantity,
+      isAddon: Boolean(line.isAddon || doc.isAddon),
+      addons: Array.isArray(line.addons) ? line.addons : [],
       ...snapshot,
     });
 
@@ -305,6 +360,21 @@ export async function hydrateFoodCart(cartDoc) {
     const unitBase = Number(snapshot.basePrice) || 0;
     const unitPrice = Number(snapshot.sellingPrice ?? unitBase) || unitBase;
     const markupAmount = Math.max(0, Number(snapshot.markupAmount) || 0);
+
+    const safeAddons = Array.isArray(line.addons)
+      ? line.addons
+          .map((a) => ({
+            name: String(a?.name || a?.title || a?.label || '').trim(),
+            quantity: Math.max(1, Number(a?.quantity) || 1),
+            price: Math.max(0, Number(a?.price) || 0),
+          }))
+          .filter((a) => a.name)
+      : [];
+    const addonsUnitSum = safeAddons.reduce(
+      (sum, a) => sum + (Number(a.price) || 0) * (Number(a.quantity) || 1),
+      0,
+    );
+    const lineTotal = Math.round((unitPrice + addonsUnitSum) * quantity * 100) / 100;
 
     hydrated.push({
       id: lineId,
@@ -343,9 +413,10 @@ export async function hydrateFoodCart(cartDoc) {
       sourceName: restaurant?.restaurantName || '',
       categoryId: doc.categoryId ? String(doc.categoryId) : '',
       categoryName: doc.categoryName || '',
-      addons: Array.isArray(line.addons) ? line.addons : [],
+      isAddon: Boolean(line.isAddon || doc.isAddon),
+      addons: safeAddons,
       notes: typeof line.notes === 'string' ? line.notes : '',
-      lineTotal: unitPrice * quantity,
+      lineTotal,
       available: true,
     });
   }
@@ -490,6 +561,8 @@ export async function addFoodCartItem(userId, body = {}) {
             itemId: itemDoc._id,
             variantId: variant.variantId,
             quantity: addQty,
+            isAddon: Boolean(itemDoc.isAddon || body.isAddon),
+            addons: Array.isArray(body.addons) ? body.addons : [],
             ...pricingSnapshot,
           },
         },
@@ -654,6 +727,7 @@ export async function buildOrderItemsFromFoodCart(userId) {
     image: line.image || '',
     categoryId: line.categoryId || '',
     categoryName: line.categoryName || '',
+    isAddon: Boolean(line.isAddon),
     notes: line.notes || '',
     addons: Array.isArray(line.addons)
       ? line.addons.map((a) => ({

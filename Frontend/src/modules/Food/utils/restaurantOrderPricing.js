@@ -58,9 +58,23 @@ export function getMenuItemLevelMarkupTotal(item = {}) {
   return Math.round(resolveItemMarkupUnit(item) * qty * 100) / 100;
 }
 
+export function getItemAddonsUnitTotal(item = {}) {
+  const addons = Array.isArray(item?.addons)
+    ? item.addons
+    : Array.isArray(item?.selectedAddons)
+    ? item.selectedAddons
+    : [];
+  return addons.reduce(
+    (sum, a) => sum + (Number(a?.price) || 0) * (Number(a?.quantity) || 1),
+    0,
+  );
+}
+
 export function getRestaurantItemLineTotal(item) {
   const qty = Number(item?.quantity || 1) || 1;
-  return resolveRestaurantItemUnitPrice(item) * qty;
+  const unitPrice = resolveRestaurantItemUnitPrice(item);
+  const addonsTotal = getItemAddonsUnitTotal(item);
+  return (unitPrice + addonsTotal) * qty;
 }
 
 export function getOrderMarkupTotal(orderLike) {

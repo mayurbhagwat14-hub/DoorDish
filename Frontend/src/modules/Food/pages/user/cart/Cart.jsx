@@ -1215,7 +1215,9 @@ export default function Cart() {
           quantity: item.quantity || 1,
           image: item.image,
           description: item.description,
-          isVeg: item.isVeg !== false
+          isVeg: item.isVeg !== false,
+          isAddon: Boolean(item.isAddon),
+          addons: Array.isArray(item.addons) ? item.addons : []
         }))
 
         const resolvedRestaurantId = restaurantData?.restaurantId || restaurantData?._id || cart[0]?.restaurantId || undefined
@@ -1981,7 +1983,9 @@ export default function Cart() {
           image: item.image || "",
           description: item.description || "",
           isVeg: item.isVeg === true || item.foodType === 'Veg',
-          preparationTime: item.preparationTime
+          preparationTime: item.preparationTime,
+          isAddon: Boolean(item.isAddon),
+          addons: Array.isArray(item.addons) ? item.addons : []
         };
       })
 
@@ -2801,6 +2805,7 @@ export default function Cart() {
                                   image: addon.image || (addon.images && addon.images[0]) || "",
                                   description: addon.description || "",
                                   isVeg: true,
+                                  isAddon: true,
                                   restaurant: cartRestaurantName,
                                   restaurantId: cartRestaurantId
                                 });

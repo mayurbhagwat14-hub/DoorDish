@@ -206,8 +206,42 @@ export function toRestaurantFacingOrder(orderDoc) {
     Math.round((restaurantSubtotal + packagingFee) * 100) / 100,
   );
 
+  const sanitizedUser = order.userId && typeof order.userId === 'object'
+    ? {
+        ...order.userId,
+        phone: undefined,
+        phoneNumber: undefined,
+        mobile: undefined,
+      }
+    : order.userId;
+
+  const sanitizedDeliveryAddress = order.deliveryAddress && typeof order.deliveryAddress === 'object'
+    ? {
+        ...order.deliveryAddress,
+        phone: undefined,
+        phoneNumber: undefined,
+        mobile: undefined,
+      }
+    : order.deliveryAddress;
+
+  const sanitizedAddress = order.address && typeof order.address === 'object'
+    ? {
+        ...order.address,
+        phone: undefined,
+        phoneNumber: undefined,
+        mobile: undefined,
+      }
+    : order.address;
+
   return {
     ...order,
+    userId: sanitizedUser,
+    customerPhone: undefined,
+    userPhone: undefined,
+    recipientPhone: undefined,
+    phone: undefined,
+    deliveryAddress: sanitizedDeliveryAddress,
+    address: sanitizedAddress,
     items,
     pricing: {
       ...pricing,

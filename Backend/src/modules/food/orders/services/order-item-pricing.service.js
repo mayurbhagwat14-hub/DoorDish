@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { FoodItem } from '../../admin/models/food.model.js';
+import { FoodAddon } from '../../restaurant/models/foodAddon.model.js';
 import { ValidationError } from '../../../../core/auth/errors.js';
 import {
   applyOtherPriceToFood,
@@ -33,6 +34,32 @@ export async function enforceMinimumFoodItemPrices(items = [], restaurantId = nu
         .lean()
     : [];
   const foodDocMap = new Map(foodDocs.map((doc) => [String(doc._id), doc]));
+
+  const missingAddonIds = validIds.filter((id) => !foodDocMap.has(String(id)));
+  if (missingAddonIds.length) {
+    const addonDocs = await FoodAddon.find({
+      _id: { $in: missingAddonIds },
+      isDeleted: { $ne: true },
+      approvalStatus: 'approved',
+      isAvailable: true,
+    }).lean();
+    for (const a of addonDocs) {
+      const p = a.published || a.draft || {};
+      foodDocMap.set(String(a._id), {
+        _id: a._id,
+        restaurantId: a.restaurantId,
+        name: p.name || 'Add-on',
+        price: Number(p.price) || 0,
+        otherPrice: 0,
+        image: p.image || (Array.isArray(p.images) ? p.images[0] : ''),
+        foodType: 'Veg',
+        isAvailable: a.isAvailable !== false,
+        approvalStatus: a.approvalStatus,
+        variants: [],
+        isAddon: true,
+      });
+    }
+  }
 
   const restaurantIds = [
     ...new Set(
@@ -179,6 +206,16 @@ export async function enforceMinimumFoodItemPrices(items = [], restaurantId = nu
     item.variantName = item.variantName || '';
     item.otherPrice = 0;
     item.markupAmount = markupAmount;
+    item.isAddon = Boolean(item.isAddon || doc.isAddon);
+    item.addons = Array.isArray(item.addons)
+      ? item.addons
+          .map((a) => ({
+            name: String(a?.name || a?.title || a?.label || '').trim(),
+            quantity: Math.max(1, Number(a?.quantity) || 1),
+            price: Math.max(0, Number(a?.price) || 0),
+          }))
+          .filter((a) => a.name)
+      : [];
     if (!item.image && doc.image) item.image = doc.image;
     if (item.isVeg == null) {
       item.isVeg = ['veg', 'vegan'].includes(String(doc.foodType || '').toLowerCase());
@@ -219,6 +256,8 @@ export async function resolveCheckoutItems(userId, dto = {}) {
       variantId: item.variantId ? String(item.variantId) : '',
       variantName: item.variantName ? String(item.variantName) : '',
       quantity: Math.max(1, Number(item.quantity) || 1),
+      isAddon: Boolean(item.isAddon),
+      addons: Array.isArray(item.addons) ? item.addons : [],
     })),
     restaurantId: dto.restaurantId || null,
     restaurantName: dto.restaurantName || '',

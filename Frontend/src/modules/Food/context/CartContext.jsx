@@ -194,6 +194,8 @@ const normalizeCartData = (rawCart) => {
           null,
         image: normalizedImage,
         imageUrl: normalizedImage,
+        isAddon: Boolean(item.isAddon),
+        addons: Array.isArray(item.addons) ? item.addons : [],
       }
     })
 }
@@ -832,10 +834,13 @@ export function CartProvider({ children }) {
       quantity: item.quantity || 1,
     }))
     const itemCount = normalizedCart.reduce((total, item) => total + (item.quantity || 0), 0)
-    const total = normalizedCart.reduce(
-      (sum, item) => sum + (item.price || 0) * (item.quantity || 0),
-      0,
-    )
+    const total = normalizedCart.reduce((sum, item) => {
+      const addonsSum = (Array.isArray(item.addons) ? item.addons : []).reduce(
+        (aSum, a) => aSum + (Number(a.price) || 0) * (Number(a.quantity) || 1),
+        0,
+      )
+      return sum + ((item.price || 0) + addonsSum) * (item.quantity || 0)
+    }, 0)
     return { items, itemCount, total }
   }, [normalizedCart])
 

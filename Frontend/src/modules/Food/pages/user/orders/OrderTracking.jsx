@@ -23,7 +23,8 @@ import {
   Calendar,
   ShoppingBag,
   Users,
-  Navigation
+  Navigation,
+  HelpCircle
 } from "lucide-react"
 import AnimatedPage from "@food/components/user/AnimatedPage"
 import { Card, CardContent } from "@food/components/ui/card"
@@ -741,14 +742,7 @@ const transformOrderForTracking = (apiOrder, previousOrder = null, explicitResta
       apiOrder?.restaurant?.name || 
       previousOrder?.restaurant || 
       'Restaurant',
-    restaurantPhone:
-      apiOrder?.restaurantPhone ||
-      apiOrder?.restaurantId?.phone ||
-      apiOrder?.restaurantId?.ownerPhone ||
-      apiOrder?.restaurant?.phone ||
-      apiOrder?.restaurant?.ownerPhone ||
-      previousOrder?.restaurantPhone ||
-      '',
+    restaurantPhone: '',
     restaurantAddress,
     restaurantId: apiOrder?.restaurantId || previousOrder?.restaurantId || null,
     userId: apiOrder?.userId || previousOrder?.userId || null,
@@ -1422,41 +1416,12 @@ export default function OrderTracking() {
   }, [editWindowRemainingMs])
 
   const handleCallRestaurant = (e) => {
-    // Prevent event bubbling if necessary
     if (e && e.stopPropagation) e.stopPropagation();
-
-    const rawPhone =
-      order?.restaurantPhone ||
-      order?.restaurantId?.phone ||
-      order?.restaurantId?.ownerPhone ||
-      order?.restaurantId?.contact?.phone ||
-      order?.restaurant?.phone ||
-      order?.restaurant?.ownerPhone ||
-      order?.restaurantId?.location?.phone ||
-      '';
-
-    const cleanPhone = String(rawPhone).replace(/[^\d+]/g, '');
-    
-    if (!cleanPhone || cleanPhone.length < 5) {
-      toast.error('Restaurant phone number not available');
-      return;
-    }
-
-    debugLog('?? Attempting to call restaurant:', cleanPhone);
-    
-    // Most compatible way to trigger dialer on overall mobile/web environments:
-    // Create a temporary hidden anchor and programmatically click it.
-    try {
-      const link = document.createElement('a');
-      link.href = `tel:${cleanPhone}`;
-      link.setAttribute('target', '_self');
-      document.body.appendChild(link);
-      link.click();
-      if (document.body.contains(link)) document.body.removeChild(link);
-    } catch (err) {
-      debugError('Call failed via link click:', err);
-      // Last-ditch fallback
-      window.location.assign(`tel:${cleanPhone}`);
+    const targetId = orderIdDisplay || order?.orderId || order?._id || orderId;
+    if (targetId) {
+      navigate(`/food/user/help/orders/${targetId}`);
+    } else {
+      navigate('/food/user/help');
     }
   };
 
@@ -2733,9 +2698,9 @@ export default function OrderTracking() {
                 className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center shadow-sm"
                 onClick={handleCallRestaurant}
                 whileTap={{ scale: 0.9 }}
-                title="Call Restaurant"
+                title="Support / Report Issue"
               >
-                <Phone className="w-5 h-5 text-[#FF5A1F]" />
+                <HelpCircle className="w-5 h-5 text-[#FF5A1F]" />
               </motion.button>
             </div>
           </div>

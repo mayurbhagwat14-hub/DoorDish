@@ -165,6 +165,7 @@ export default function UserRouter() {
           {/* Help Center */}
           <Route path="help" element={<Help />} />
           <Route path="help/orders/:orderId" element={<OrderHelp />} />
+          <Route path="help/order/:orderId" element={<OrderHelp />} />
 
           {/* Auth Redirects & Callbacks */}
           <Route path="login" element={

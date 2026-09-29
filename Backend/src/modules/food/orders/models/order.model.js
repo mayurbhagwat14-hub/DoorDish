@@ -1,5 +1,14 @@
 import mongoose from 'mongoose';
 
+const orderItemAddonSchema = new mongoose.Schema(
+    {
+        name: { type: String, trim: true, default: '' },
+        price: { type: Number, min: 0, default: 0 },
+        quantity: { type: Number, min: 1, default: 1 }
+    },
+    { _id: false }
+);
+
 const orderItemSchema = new mongoose.Schema(
     {
         itemId: { type: String, required: true, trim: true },
@@ -21,7 +30,9 @@ const orderItemSchema = new mongoose.Schema(
         quantity: { type: Number, required: true, min: 1 },
         isVeg: { type: Boolean, default: true },
         image: { type: String, default: '' },
-        notes: { type: String, default: '' }
+        notes: { type: String, default: '' },
+        isAddon: { type: Boolean, default: false },
+        addons: { type: [orderItemAddonSchema], default: [] }
     },
     { _id: false }
 );

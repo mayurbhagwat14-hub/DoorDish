@@ -910,6 +910,25 @@ export async function getOrderById(
     if (!drop.verified && secret) {
       out.handoverOtp = secret;
     }
+    if (out.restaurantId && typeof out.restaurantId === 'object') {
+      out.restaurantId = {
+        ...out.restaurantId,
+        ownerPhone: undefined,
+        phone: undefined,
+        primaryContactNumber: undefined,
+        contactNumber: undefined,
+      };
+    }
+    if (out.restaurant && typeof out.restaurant === 'object') {
+      out.restaurant = {
+        ...out.restaurant,
+        ownerPhone: undefined,
+        phone: undefined,
+        primaryContactNumber: undefined,
+        contactNumber: undefined,
+      };
+    }
+    delete out.restaurantPhone;
     return out;
   }
 

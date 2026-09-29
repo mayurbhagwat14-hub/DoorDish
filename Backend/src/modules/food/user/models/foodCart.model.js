@@ -10,6 +10,17 @@ const foodCartItemSchema = new mongoose.Schema(
     },
     variantId: { type: String, default: '', trim: true },
     quantity: { type: Number, required: true, min: 1, default: 1 },
+    isAddon: { type: Boolean, default: false },
+    addons: {
+      type: [
+        {
+          name: { type: String, trim: true, default: '' },
+          price: { type: Number, min: 0, default: 0 },
+          quantity: { type: Number, min: 1, default: 1 },
+        },
+      ],
+      default: [],
+    },
     /** Snapshot of pricing when line was added/updated — stays stable until cart refresh. */
     basePrice: { type: Number, default: null, min: 0 },
     /** @deprecated Do not store selling here; use sellingPrice + markupAmount. */
