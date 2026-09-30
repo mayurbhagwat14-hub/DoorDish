@@ -106,7 +106,9 @@ export async function enforceMinimumFoodItemPrices(items = [], restaurantId = nu
     let pricingScope = priced.pricingScope || null;
     let pricingRule = priced.pricingRule || null;
 
-    if (item.variantId && hasVariantsInDB) {
+    const isBaseOption = !item.variantId || item.variantId === 'base' || item.variantId === 'regular';
+
+    if (!isBaseOption && item.variantId && hasVariantsInDB) {
       const variant =
         (priced.variants || []).find(
           (v) => String(v.id || v._id) === String(item.variantId),
@@ -137,7 +139,8 @@ export async function enforceMinimumFoodItemPrices(items = [], restaurantId = nu
       item.variantName = String(variant.name || '').trim();
     } else {
       item.variantId = '';
-      item.variantName = '';
+      const fallbackName = hasVariantsInDB ? 'Regular' : '';
+      item.variantName = String(item.variantName || fallbackName).trim();
     }
 
     // Prefer cart pricing snapshot when base matches.
