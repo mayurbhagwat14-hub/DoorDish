@@ -208,6 +208,7 @@ function RestaurantDetailsContent() {
   const [selectedItem, setSelectedItem] = useState(null)
   const [selectedVariantId, setSelectedVariantId] = useState("")
   const [modalQuantity, setModalQuantity] = useState(1)
+  const [modalVariantQuantities, setModalVariantQuantities] = useState({})
   const [showFilterSheet, setShowFilterSheet] = useState(false)
   const [showLocationSheet, setShowLocationSheet] = useState(false)
   const [showScheduleSheet, setShowScheduleSheet] = useState(false)
@@ -1064,13 +1065,19 @@ function RestaurantDetailsContent() {
                   // Derive isVeg strictly from foodType
                   const isVeg = foodType === 'Veg'
 
+                  const rawBasePrice = Number(item.basePrice != null ? item.basePrice : item.price)
+                  const itemBasePrice = Number.isFinite(rawBasePrice) && rawBasePrice > 0 ? rawBasePrice : 0
+                  const itemDisplayPrice = itemBasePrice > 0 ? itemBasePrice : getFoodDisplayPrice(item)
+
                   return {
                     ...item,
                     id: String(item.id || item._id || `${Date.now()}-${Math.random()}`),
                     name: item.name || "Unnamed Item",
                     foodType,
                     isVeg, // Explicitly set isVeg
-                    price: getFoodDisplayPrice(item),
+                    basePrice: itemBasePrice,
+                    itemBasePrice: itemBasePrice,
+                    price: itemDisplayPrice,
                     variants: getFoodVariants(item),
                     variations: getFoodVariants(item),
                     isAvailable: item.isAvailable !== false,
@@ -1335,26 +1342,26 @@ function RestaurantDetailsContent() {
 
   useEffect(() => {
     if (!selectedItem) {
-      setSelectedVariantId("")
-      return
-    }
-    const hasBasePrice = (Number(selectedItem.price) || 0) > 0 || (Number(selectedItem.basePrice) || 0) > 0
-    if (hasBasePrice) {
-      // Dish has base price: do not pre-select any variant so optional add-ons/varieties start UNSELECTED
-      setSelectedVariantId("")
+      setSelectedVariantId(null)
+      setModalVariantQuantities({})
       return
     }
     const variants = getFoodVariants(selectedItem)
-    const variantInCart = variants.find(v => {
-      const lineItemId = getLineItemIdForDish(selectedItem, v)
-      return quantities[lineItemId] > 0
-    })
-    
-    if (variantInCart) {
-      setSelectedVariantId(variantInCart.id)
+    if (variants.length > 0) {
+      const currentBaseQty = quantities[getLineItemIdForDish(selectedItem, null)] || 0
+      const initialQuantities = {
+        base: currentBaseQty,
+      }
+      variants.forEach((v) => {
+        initialQuantities[v.id] = quantities[getLineItemIdForDish(selectedItem, v)] || 0
+      })
+      setModalVariantQuantities(initialQuantities)
+      setSelectedVariantId(null)
     } else {
-      const defaultVariant = getDefaultFoodVariant(selectedItem)
-      setSelectedVariantId(defaultVariant?.id || "")
+      setSelectedVariantId("")
+      const existingQty = getDishQuantity(selectedItem, null)
+      setModalQuantity(existingQty > 0 ? existingQty : 1)
+      setModalVariantQuantities({})
     }
   }, [selectedItem])
 
@@ -1379,10 +1386,11 @@ function RestaurantDetailsContent() {
     }
 
     const hasBasePrice = (Number(item?.price) || 0) > 0 || (Number(item?.basePrice) || 0) > 0
+    const isBaseChoice = !preferredVariant || preferredVariant.isBase || preferredVariant.id === 'base' || preferredVariant.id === 'regular'
     let resolvedVariant = null
-    if (preferredVariant) {
+    if (preferredVariant && !isBaseChoice) {
       resolvedVariant = preferredVariant
-    } else if (!hasBasePrice && hasFoodVariants(item)) {
+    } else if (!hasBasePrice && hasFoodVariants(item) && !isBaseChoice) {
       resolvedVariant = getDefaultFoodVariant(item)
     } else {
       resolvedVariant = null
@@ -1426,17 +1434,24 @@ function RestaurantDetailsContent() {
     });
 
     // Prepare cart item with all required properties (selling price already includes admin markup).
+    const regularPrice = Number(item.itemBasePrice ?? item.basePrice ?? item.price) || 0
+    const itemPrice = resolvedVariant ? Number(resolvedVariant.price) : regularPrice
+    const itemBasePrice = resolvedVariant?.basePrice ?? itemPrice
+    const itemVariantName = resolvedVariant?.name
+      ? String(resolvedVariant.name)
+      : (hasFoodVariants(item) ? "Regular" : "")
+
     const cartItem = {
       id: lineItemId,
       lineItemId,
-      itemId: item.id,
+      itemId: item.id || item._id,
       name: item.name,
-      price: resolvedVariant?.price ?? item.price,
-      basePrice: resolvedVariant?.basePrice ?? item.basePrice ?? resolvedVariant?.price ?? item.price,
+      price: itemPrice,
+      basePrice: itemBasePrice,
       markupAmount: resolvedVariant?.markupAmount ?? item.markupAmount ?? 0,
-      variantId: resolvedVariant?.id || "",
-      variantName: resolvedVariant?.name || "",
-      variantPrice: resolvedVariant?.price ?? item.price,
+      variantId: resolvedVariant?.id ? String(resolvedVariant.id) : "",
+      variantName: itemVariantName,
+      variantPrice: itemPrice,
       image: item.image,
       restaurant: restaurant.name, // Use restaurant.name directly (already validated)
       restaurantId: validRestaurantId, // Use validated restaurantId
@@ -1449,7 +1464,7 @@ function RestaurantDetailsContent() {
       appliedPricingType: resolvedVariant?.appliedPricingType ?? item.appliedPricingType ?? null,
       appliedPricingValue: resolvedVariant?.appliedPricingValue ?? item.appliedPricingValue ?? null,
       variants: getFoodVariants(item),
-      itemBasePrice: Number(item.price) || 0,
+      itemBasePrice: regularPrice,
     }
 
     // Get source position for animation from event target
@@ -1940,23 +1955,23 @@ function RestaurantDetailsContent() {
     setSelectedItem({ ...item, displayImage: imageSrc })
 
     const vars = getFoodVariants(item)
-    const hasBasePrice = (Number(item.price) || 0) > 0 || (Number(item.basePrice) || 0) > 0
-
-    if (hasBasePrice) {
-      // Dish has base price: always start UNSELECTED so customer chooses explicitly
-      setSelectedVariantId("")
-      const existingQty = getDishQuantity(item, null)
-      setModalQuantity(existingQty > 0 ? existingQty : 1)
-    } else if (vars.length > 0) {
-      // No base price: first variant is required
-      const initialVarId = vars[0]?.id || ""
-      setSelectedVariantId(initialVarId)
-      const existingQty = getDishQuantity(item, initialVarId)
-      setModalQuantity(existingQty > 0 ? existingQty : 1)
+    if (vars.length > 0) {
+      // Dish with variants: load existing quantities in cart for base + all variants
+      const currentBaseQty = quantities[getLineItemIdForDish(item, null)] || 0
+      const initialQuantities = {
+        base: currentBaseQty,
+      }
+      vars.forEach((v) => {
+        initialQuantities[v.id] = quantities[getLineItemIdForDish(item, v)] || 0
+      })
+      setModalVariantQuantities(initialQuantities)
+      setSelectedVariantId(null)
+      setModalQuantity(1)
     } else {
       setSelectedVariantId("")
       const existingQty = getDishQuantity(item, null)
       setModalQuantity(existingQty > 0 ? existingQty : 1)
+      setModalVariantQuantities({})
     }
 
     const alreadyReady = Boolean(listImg?.complete && cachedSrc)
@@ -1967,20 +1982,59 @@ function RestaurantDetailsContent() {
     setShowItemDetail(true)
   }
 
+  const handleModalVariantQtyChange = (key, deltaOrVal, isAbsolute = false) => {
+    setModalVariantQuantities((prev) => {
+      const current = prev[key] || 0
+      const next = isAbsolute ? Math.max(0, deltaOrVal) : Math.max(0, current + deltaOrVal)
+      return {
+        ...prev,
+        [key]: next,
+      }
+    })
+  }
+
+  const handleApplyVariantQuantities = (e) => {
+    if (!selectedItem) return
+    const variants = getFoodVariants(selectedItem)
+    const regularPrice = Number(selectedItem.itemBasePrice != null ? selectedItem.itemBasePrice : (selectedItem.basePrice != null ? selectedItem.basePrice : selectedItem.price)) || 0
+
+    // Update base / regular
+    const oldBaseQty = quantities[getLineItemIdForDish(selectedItem, null)] || 0
+    const newBaseQty = modalVariantQuantities["base"] || 0
+    if (newBaseQty !== oldBaseQty) {
+      updateItemQuantity(
+        selectedItem,
+        newBaseQty,
+        e,
+        { id: "base", isBase: true, name: "Regular", price: regularPrice }
+      )
+    }
+
+    // Update each variant
+    variants.forEach((v) => {
+      const oldVQty = quantities[getLineItemIdForDish(selectedItem, v)] || 0
+      const newVQty = modalVariantQuantities[v.id] || 0
+      if (newVQty !== oldVQty) {
+        updateItemQuantity(selectedItem, newVQty, e, v)
+      }
+    })
+
+    closeItemDetail()
+  }
+
   const handleSelectVariant = (varId) => {
     const isCurrentlySelected = String(selectedVariantId || "") === String(varId)
     if (isCurrentlySelected) {
-      // Toggle UNSELECT
-      setSelectedVariantId("")
-      if (selectedItem) {
-        const existingQty = getDishQuantity(selectedItem, null)
-        setModalQuantity(existingQty > 0 ? existingQty : 1)
-      }
+      // Toggle unselect
+      setSelectedVariantId(null)
+      setModalQuantity(1)
     } else {
-      // SELECT
       setSelectedVariantId(varId)
       if (selectedItem) {
-        const existingQty = getDishQuantity(selectedItem, varId)
+        const existingQty =
+          varId === "base" || varId === "regular"
+            ? getDishQuantity(selectedItem, null)
+            : getDishQuantity(selectedItem, varId)
         setModalQuantity(existingQty > 0 ? existingQty : 1)
       }
     }
@@ -3182,7 +3236,7 @@ function RestaurantDetailsContent() {
                                             if (hasFoodVariants(item) && !sole) {
                                               handleItemClick(item, e)
                                             } else {
-                                              updateItemQuantity(item, Math.max(0, quantity - 1), e, sole?.isBase ? null : sole)
+                                              updateItemQuantity(item, Math.max(0, quantity - 1), e, sole?.isBase ? { id: "base", isBase: true, name: "Regular" } : sole)
                                             }
                                           }}
                                           disabled={shouldShowGrayscale}
@@ -3429,7 +3483,7 @@ function RestaurantDetailsContent() {
                                                       if (hasFoodVariants(item) && !sole) {
                                                         handleItemClick(item, e)
                                                       } else {
-                                                        updateItemQuantity(item, Math.max(0, quantity - 1), e, sole?.isBase ? null : sole)
+                                                        updateItemQuantity(item, Math.max(0, quantity - 1), e, sole?.isBase ? { id: "base", isBase: true, name: "Regular" } : sole)
                                                       }
                                                     }}
                                                     disabled={shouldShowGrayscale}
@@ -4153,152 +4207,273 @@ function RestaurantDetailsContent() {
                       </p>
                     )}
 
-                    {hasFoodVariants(selectedItem) && (
+                    {hasFoodVariants(selectedItem) ? (
                       <div className="mb-4">
-                        <div className="flex items-center justify-between mb-2.5">
+                        <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-100 dark:border-gray-800">
                           <div>
                             <p className="text-sm font-bold text-gray-900 dark:text-white">Choose Variety / Option</p>
                             <p className="text-xs text-gray-500 dark:text-gray-400">
-                              {(Number(selectedItem.price) || 0) > 0 || (Number(selectedItem.basePrice) || 0) > 0
-                                ? "Tap to select / unselect option"
-                                : "Select 1 option to proceed"}
+                              Select quantities of Regular & Add-on variants
                             </p>
                           </div>
-                          {(Number(selectedItem.price) || 0) > 0 || (Number(selectedItem.basePrice) || 0) > 0 ? (
-                            <span className="text-[11px] uppercase font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 px-2 py-0.5 rounded-full">
-                              Optional
-                            </span>
-                          ) : (
-                            <span className="text-[11px] uppercase font-bold text-[#FF5A1F] bg-[#FF5A1F]/10 px-2 py-0.5 rounded-full">
-                              Required
-                            </span>
-                          )}
+                          <span className="text-[11px] uppercase font-bold text-[#FF5A1F] bg-[#FF5A1F]/10 px-2.5 py-0.5 rounded-full border border-[#FF5A1F]/20">
+                            Customisable
+                          </span>
                         </div>
-                        <div className="space-y-2">
-                          {getFoodVariants(selectedItem).map((variant) => {
-                            const isSelected = String(selectedVariantId || "") === String(variant.id)
+                        <div className="space-y-2.5">
+                          {/* 1. Regular / Original Option */}
+                          {(() => {
+                            const regularPrice = Number(selectedItem.itemBasePrice != null ? selectedItem.itemBasePrice : (selectedItem.basePrice != null ? selectedItem.basePrice : selectedItem.price)) || 0
+                            const currentQty = modalVariantQuantities["base"] || 0
+                            const isSelected = currentQty > 0
                             return (
                               <div
-                                key={variant.id}
-                                onClick={() => handleSelectVariant(variant.id)}
-                                className={`flex items-center justify-between p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
+                                key="regular-base-option"
+                                className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all ${
                                   isSelected
-                                    ? "border-[#FF5A1F] bg-orange-50/60 dark:bg-orange-950/30 shadow-sm"
+                                    ? "border-[#FF5A1F] bg-orange-50/50 dark:bg-orange-950/20 shadow-xs"
                                     : "border-gray-200 dark:border-gray-800 bg-white dark:bg-[#242424] hover:border-gray-300 dark:hover:border-gray-700"
                                 }`}
                               >
                                 <div className="flex items-center gap-3">
-                                  <div
-                                    className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
-                                      isSelected
-                                        ? "border-[#FF5A1F] bg-[#FF5A1F] text-white shadow-xs"
-                                        : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800"
-                                    }`}
-                                  >
-                                    {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                                  <div className="w-4 h-4 rounded border flex items-center justify-center border-emerald-600 dark:border-emerald-500">
+                                    <span className="w-2 h-2 rounded-full bg-emerald-600 dark:bg-emerald-500" />
                                   </div>
                                   <div className="flex flex-col">
-                                    <span className={`text-sm ${isSelected ? "font-bold text-[#FF5A1F]" : "font-semibold text-gray-800 dark:text-gray-200"}`}>
-                                      {variant.name}
+                                    <span className={`text-sm ${isSelected ? "font-bold text-gray-900 dark:text-white" : "font-semibold text-gray-800 dark:text-gray-200"}`}>
+                                      Regular
+                                    </span>
+                                    <span className="text-[11px] text-gray-400">Original option</span>
+                                    <span className="text-sm font-bold text-[#FF5A1F] mt-0.5">
+                                      {RUPEE_SYMBOL}{Math.round(regularPrice)}
                                     </span>
                                   </div>
                                 </div>
-                                <span className={`text-sm font-bold ${isSelected ? "text-[#FF5A1F]" : "text-gray-900 dark:text-white"}`}>
-                                  {RUPEE_SYMBOL}{Math.round(variant.price)}
-                                </span>
+
+                                {/* Stepper or ADD button */}
+                                {currentQty > 0 ? (
+                                  <div className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-[#FF5A1F] rounded-lg px-2 py-1 shadow-xs">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleModalVariantQtyChange("base", -1)}
+                                      className="w-6 h-6 flex items-center justify-center rounded text-[#FF5A1F] hover:bg-orange-100 dark:hover:bg-gray-700 active:scale-90 transition"
+                                      aria-label="Decrease Regular quantity"
+                                    >
+                                      <Minus className="w-3.5 h-3.5" />
+                                    </button>
+                                    <span className="text-sm font-bold text-[#FF5A1F] min-w-[1.2rem] text-center">
+                                      {currentQty}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleModalVariantQtyChange("base", 1)}
+                                      className="w-6 h-6 flex items-center justify-center rounded bg-[#FF5A1F] text-white hover:bg-[#E64A0F] active:scale-90 transition"
+                                      aria-label="Increase Regular quantity"
+                                    >
+                                      <Plus className="w-3.5 h-3.5 stroke-[3]" />
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleModalVariantQtyChange("base", 1)}
+                                    className="px-4 py-1.5 rounded-lg border border-[#FF5A1F] text-[#FF5A1F] font-bold text-xs hover:bg-[#FF5A1F] hover:text-white active:scale-95 transition-all shadow-xs flex items-center gap-1"
+                                  >
+                                    ADD <Plus className="w-3 h-3 stroke-[3]" />
+                                  </button>
+                                )}
+                              </div>
+                            )
+                          })()}
+
+                          {/* 2. Variant / Add-on Options */}
+                          {getFoodVariants(selectedItem).map((variant) => {
+                            const currentQty = modalVariantQuantities[variant.id] || 0
+                            const isSelected = currentQty > 0
+                            return (
+                              <div
+                                key={variant.id}
+                                className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all ${
+                                  isSelected
+                                    ? "border-[#FF5A1F] bg-orange-50/50 dark:bg-orange-950/20 shadow-xs"
+                                    : "border-gray-200 dark:border-gray-800 bg-white dark:bg-[#242424] hover:border-gray-300 dark:hover:border-gray-700"
+                                }`}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className="w-4 h-4 rounded border flex items-center justify-center border-amber-500 dark:border-amber-400">
+                                    <span className="w-2 h-2 rounded-full bg-amber-500 dark:bg-amber-400" />
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className={`text-sm ${isSelected ? "font-bold text-gray-900 dark:text-white" : "font-semibold text-gray-800 dark:text-gray-200"}`}>
+                                      {variant.name}
+                                    </span>
+                                    <span className="text-[11px] text-gray-400">Add-on variant</span>
+                                    <span className="text-sm font-bold text-[#FF5A1F] mt-0.5">
+                                      {RUPEE_SYMBOL}{Math.round(variant.price)}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {/* Stepper or ADD button */}
+                                {currentQty > 0 ? (
+                                  <div className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-[#FF5A1F] rounded-lg px-2 py-1 shadow-xs">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleModalVariantQtyChange(variant.id, -1)}
+                                      className="w-6 h-6 flex items-center justify-center rounded text-[#FF5A1F] hover:bg-orange-100 dark:hover:bg-gray-700 active:scale-90 transition"
+                                      aria-label={`Decrease ${variant.name} quantity`}
+                                    >
+                                      <Minus className="w-3.5 h-3.5" />
+                                    </button>
+                                    <span className="text-sm font-bold text-[#FF5A1F] min-w-[1.2rem] text-center">
+                                      {currentQty}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleModalVariantQtyChange(variant.id, 1)}
+                                      className="w-6 h-6 flex items-center justify-center rounded bg-[#FF5A1F] text-white hover:bg-[#E64A0F] active:scale-90 transition"
+                                      aria-label={`Increase ${variant.name} quantity`}
+                                    >
+                                      <Plus className="w-3.5 h-3.5 stroke-[3]" />
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleModalVariantQtyChange(variant.id, 1)}
+                                    className="px-4 py-1.5 rounded-lg border border-[#FF5A1F] text-[#FF5A1F] font-bold text-xs hover:bg-[#FF5A1F] hover:text-white active:scale-95 transition-all shadow-xs flex items-center gap-1"
+                                  >
+                                    ADD <Plus className="w-3 h-3 stroke-[3]" />
+                                  </button>
+                                )}
                               </div>
                             )
                           })}
                         </div>
                       </div>
-                    )}
+                    ) : null}
                   </div>
 
                   {/* Bottom Action Bar */}
-                  <div className="border-t border-gray-200 dark:border-gray-800 px-3 sm:px-4 py-4 bg-white dark:bg-[#1a1a1a]">
-                    <div className="flex items-center gap-2 sm:gap-4">
-                      {/* Quantity Selector */}
-                      <div className={`flex items-center gap-1 sm:gap-3 border-2 rounded-lg px-2 sm:px-3 h-[44px] bg-white dark:bg-[#2a2a2a] ${shouldShowGrayscale
-                        ? 'border-gray-300 dark:border-gray-700 opacity-50'
-                        : 'border-gray-300 dark:border-gray-700'
-                        }`}>
-                        <button
-                          onClick={() => {
-                            if (!shouldShowGrayscale) {
-                              setModalQuantity((prev) => Math.max(1, prev - 1))
-                            }
-                          }}
-                          disabled={modalQuantity <= 1 || shouldShowGrayscale}
-                          className={`${shouldShowGrayscale
-                            ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
-                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white disabled:text-gray-300 dark:disabled:text-gray-600 disabled:cursor-not-allowed'
-                            }`}
-                        >
-                          <Minus className="h-5 w-5" />
-                        </button>
-                        <span className={`text-lg font-semibold min-w-[1.5rem] sm:min-w-[2rem] text-center ${shouldShowGrayscale
-                          ? 'text-gray-400 dark:text-gray-600'
-                          : 'text-gray-900 dark:text-white'
+                  {hasFoodVariants(selectedItem) ? (
+                    <div className="border-t border-gray-200 dark:border-gray-800 px-3 sm:px-4 py-3.5 bg-white dark:bg-[#1a1a1a]">
+                      {(() => {
+                        const regularPrice = Number(selectedItem.itemBasePrice != null ? selectedItem.itemBasePrice : (selectedItem.basePrice != null ? selectedItem.basePrice : selectedItem.price)) || 0
+                        const variants = getFoodVariants(selectedItem)
+                        const baseQty = modalVariantQuantities["base"] || 0
+                        const totalQty = baseQty + variants.reduce((sum, v) => sum + (modalVariantQuantities[v.id] || 0), 0)
+                        const totalAmount = (baseQty * regularPrice) + variants.reduce((sum, v) => sum + ((modalVariantQuantities[v.id] || 0) * (Number(v.price) || 0)), 0)
+
+                        const cartTotalQty = getDishQuantity(selectedItem)
+                        const isAlreadyInCart = cartTotalQty > 0
+                        const hasAnySelected = totalQty > 0
+                        const isDisabled = shouldShowGrayscale || !hasAnySelected
+
+                        return (
+                          <div className="flex items-center gap-3">
+                            <div className="flex flex-col">
+                              <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                                {totalQty > 0 ? `${totalQty} item${totalQty > 1 ? "s" : ""} selected` : "No items selected"}
+                              </span>
+                              <span className="text-lg font-extrabold text-gray-900 dark:text-white">
+                                {RUPEE_SYMBOL}{Math.round(totalAmount)}
+                              </span>
+                            </div>
+
+                            <Button
+                              className={`flex-1 h-[46px] rounded-xl font-bold flex items-center justify-center gap-2 px-4 transition-all ${
+                                isDisabled
+                                  ? 'bg-gray-200 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-70'
+                                  : 'bg-[#FF5A1F] hover:bg-[#E64A0F] text-white shadow-md active:scale-[0.99]'
+                              }`}
+                              onClick={handleApplyVariantQuantities}
+                              disabled={isDisabled}
+                            >
+                              <span>{isAlreadyInCart ? "Update Cart" : "Add to Cart"}</span>
+                              {hasAnySelected && (
+                                <span className="text-sm font-semibold opacity-90">
+                                  • {RUPEE_SYMBOL}{Math.round(totalAmount)}
+                                </span>
+                              )}
+                            </Button>
+                          </div>
+                        )
+                      })()}
+                    </div>
+                  ) : (
+                    <div className="border-t border-gray-200 dark:border-gray-800 px-3 sm:px-4 py-4 bg-white dark:bg-[#1a1a1a]">
+                      <div className="flex items-center gap-2 sm:gap-4">
+                        {/* Quantity Selector */}
+                        <div className={`flex items-center gap-1 sm:gap-3 border-2 rounded-lg px-2 sm:px-3 h-[44px] bg-white dark:bg-[#2a2a2a] ${shouldShowGrayscale
+                          ? 'border-gray-300 dark:border-gray-700 opacity-50'
+                          : 'border-gray-300 dark:border-gray-700'
                           }`}>
-                          {modalQuantity}
-                        </span>
-                        <button
-                          onClick={() => {
+                          <button
+                            onClick={() => {
+                              if (!shouldShowGrayscale) {
+                                setModalQuantity((prev) => Math.max(1, prev - 1))
+                              }
+                            }}
+                            disabled={modalQuantity <= 1 || shouldShowGrayscale}
+                            className={`${shouldShowGrayscale
+                              ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white disabled:text-gray-300 dark:disabled:text-gray-600 disabled:cursor-not-allowed'
+                              }`}
+                          >
+                            <Minus className="h-5 w-5" />
+                          </button>
+                          <span className={`text-lg font-semibold min-w-[1.5rem] sm:min-w-[2rem] text-center ${shouldShowGrayscale
+                            ? 'text-gray-400 dark:text-gray-600'
+                            : 'text-gray-900 dark:text-white'
+                            }`}>
+                            {modalQuantity}
+                          </span>
+                          <button
+                            onClick={() => {
+                              if (!shouldShowGrayscale) {
+                                setModalQuantity((prev) => prev + 1)
+                              }
+                            }}
+                            disabled={shouldShowGrayscale}
+                            className={shouldShowGrayscale
+                              ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                            }
+                          >
+                            <Plus className="h-5 w-5" />
+                          </button>
+                        </div>
+
+                        {/* Add Item Button */}
+                        <Button
+                          className={`flex-1 h-[44px] rounded-lg font-semibold flex items-center justify-center gap-1 sm:gap-2 px-1 sm:px-4 ${
+                            shouldShowGrayscale
+                              ? 'bg-gray-200 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-70'
+                              : 'bg-[#FF5A1F] hover:bg-[#E64A0F] text-white shadow-sm'
+                          }`}
+                          onClick={(e) => {
                             if (!shouldShowGrayscale) {
-                              setModalQuantity((prev) => prev + 1)
+                              updateItemQuantity(
+                                selectedItem,
+                                modalQuantity,
+                                e,
+                                null,
+                              )
+                              closeItemDetail()
                             }
                           }}
                           disabled={shouldShowGrayscale}
-                          className={shouldShowGrayscale
-                            ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
-                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                          }
                         >
-                          <Plus className="h-5 w-5" />
-                        </button>
+                          <span className="truncate">{getDishQuantity(selectedItem) > 0 ? "Update item" : "Add item"}</span>
+                          <div className="flex flex-wrap items-center justify-center gap-1 overflow-hidden ml-1">
+                            <span className="text-sm sm:text-base font-bold whitespace-nowrap">
+                              {RUPEE_SYMBOL}{Math.round((Number(selectedItem.itemBasePrice != null ? selectedItem.itemBasePrice : (selectedItem.basePrice != null ? selectedItem.basePrice : selectedItem.price)) || 0) * modalQuantity)}
+                            </span>
+                          </div>
+                        </Button>
                       </div>
-
-                      {/* Add Item Button */}
-                      <Button
-                        className={`flex-1 h-[44px] rounded-lg font-semibold flex items-center justify-center gap-1 sm:gap-2 px-1 sm:px-4 ${shouldShowGrayscale
-                          ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-600 cursor-not-allowed opacity-50'
-                          : 'bg-[#FF5A1F] hover:bg-[#E64A0F] text-white'
-                          }`}
-                        onClick={(e) => {
-                          if (!shouldShowGrayscale) {
-                            const resolvedVariant = selectedVariantId
-                              ? getVariantForDish(selectedItem, selectedVariantId)
-                              : null
-                            updateItemQuantity(
-                              selectedItem,
-                              modalQuantity,
-                              e,
-                              resolvedVariant,
-                            )
-                            closeItemDetail()
-                          }
-                        }}
-                        disabled={shouldShowGrayscale}
-                      >
-                        <span className="truncate">
-                          {getDishQuantity(selectedItem, selectedVariantId) > 0
-                            ? "Update cart"
-                            : selectedVariantId
-                              ? `Add with ${getVariantForDish(selectedItem, selectedVariantId)?.name || "Option"}`
-                              : (hasFoodVariants(selectedItem) ? "Add without option" : "Add item")}
-                        </span>
-                        <div className="flex flex-wrap items-center justify-center gap-1 overflow-hidden">
-                          <span className="text-sm sm:text-base font-bold whitespace-nowrap">
-                            {RUPEE_SYMBOL}{Math.round(
-                              (selectedVariantId
-                                ? (getVariantForDish(selectedItem, selectedVariantId)?.price || selectedItem.price)
-                                : selectedItem.price) * modalQuantity
-                            )}
-                          </span>
-                        </div>
-                      </Button>
                     </div>
-                  </div>
+                  )}
                 </motion.div>
               </motion.div>
             )}

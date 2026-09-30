@@ -23,6 +23,7 @@ import { useCompanyName } from "@food/hooks/useCompanyName"
 import { getRestaurantAvailabilityStatus } from "@food/utils/restaurantAvailability"
 import useAppBackNavigation from "@food/hooks/useAppBackNavigation"
 import { filterPublicOffers, mapPublicOfferToCartCoupon } from "@food/utils/offerUtils"
+import { buildCartLineId, getFoodVariants, hasFoodVariants } from "@food/utils/foodVariants"
 import dishFallbackImage from "@food/assets/dish_fallback.webp"
 const zoopSound = "/assets/media/zomato_sms.mp3"
 const debugLog = (...args) => { }
@@ -118,6 +119,65 @@ export default function Cart() {
 
   const { cart, updateQuantity, updateCartItemVariant, addToCart, getCartCount, clearCart, cleanCartForRestaurant } = cartContext;
   const [updatingVariantLineId, setUpdatingVariantLineId] = useState(null);
+  const [addingVarietyKey, setAddingVarietyKey] = useState(null);
+
+  const handleAddVarietyToCart = async (group, variety) => {
+    const key = `${group.baseId}::${variety.id}`;
+    if (addingVarietyKey === key) return;
+    setAddingVarietyKey(key);
+    try {
+      const baseLine = group.lines[0] || group.rawItem || {};
+      const rawBaseId =
+        group.baseId ||
+        baseLine.itemId ||
+        baseLine.foodId ||
+        (baseLine.id && String(baseLine.id).includes("::") ? String(baseLine.id).split("::")[0] : baseLine.id);
+
+      const variantId = variety.isBase ? "" : String(variety.id || "");
+      const variantName = variety.isBase ? "Regular" : String(variety.name || "");
+      const price = Number(variety.price) || 0;
+      const lineItemId = buildCartLineId(rawBaseId, variantId);
+
+      const newItem = {
+        ...baseLine,
+        id: lineItemId,
+        lineItemId,
+        itemId: rawBaseId,
+        productId: rawBaseId,
+        foodId: rawBaseId,
+        name: group.name || baseLine.name,
+        price,
+        basePrice: Number(group.regularPrice) || price,
+        itemBasePrice: Number(group.regularPrice) || price,
+        variantId,
+        variantName,
+        variantPrice: price,
+        variants: group.variants || baseLine.variants || [],
+        image: group.image || baseLine.image,
+        imageUrl: group.image || baseLine.image,
+        restaurant: group.restaurant || baseLine.restaurant,
+        restaurantId: group.restaurantId || baseLine.restaurantId,
+        restaurantZoneId: group.restaurantZoneId || baseLine.restaurantZoneId,
+        description: group.description || baseLine.description,
+        isVeg: group.isVeg,
+        foodType: group.foodType,
+        preparationTime: group.preparationTime || baseLine.preparationTime,
+        quantity: 1,
+      };
+
+      const res = await addToCart(newItem);
+      if (res?.ok === false && res?.error) {
+        toast.error(res.error);
+      } else {
+        toast.success(`Added ${variantName}`);
+      }
+    } catch (err) {
+      debugError("handleAddVarietyToCart failed", err);
+      toast.error("Failed to add item");
+    } finally {
+      setAddingVarietyKey(null);
+    }
+  };
 
   const handleSelectVariety = async (item, targetVariantId) => {
     if (!updateCartItemVariant) return;
@@ -246,7 +306,63 @@ export default function Cart() {
       return "saved"
     }
   })
+  const groupedCartItems = useMemo(() => {
+    const groups = []
+    const groupMap = new Map()
 
+    cart.forEach((item) => {
+      const rawBaseId =
+        item.itemId ||
+        item.foodId ||
+        (item.id && String(item.id).includes("::") ? String(item.id).split("::")[0] : item.id)
+      const baseId = String(rawBaseId || item.id || "")
+
+      const itemVariants = getFoodVariants(item)
+      const itemRegularPrice =
+        Number(item.itemBasePrice ?? item.basePrice) > 0
+          ? Number(item.itemBasePrice ?? item.basePrice)
+          : (!item.variantId || item.variantId === "base" || item.variantId === "regular" || String(item.variantName || "").toLowerCase() === "regular"
+              ? Number(item.price) || 0
+              : 0)
+
+      if (!groupMap.has(baseId)) {
+        const group = {
+          baseId,
+          itemId: baseId,
+          name: item.name,
+          image: item.image,
+          description: item.description,
+          isVeg: item.isVeg,
+          foodType: item.foodType,
+          isRestaurantClosed: item.isRestaurantClosed,
+          isCartZoneMismatch: item.isCartZoneMismatch,
+          variants: itemVariants,
+          regularPrice: itemRegularPrice,
+          restaurant: item.restaurant,
+          restaurantId: item.restaurantId,
+          restaurantZoneId: item.restaurantZoneId,
+          preparationTime: item.preparationTime,
+          rawItem: item,
+          lines: [item],
+        }
+        groupMap.set(baseId, group)
+        groups.push(group)
+      } else {
+        const existing = groupMap.get(baseId)
+        existing.lines.push(item)
+        if (!existing.image && item.image) existing.image = item.image
+        if (!existing.description && item.description) existing.description = item.description
+        if ((!existing.variants || existing.variants.length === 0) && itemVariants.length > 0) {
+          existing.variants = itemVariants
+        }
+        if ((!existing.regularPrice || existing.regularPrice <= 0) && itemRegularPrice > 0) {
+          existing.regularPrice = itemRegularPrice
+        }
+      }
+    })
+
+    return groups
+  }, [cart])
 
   const [customizationSettings, setCustomizationSettings] = useState({
     cod_enabled: true,
@@ -2480,22 +2596,27 @@ export default function Cart() {
   }
 
   return (
-    <div className="relative min-h-screen bg-slate-50 dark:bg-[#0a0a0a]">
+    <div className="relative min-h-screen bg-[#FBF8F5] dark:bg-[#0f0f0f]">
       {/* Header - Sticky at top */}
-      <div className="bg-white dark:bg-[#1a1a1a] border-b border-gray-100/80 dark:border-gray-800/80 sticky top-0 z-20 flex-shrink-0">
+      <div className="bg-[#FAF7F2] dark:bg-[#141414] border-b border-[#F0E6DE]/60 dark:border-gray-800/80 sticky top-0 z-20 flex-shrink-0">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between px-4 md:px-6 py-2.5">
-            <div className="flex items-center gap-2 flex-1 min-w-0">
+          <div className="flex items-center justify-between px-4 md:px-6 py-3">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
               <button 
-                className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-white/90 dark:bg-gray-800/90 border border-gray-100/50 dark:border-gray-700/50 shadow-sm flex items-center justify-center flex-shrink-0 text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 active:scale-95"
+                className="w-10 h-10 rounded-full bg-[#F5ECE5] dark:bg-gray-800 border border-[#EDE2D8] dark:border-gray-700 shadow-xs flex items-center justify-center flex-shrink-0 text-gray-800 dark:text-gray-200 hover:bg-[#EFE3D9] dark:hover:bg-gray-700 transition-all duration-200 active:scale-95"
                 onClick={handleBack}
               >
-                <ArrowLeft className="h-[18px] w-[18px] md:h-5 md:w-5 stroke-[2.5]" />
+                <ArrowLeft className="h-5 w-5 stroke-[2.5]" />
               </button>
-              <div className="min-w-0 flex-1 ml-2 md:ml-3">
-                <h1 className="text-base md:text-lg font-bold text-[#1C2534] dark:text-white tracking-tight truncate antialiased transform-gpu">
+              <div className="min-w-0 flex-1 ml-1 sm:ml-2">
+                <h1 className="text-base sm:text-lg md:text-xl font-extrabold text-gray-900 dark:text-white tracking-tight truncate">
                   {restaurantName}
                 </h1>
+                <p className="text-xs text-gray-500 dark:text-gray-400 font-medium flex items-center gap-1.5 mt-0.5">
+                  <span>🍴 {restaurantData?.cuisine || "Good Food"}</span>
+                  <span className="text-gray-300 dark:text-gray-600">•</span>
+                  <span>❤️ Happy Moments</span>
+                </p>
                 {isRestaurantClosed && (
                   <p className="text-xs font-semibold text-red-600 dark:text-red-400 mt-0.5">
                     Restaurant is closed. Please order when they are online.
@@ -2504,10 +2625,10 @@ export default function Cart() {
               </div>
             </div>
             <button
-              className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-white/90 dark:bg-gray-800/90 border border-gray-100/50 dark:border-gray-700/50 shadow-sm flex items-center justify-center flex-shrink-0 text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-750 transition-all duration-200 active:scale-95"
+              className="w-10 h-10 rounded-full bg-[#F5ECE5] dark:bg-gray-800 border border-[#EDE2D8] dark:border-gray-700 shadow-xs flex items-center justify-center flex-shrink-0 text-gray-800 dark:text-gray-200 hover:bg-[#EFE3D9] dark:hover:bg-gray-700 transition-all duration-200 active:scale-95"
               onClick={handleShare}
             >
-              <Share className="h-[18px] w-[18px] md:h-5 md:w-5 stroke-[2.5]" />
+              <Share className="h-5 w-5 stroke-[2]" />
             </button>
           </div>
         </div>
@@ -2577,133 +2698,386 @@ export default function Cart() {
           <div className="max-w-3xl mx-auto">
             {/* Main Cart Content */}
             <div className="space-y-2 md:space-y-4">
-              {/* Cart Items */}
-              <div className="bg-white dark:bg-[#1a1a1a] px-4 md:px-6 py-4 md:py-5 rounded-2xl md:rounded-3xl shadow-sm border border-slate-100 dark:border-gray-800">
-                <div className="space-y-3 md:space-y-4">
-                  <div className="space-y-6">
-                    {cart.map((item, index) => (
-                      <div key={item.id} className={isCartUnavailable ? "opacity-60 grayscale transition-all duration-300" : ""}>
-                        <div className="flex items-center gap-4">
-                          {/* Veg/Non-veg indicator */}
-                          <div className={`w-4 h-4 border-2 ${item.isVeg === true || item.foodType === 'Veg' ? 'border-green-600' : 'border-red-600'} flex items-center justify-center flex-shrink-0 rounded-[2px]`}>
-                            <div className={`w-2 h-2 rounded-full ${item.isVeg === true || item.foodType === 'Veg' ? 'bg-green-600' : 'bg-red-600'}`} />
+              {/* Cart Items Cards */}
+              <div className="space-y-3 sm:space-y-4">
+                {groupedCartItems.map((group) => {
+                  const isCustomizable =
+                    (Array.isArray(group.variants) && group.variants.length > 0) ||
+                    group.lines.length > 1 ||
+                    Boolean(
+                      group.lines[0]?.variantName &&
+                        String(group.lines[0].variantName).trim().toLowerCase() !== ""
+                    )
+
+                  const groupTotalPrice = group.lines.reduce(
+                    (sum, l) => sum + ((l.price || 0) * (l.quantity || 1)),
+                    0
+                  )
+                  const groupTotalQty = group.lines.reduce(
+                    (sum, l) => sum + (l.quantity || 1),
+                    0
+                  )
+
+                  let varieties = []
+                  if (isCustomizable) {
+                    const list = []
+                    const seenIds = new Set()
+
+                    let regularPrice = Number(group.regularPrice)
+                    if (!Number.isFinite(regularPrice) || regularPrice <= 0) {
+                      const regularLine = group.lines.find(
+                        (l) =>
+                          !l.variantId ||
+                          l.variantId === "base" ||
+                          l.variantId === "regular" ||
+                          String(l.variantName || "").toLowerCase() === "regular"
+                      )
+                      if (regularLine) {
+                        regularPrice = Number(regularLine.price) || 0
+                      } else {
+                        regularPrice =
+                          Number(group.lines[0]?.itemBasePrice ?? group.lines[0]?.basePrice ?? group.lines[0]?.price) || 0
+                      }
+                    }
+
+                    const hasRegularInCart = group.lines.some(
+                      (l) =>
+                        !l.variantId ||
+                        l.variantId === "base" ||
+                        l.variantId === "regular" ||
+                        String(l.variantName || "").toLowerCase() === "regular"
+                    )
+
+                    if (regularPrice > 0 || hasRegularInCart) {
+                      list.push({
+                        id: "base",
+                        isBase: true,
+                        name: "Regular",
+                        subtitle: "Original option",
+                        price: regularPrice,
+                      })
+                      seenIds.add("base")
+                      seenIds.add("regular")
+                      seenIds.add("")
+                    }
+
+                    if (Array.isArray(group.variants)) {
+                      group.variants.forEach((v) => {
+                        const vid = String(v.id || v._id || "").trim()
+                        if (vid && !seenIds.has(vid)) {
+                          seenIds.add(vid)
+                          list.push({
+                            id: vid,
+                            isBase: false,
+                            name: v.name,
+                            subtitle: "Add-on variant",
+                            price: Number(v.price) || 0,
+                            rawVariant: v,
+                          })
+                        }
+                      })
+                    }
+
+                    group.lines.forEach((l) => {
+                      const vid = String(l.variantId || "").trim()
+                      const vName = String(l.variantName || "").trim()
+                      if (vid && !seenIds.has(vid) && vName.toLowerCase() !== "regular") {
+                        seenIds.add(vid)
+                        list.push({
+                          id: vid,
+                          isBase: false,
+                          name: vName || "Variant",
+                          subtitle: "Add-on variant",
+                          price: Number(l.price) || 0,
+                        })
+                      }
+                    })
+
+                    varieties = list
+                  }
+
+                  const singleLine = group.lines[0]
+
+                  return (
+                    <div
+                      key={group.baseId}
+                      className={`bg-white dark:bg-[#1a1a1a] rounded-3xl p-4 sm:p-5 shadow-[0_4px_24px_rgba(0,0,0,0.03)] border border-[#F0E6DE] dark:border-gray-800 transition-all duration-300 ${
+                        isCartUnavailable ? "opacity-60 grayscale" : ""
+                      }`}
+                    >
+                      {isCustomizable && varieties.length > 0 ? (
+                        /* Unified customizable dish card */
+                        <div>
+                          {/* Dish Header */}
+                          <div className="flex items-start gap-3.5 sm:gap-4 pb-3.5 border-b border-[#F0E6DE]/70 dark:border-gray-800">
+                            {/* Left: Food Image with Veg/Non-Veg Badge Inside */}
+                            <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden flex-shrink-0 bg-gray-100 dark:bg-gray-800 shadow-xs">
+                              <img
+                                src={group.image || dishFallbackImage}
+                                alt={group.name}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.target.src = dishFallbackImage
+                                }}
+                              />
+                              <div className="absolute top-1.5 left-1.5 z-10 w-5 h-5 bg-white/95 dark:bg-gray-900/95 rounded-md flex items-center justify-center shadow-xs border border-gray-100 dark:border-gray-700">
+                                <div
+                                  className={`w-3.5 h-3.5 border-2 ${
+                                    group.isVeg === true || group.foodType === "Veg"
+                                      ? "border-green-600"
+                                      : "border-red-600"
+                                  } flex items-center justify-center rounded-[3px]`}
+                                >
+                                  <div
+                                    className={`w-1.5 h-1.5 rounded-full ${
+                                      group.isVeg === true || group.foodType === "Veg"
+                                        ? "bg-green-600"
+                                        : "bg-red-600"
+                                    }`}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Middle: Dish Name & Info */}
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-start justify-between gap-2">
+                                <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100 leading-tight">
+                                  {group.name}
+                                </h3>
+                                <p className="text-base sm:text-lg font-black text-gray-900 dark:text-gray-100 tracking-tight whitespace-nowrap">
+                                  {RUPEE_SYMBOL}{groupTotalPrice.toFixed(0)}
+                                </p>
+                              </div>
+                              <p className="text-xs sm:text-[13px] text-gray-500 dark:text-gray-400 mt-1 line-clamp-1 leading-relaxed font-normal">
+                                {group.description || "Soft, fresh and perfectly baked in a traditional tandoor."}
+                              </p>
+                              <div className="mt-2 flex items-center gap-2 flex-wrap">
+                                <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#FA5D19] bg-[#FFF5EE] dark:bg-orange-950/30 px-2.5 py-0.5 rounded-full border border-[#FFD9C6]/60">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-[#FA5D19]" />
+                                  {groupTotalQty} {groupTotalQty === 1 ? "item" : "items"} customized
+                                </span>
+                                {group.isRestaurantClosed && (
+                                  <span className="text-[11px] text-red-500 dark:text-red-400 font-semibold">
+                                    Restaurant is closed
+                                  </span>
+                                )}
+                                {group.isCartZoneMismatch && !group.isRestaurantClosed && (
+                                  <span className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold">
+                                    Not deliverable to selected location
+                                  </span>
+                                )}
+                              </div>
+                            </div>
                           </div>
 
-                          <div className="flex-1 min-w-0 flex items-center gap-4">
-                              <div className="w-16 h-16 md:w-20 md:h-20 flex-shrink-0 rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-800">
-                                <img
-                                  src={item.image || dishFallbackImage}
-                                  alt={item.name}
-                                  className="w-full h-full object-cover transform hover:scale-110 transition-transform duration-700"
-                                  onError={(e) => {
-                                    e.target.src = dishFallbackImage;
-                                  }}
-                                />
-                              </div>
-                            <div className="min-w-0 flex-1">
-                              <h3 className="text-sm md:text-base font-bold text-gray-900 dark:text-gray-100 leading-tight">{item.name}</h3>
-                              {Array.isArray(item.variants) && item.variants.length > 0 ? (
-                                <div className="mt-2 flex flex-col gap-1">
-                                  <div className="flex flex-wrap items-center gap-1.5">
-                                    {/* Regular / Base option */}
-                                    <button
-                                      type="button"
-                                      disabled={updatingVariantLineId === (item.lineItemId || item.id)}
-                                      onClick={() => handleSelectVariety(item, "")}
-                                      className={`text-[11px] px-2.5 py-1 rounded-lg font-semibold border transition-all flex items-center gap-1 cursor-pointer ${
-                                        !item.variantId
-                                          ? "bg-[#FF5A1F] text-white border-[#FF5A1F] shadow-sm"
-                                          : "bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-[#FF5A1F]/50"
-                                      } ${updatingVariantLineId === (item.lineItemId || item.id) ? "opacity-50 cursor-wait" : ""}`}
-                                    >
-                                      {!item.variantId && <Check className="w-3 h-3 stroke-[3px]" />}
-                                      <span>Regular</span>
-                                      <span className="font-normal opacity-90">
-                                        · {RUPEE_SYMBOL}{item.itemBasePrice || item.basePrice || item.price}
-                                      </span>
-                                    </button>
+                          {/* Customized Variant Rows */}
+                          <div className="pt-3 space-y-2">
+                            {varieties.map((variety) => {
+                              const activeLine = variety.isBase
+                                ? group.lines.find(
+                                    (l) =>
+                                      !l.variantId ||
+                                      l.variantId === "base" ||
+                                      l.variantId === "regular" ||
+                                      String(l.variantName || "").toLowerCase() === "regular"
+                                  )
+                                : group.lines.find((l) => String(l.variantId || "") === String(variety.id))
 
-                                    {/* Each Variant option */}
-                                    {item.variants.map((v) => {
-                                      const isSelected = String(item.variantId) === String(v.id || v._id);
-                                      return (
-                                        <button
-                                          key={v.id || v._id}
-                                          type="button"
-                                          disabled={updatingVariantLineId === (item.lineItemId || item.id)}
-                                          onClick={() => handleSelectVariety(item, v.id || v._id)}
-                                          className={`text-[11px] px-2.5 py-1 rounded-lg font-semibold border transition-all flex items-center gap-1 cursor-pointer ${
-                                            isSelected
-                                              ? "bg-[#FF5A1F] text-white border-[#FF5A1F] shadow-sm"
-                                              : "bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-[#FF5A1F]/50"
-                                          } ${updatingVariantLineId === (item.lineItemId || item.id) ? "opacity-50 cursor-wait" : ""}`}
+                              const currentQty = activeLine ? Number(activeLine.quantity) || 0 : 0
+                              const isAdding = addingVarietyKey === `${group.baseId}::${variety.id}`
+
+                              return (
+                                <div
+                                  key={variety.id}
+                                  className={`flex items-center justify-between p-2.5 sm:p-3 rounded-2xl transition-all ${
+                                    currentQty > 0
+                                      ? "bg-[#FFF9F5] dark:bg-orange-950/20 border border-[#FFE8DC] dark:border-orange-900/30"
+                                      : "bg-gray-50/70 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 hover:border-[#FFE8DC] dark:hover:border-orange-900/20"
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
+                                    <span
+                                      className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                                        currentQty > 0 ? "bg-[#FA5D19]" : "bg-gray-300 dark:bg-gray-600"
+                                      }`}
+                                    />
+                                    <div className="flex flex-col min-w-0">
+                                      <div className="flex items-center gap-1.5 flex-wrap">
+                                        <span
+                                          className={`text-xs sm:text-sm font-bold truncate ${
+                                            currentQty > 0
+                                              ? "text-gray-900 dark:text-gray-100"
+                                              : "text-gray-700 dark:text-gray-300"
+                                          }`}
                                         >
-                                          {isSelected && <Check className="w-3 h-3 stroke-[3px]" />}
-                                          <span>{v.name}</span>
-                                          <span className="font-normal opacity-90">
-                                            · {RUPEE_SYMBOL}{v.price}
+                                          {variety.name}
+                                        </span>
+                                        {variety.subtitle && (
+                                          <span className="text-[10px] text-gray-400 dark:text-gray-500 font-medium hidden xs:inline">
+                                            • {variety.subtitle}
                                           </span>
+                                        )}
+                                      </div>
+                                      <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">
+                                        {RUPEE_SYMBOL}{Number(variety.price).toFixed(0)} each
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center gap-3 flex-shrink-0">
+                                    {currentQty > 0 ? (
+                                      <>
+                                        {/* Stepper capsule */}
+                                        <div className="flex items-center bg-white dark:bg-[#252525] border border-[#FFE8DC] dark:border-orange-900/40 rounded-full p-0.5 sm:p-1 shadow-xs">
+                                          <button
+                                            type="button"
+                                            onClick={() => updateQuantity(activeLine.id, currentQty - 1)}
+                                            className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-[#FA5D19] hover:bg-[#FFE2D1] active:scale-90 transition-all"
+                                            aria-label={`Decrease ${variety.name} quantity`}
+                                          >
+                                            <Minus className="w-3.5 h-3.5 stroke-[2.5]" />
+                                          </button>
+                                          <span className="px-2 text-xs sm:text-sm font-bold text-gray-900 dark:text-gray-100 min-w-[18px] text-center">
+                                            {currentQty}
+                                          </span>
+                                          <button
+                                            type="button"
+                                            onClick={() => updateQuantity(activeLine.id, currentQty + 1)}
+                                            className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-[#FA5D19] hover:bg-[#FFE2D1] active:scale-90 transition-all"
+                                            aria-label={`Increase ${variety.name} quantity`}
+                                          >
+                                            <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                                          </button>
+                                        </div>
+
+                                        {/* Subtotal */}
+                                        <span className="text-sm sm:text-base font-extrabold text-gray-900 dark:text-gray-100 min-w-[48px] text-right">
+                                          {RUPEE_SYMBOL}{((variety.price || activeLine.price || 0) * currentQty).toFixed(0)}
+                                        </span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        {/* ADD + Button */}
+                                        <button
+                                          type="button"
+                                          disabled={isAdding || isCartUnavailable}
+                                          onClick={() => handleAddVarietyToCart(group, variety)}
+                                          className="px-3.5 sm:px-4 py-1.5 rounded-full bg-[#FFF5EE] dark:bg-orange-950/40 text-[#FA5D19] border border-[#FFD9C6] dark:border-orange-900/60 text-xs sm:text-sm font-extrabold hover:bg-[#FA5D19] hover:text-white active:scale-95 transition-all shadow-xs flex items-center gap-1.5 disabled:opacity-50"
+                                        >
+                                          {isAdding ? "ADDING..." : "ADD"}
+                                          {!isAdding && <Plus className="w-3.5 h-3.5 stroke-[3]" />}
                                         </button>
-                                      );
-                                    })}
+                                        <span className="text-sm sm:text-base font-medium text-gray-300 dark:text-gray-600 min-w-[48px] text-right">
+                                          —
+                                        </span>
+                                      </>
+                                    )}
                                   </div>
                                 </div>
-                              ) : item.variantName ? (
-                                <p className="text-[10px] md:text-xs text-red-600 dark:text-red-300 mt-1 font-semibold bg-red-50 dark:bg-red-950/20 border border-red-100/50 dark:border-red-900/30 w-fit px-2.5 py-0.5 rounded-full whitespace-nowrap">
-                                  {item.variantName}
-                                </p>
-                              ) : null}
-                              {isRestaurantClosed && (
-                                <p className="text-[11px] text-red-500 dark:text-red-400 font-semibold mt-1">
-                                  Remove this dish to order available dishes
-                                </p>
-                              )}
-                              {isCartZoneMismatch && !isRestaurantClosed && (
-                                <p className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold mt-1">
-                                  Not deliverable to your selected location
-                                </p>
-                              )}
+                              )
+                            })}
+                          </div>
+                        </div>
+                      ) : (
+                        /* Single item (Simple dish without variants) */
+                        <div className="flex items-start sm:items-center gap-3.5 sm:gap-4">
+                          {/* Left: Food Image with Veg/Non-Veg Badge Inside */}
+                          <div className="relative w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-2xl overflow-hidden flex-shrink-0 bg-gray-100 dark:bg-gray-800 shadow-xs">
+                            <img
+                              src={group.image || dishFallbackImage}
+                              alt={group.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.target.src = dishFallbackImage
+                              }}
+                            />
+                            <div className="absolute top-2 left-2 z-10 w-5 h-5 bg-white/95 dark:bg-gray-900/95 rounded-md flex items-center justify-center shadow-xs border border-gray-100 dark:border-gray-700">
+                              <div
+                                className={`w-3.5 h-3.5 border-2 ${
+                                  group.isVeg === true || group.foodType === "Veg"
+                                    ? "border-green-600"
+                                    : "border-red-600"
+                                } flex items-center justify-center rounded-[3px]`}
+                              >
+                                <div
+                                  className={`w-1.5 h-1.5 rounded-full ${
+                                    group.isVeg === true || group.foodType === "Veg"
+                                      ? "bg-green-600"
+                                      : "bg-red-600"
+                                  }`}
+                                />
+                              </div>
                             </div>
                           </div>
 
-                          <div className="flex flex-col items-end gap-2.5 flex-shrink-0">
-                            <div className="flex items-center border border-[#FF5A1F]/30 dark:border-[#FF5A1F]/40 rounded-lg overflow-hidden bg-white dark:bg-gray-900 shadow-sm">
+                          {/* Middle: Details */}
+                          <div className="min-w-0 flex-1">
+                            <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100 leading-tight">
+                              {group.name}
+                            </h3>
+                            <p className="text-xs sm:text-[13px] text-gray-500 dark:text-gray-400 mt-1 line-clamp-2 leading-relaxed font-normal">
+                              {group.description || "Soft, fresh and perfectly baked in a traditional tandoor."}
+                            </p>
+
+                            {group.isRestaurantClosed && (
+                              <p className="text-[11px] text-red-500 dark:text-red-400 font-semibold mt-2">
+                                Remove this dish to order available dishes
+                              </p>
+                            )}
+                            {group.isCartZoneMismatch && !group.isRestaurantClosed && (
+                              <p className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold mt-2">
+                                Not deliverable to your selected location
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Right: Quantity Stepper & Price */}
+                          <div className="flex flex-col items-end justify-between self-stretch py-0.5 flex-shrink-0">
+                            <div className="flex items-center bg-[#FFF5EE] dark:bg-orange-950/30 border border-[#FFE8DC] dark:border-orange-900/40 rounded-full p-1 shadow-xs">
                               <button
-                                onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                className="px-2.5 py-1.5 hover:bg-[#FF5A1F]/5 text-[#FF5A1F] transition-colors"
+                                onClick={() => updateQuantity(singleLine.id, (singleLine.quantity || 1) - 1)}
+                                className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-[#FA5D19] hover:bg-[#FFE2D1] active:scale-95 transition-all"
+                                aria-label="Decrease quantity"
                               >
-                                <Minus className="w-3.5 h-3.5" />
+                                <Minus className="w-3.5 h-3.5 stroke-[2.5]" />
                               </button>
-                              <span className="px-2 text-sm md:text-base font-black text-[#FF5A1F] min-w-[28px] text-center">
-                                {item.quantity}
+                              <span className="px-2 text-sm sm:text-base font-bold text-gray-900 dark:text-gray-100 min-w-[20px] text-center">
+                                {singleLine.quantity}
                               </span>
                               <button
-                                onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                className="px-2.5 py-1.5 hover:bg-[#FF5A1F]/5 text-[#FF5A1F] transition-colors"
+                                onClick={() => updateQuantity(singleLine.id, (singleLine.quantity || 1) + 1)}
+                                className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-[#FA5D19] hover:bg-[#FFE2D1] active:scale-95 transition-all"
+                                aria-label="Increase quantity"
                               >
-                                <Plus className="w-3.5 h-3.5" />
+                                <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                               </button>
                             </div>
-                            <p className="text-sm md:text-base font-black text-gray-900 dark:text-gray-100">
-                              {RUPEE_SYMBOL}{((item.price || 0) * (item.quantity || 1)).toFixed(0)}
+
+                            <p className="text-lg sm:text-xl font-black text-gray-900 dark:text-gray-100 tracking-tight mt-auto pt-3">
+                              {RUPEE_SYMBOL}{((singleLine.price || 0) * (singleLine.quantity || 1)).toFixed(0)}
                             </p>
                           </div>
                         </div>
-                        {index < cart.length - 1 && (
-                          <div className="mt-6 border-b border-gray-100 dark:border-gray-800/40 border-dashed" />
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                      )}
+                    </div>
+                  )
+                })}
 
-                {/* Add more items */}
+                {/* Add more items card */}
                 <button
                   onClick={handleBack}
-                  className="flex items-center gap-2 mt-4 md:mt-6 text-[#FF5A1F] dark:text-[#FF5A1F]"
+                  className="w-full mt-3 bg-white dark:bg-[#1a1a1a] rounded-2xl md:rounded-3xl p-4 shadow-sm border border-[#F0E6DE] dark:border-gray-800 flex items-center justify-between group hover:border-[#FA5D19]/40 transition-all cursor-pointer active:scale-[0.99]"
                 >
-                  <Plus className="h-4 w-4 md:h-5 md:w-5" />
-                  <span className="text-sm md:text-base font-medium">Add more items</span>
+                  <div className="flex items-center gap-3">
+                    <div className="w-7 h-7 rounded-full bg-[#FA5D19] text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
+                      <Plus className="w-4 h-4 stroke-[3]" />
+                    </div>
+                    <span className="text-sm sm:text-base font-bold text-[#E05318]">
+                      Add more items
+                    </span>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-[#E05318] group-hover:translate-x-0.5 transition-transform" />
                 </button>
               </div>
 

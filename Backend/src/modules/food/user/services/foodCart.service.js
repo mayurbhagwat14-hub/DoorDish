@@ -88,11 +88,11 @@ async function assertRestaurantAccepting(restaurantId) {
 
 function resolveVariant(itemDoc, variantId) {
   const vid = normalizeVariantId(variantId);
-  if (!vid) {
+  if (!vid || vid === 'base' || vid === 'regular') {
     return {
       variantId: '',
-      variantName: '',
-      price: Number(itemDoc.price) || 0,
+      variantName: (itemDoc.variants && itemDoc.variants.length > 0) ? 'Regular' : '',
+      price: Number(itemDoc.basePrice != null ? itemDoc.basePrice : itemDoc.price) || 0,
     };
   }
   const variant = (itemDoc.variants || []).find((v) => String(v._id) === vid);
