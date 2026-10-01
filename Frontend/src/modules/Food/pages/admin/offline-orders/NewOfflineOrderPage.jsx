@@ -114,6 +114,7 @@ export default function NewOfflineOrderPage() {
   const [overrideDeliveryFee, setOverrideDeliveryFee] = useState(false)
   const [customDeliveryFee, setCustomDeliveryFee] = useState("")
   const [deliveryCalculationError, setDeliveryCalculationError] = useState("")
+  const [calculatedPricing, setCalculatedPricing] = useState(null)
 
   // STEP 5: Order Submission state
   const [placingOrder, setPlacingOrder] = useState(false)
@@ -354,6 +355,13 @@ export default function NewOfflineOrderPage() {
       const payload = {
         restaurantId: selectedRestaurant._id || selectedRestaurant.id,
         subtotal: cartSubtotal,
+        items: cartItemsList.map(entry => ({
+          menuItemId: entry.item._id || entry.item.id,
+          variantId: entry.variant?._id || entry.variant?.id || null,
+          quantity: entry.quantity,
+          price: entry.price,
+          addonIds: entry.addons?.map(a => a._id || a.id) || []
+        })),
         deliveryAddress: {
           street: customerForm.houseFlat,
           area: customerForm.area,
@@ -370,6 +378,7 @@ export default function NewOfflineOrderPage() {
       const fee = Number(data.deliveryFee ?? 25)
       const dist = data.distanceKm != null ? Number(data.distanceKm) : null
 
+      setCalculatedPricing(data.pricing || null)
       setAutoCalculatedFee(fee)
       setDistanceKm(dist)
       setCustomDeliveryFee((prev) => (prev === "" ? String(fee) : prev))
@@ -378,6 +387,7 @@ export default function NewOfflineOrderPage() {
       setDeliveryCalculationError(
         err?.response?.data?.message || "Could not automatically calculate distance. You can set a custom delivery charge."
       )
+      setCalculatedPricing(null)
       setAutoCalculatedFee(25) // Fallback default
       setCustomDeliveryFee((prev) => (prev === "" ? "25" : prev))
     } finally {
@@ -400,8 +410,17 @@ export default function NewOfflineOrderPage() {
   }, [customDeliveryFee, autoCalculatedFee])
 
   const grandTotal = useMemo(() => {
+    if (calculatedPricing) {
+      const baseSubtotal = calculatedPricing.subtotal ?? 0
+      const markup = calculatedPricing.markupTotal ?? 0
+      const packaging = calculatedPricing.packagingFee ?? 0
+      const tax = calculatedPricing.tax ?? 0
+      const platformFee = calculatedPricing.platformFee ?? 0
+      const discount = calculatedPricing.discount ?? 0
+      return Math.max(0, baseSubtotal + markup + packaging + tax + platformFee + effectiveDeliveryFee - discount)
+    }
     return Math.max(0, cartSubtotal + effectiveDeliveryFee)
-  }, [cartSubtotal, effectiveDeliveryFee])
+  }, [cartSubtotal, effectiveDeliveryFee, calculatedPricing])
 
   // STEP 5: Place the Order
   const handlePlaceOrder = async () => {
@@ -1548,8 +1567,37 @@ export default function NewOfflineOrderPage() {
             <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2 text-sm">
               <div className="flex justify-between text-slate-600">
                 <span>Subtotal:</span>
-                <span className="font-medium text-slate-800">{formatINR(cartSubtotal)}</span>
+                <span className="font-medium text-slate-800">{formatINR(calculatedPricing?.subtotal ?? cartSubtotal)}</span>
               </div>
+              
+              {calculatedPricing?.markupTotal > 0 && (
+                <div className="flex justify-between text-slate-600">
+                  <span>Markup:</span>
+                  <span className="font-medium text-slate-800">{formatINR(calculatedPricing.markupTotal)}</span>
+                </div>
+              )}
+              
+              {calculatedPricing?.packagingFee > 0 && (
+                <div className="flex justify-between text-slate-600">
+                  <span>Packaging Fee:</span>
+                  <span className="font-medium text-slate-800">{formatINR(calculatedPricing.packagingFee)}</span>
+                </div>
+              )}
+              
+              {calculatedPricing?.tax > 0 && (
+                <div className="flex justify-between text-slate-600">
+                  <span>Taxes (GST):</span>
+                  <span className="font-medium text-slate-800">{formatINR(calculatedPricing.tax)}</span>
+                </div>
+              )}
+
+              {calculatedPricing?.platformFee > 0 && (
+                <div className="flex justify-between text-slate-600">
+                  <span>Platform Fee:</span>
+                  <span className="font-medium text-slate-800">{formatINR(calculatedPricing.platformFee)}</span>
+                </div>
+              )}
+              
               <div className="flex justify-between items-center text-slate-600">
                 <span className="flex items-center gap-1.5">
                   Delivery Charge:
@@ -1572,12 +1620,20 @@ export default function NewOfflineOrderPage() {
                   </button>
                 </div>
               </div>
+              
+              {calculatedPricing?.discount > 0 && (
+                <div className="flex justify-between text-emerald-600">
+                  <span>Discount:</span>
+                  <span className="font-medium text-emerald-700">-{formatINR(calculatedPricing.discount)}</span>
+                </div>
+              )}
+              
               <div className="flex justify-between text-slate-900 font-bold text-base border-t border-slate-200 pt-2">
                 <span>Grand Total:</span>
                 <span className="text-orange-600 text-lg">{formatINR(grandTotal)}</span>
               </div>
-              <div className="text-[11px] text-slate-400 text-right">
-                Payment Method: Cash on Delivery (COD)
+              <div className="text-[11px] text-slate-400 text-right mt-1">
+                Amount to be collected via Cash on Delivery
               </div>
             </div>
 

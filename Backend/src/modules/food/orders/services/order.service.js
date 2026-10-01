@@ -3205,9 +3205,33 @@ export async function calculateDeliveryFeeAdmin(dto) {
     }
   }
 
+  let fullPricing = null;
+  if (dto.items && dto.items.length > 0) {
+    const { calculateOrderPricing } = await import("./order-pricing.service.js");
+    try {
+      const priced = await calculateOrderPricing(null, {
+        useCart: false,
+        items: dto.items,
+        restaurantId,
+        orderType: "delivery",
+        deliveryAddress: dto.deliveryAddress?.location?.coordinates
+          ? { location: { coordinates: dto.deliveryAddress.location.coordinates } }
+          : undefined,
+        zoneId: dto.zoneId || restaurant.zoneId || undefined,
+      });
+      fullPricing = priced.pricing;
+      if (fullPricing) {
+        deliveryFee = fullPricing.deliveryFee;
+      }
+    } catch (err) {
+      logger.warn(`Failed to calculate full pricing for admin preview: ${err?.message}`);
+    }
+  }
+
   return {
     distanceKm: distanceKm != null ? Math.round(distanceKm * 10) / 10 : null,
     deliveryFee,
+    pricing: fullPricing,
     restaurantName: restaurant.restaurantName || "",
     restaurantLocation: rPoint || null,
     deliveryLocation: dPoint || null,
