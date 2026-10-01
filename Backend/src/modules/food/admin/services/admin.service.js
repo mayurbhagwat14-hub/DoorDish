@@ -394,7 +394,7 @@ export async function getRestaurants(query) {
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit)
-            .select('restaurantName location area city profileImage coverImages status ownerName ownerPhone zoneId rating totalRatings pureVegRestaurant')
+            .select('restaurantName location area city profileImage coverImages logo menuImages status ownerName ownerPhone zoneId rating totalRatings pureVegRestaurant')
             .populate('zoneId', 'name zoneName')
             .lean(),
         FoodRestaurant.countDocuments(filter)
@@ -4169,6 +4169,12 @@ export async function createRestaurantByAdmin(body) {
         status: 'approved',
         approvedAt: new Date()
     };
+
+    if (!doc.profileImage) throw new ValidationError('Profile image is required');
+    if (!doc.panImage) throw new ValidationError('PAN image is required');
+    if (!doc.fssaiImage) throw new ValidationError('FSSAI image is required');
+    if (doc.gstRegistered && !doc.gstImage) throw new ValidationError('GST image is required for GST registered restaurants');
+    if (!doc.menuImages || doc.menuImages.length === 0) throw new ValidationError('At least one menu image is required');
 
     if (body.zoneId !== undefined) {
         const zoneId = String(body.zoneId || '').trim();

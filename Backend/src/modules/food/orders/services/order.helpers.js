@@ -88,15 +88,20 @@ export function generateFourDigitDeliveryOtp() {
 export function sanitizeOrderForExternal(orderDoc) {
   const o = orderDoc?.toObject ? orderDoc.toObject() : { ...(orderDoc || {}) };
   delete o.deliveryOtp;
+  const isOffline = o.orderSource === "admin_offline";
   const dv = o.deliveryVerification;
   if (dv && dv.dropOtp != null) {
     const d = dv.dropOtp;
     o.deliveryVerification = {
       ...dv,
       dropOtp: {
-        required: Boolean(d.required),
-        verified: Boolean(d.verified),
+        required: isOffline ? false : Boolean(d.required),
+        verified: isOffline ? true : Boolean(d.verified),
       },
+    };
+  } else if (isOffline) {
+    o.deliveryVerification = {
+      dropOtp: { required: false, verified: true },
     };
   }
   o.orderMongoId = (o._id || orderDoc?._id || "").toString();
@@ -373,7 +378,19 @@ export function normalizeOrderForClient(orderDoc) {
         lat: order.lastRiderLocation.coordinates[1],
         lng: order.lastRiderLocation.coordinates[0]
       } : (order?.deliveryState?.currentLocation || null)
-    }
+    },
+    totalAmount: order.pricing?.total ?? order.totalAmount ?? order.total ?? 0,
+    total: order.pricing?.total ?? order.total ?? order.totalAmount ?? 0,
+    finalTotal: order.pricing?.total ?? order.finalTotal ?? order.total ?? 0,
+    deliveryCharge: order.pricing?.deliveryFee ?? order.deliveryCharge ?? 0,
+    deliveryFee: order.pricing?.deliveryFee ?? order.deliveryFee ?? 0,
+    platformFee: order.pricing?.platformFee ?? order.platformFee ?? 0,
+    vatTax: order.pricing?.tax ?? order.vatTax ?? 0,
+    tax: order.pricing?.tax ?? order.tax ?? 0,
+    itemDiscount: order.pricing?.discount ?? order.itemDiscount ?? 0,
+    couponDiscount: order.pricing?.couponDiscount ?? order.couponDiscount ?? 0,
+    packagingCharge: order.pricing?.packagingFee ?? order.packagingCharge ?? 0,
+    totalItemAmount: order.pricing?.subtotal ?? order.totalItemAmount ?? 0,
   };
 }
 

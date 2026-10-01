@@ -376,6 +376,12 @@ export const registerRestaurant = async (payload, files) => {
         throw new ValidationError('Restaurant name is required to register a restaurant');
     }
 
+    if (!files?.profileImage?.[0]) throw new ValidationError('Profile image is required');
+    if (!files?.panImage?.[0]) throw new ValidationError('PAN image is required');
+    if (!files?.fssaiImage?.[0]) throw new ValidationError('FSSAI image is required');
+    if (gstRegistered && !files?.gstImage?.[0]) throw new ValidationError('GST image is required for GST registered restaurants');
+    if (!files?.menuImages?.length) throw new ValidationError('At least one menu image is required');
+
     const images = {};
 
     if (files?.profileImage?.[0]) {

@@ -670,7 +670,20 @@ export const adminAPI = {
     apiClient.patch(`/food/admin/orders/${String(orderId)}/statuses`, body, {
       contextModule: "admin",
     }),
-  /** Dispatch settings – auto vs manual assign (global) */
+  /** Offline Orders (Admin places order on behalf of customer) */
+  createOfflineOrder: (body) =>
+    apiClient.post("/food/admin/orders/offline", body ?? {}, {
+      contextModule: "admin",
+    }),
+  calculateDeliveryFee: (body) =>
+    apiClient.post("/food/admin/orders/calculate-delivery", body ?? {}, {
+      contextModule: "admin",
+    }),
+  getOfflineOrders: (params = {}) =>
+    apiClient.get("/food/admin/orders", {
+      params: { limit: 50, page: 1, orderSource: "admin_offline", ...params },
+      contextModule: "admin",
+    }),
   /** Create restaurant (admin). Single API: POST /food/admin/restaurants. Body: JSON with image URLs. */
   createRestaurant: (body) =>
     apiClient.post("/food/admin/restaurants", body ?? {}, {
@@ -1590,6 +1603,9 @@ export const restaurantAPI = {
     apiClient.get(`/food/restaurant/restaurants/${String(id)}`, { ...config }),
   /** Public: get approved menu by restaurant id or slug */
   getMenuByRestaurantId: (id, config = {}) =>
+    getPublicRestaurantMenuOnce(id, config),
+  /** Alias for getMenuByRestaurantId */
+  getRestaurantMenu: (id, config = {}) =>
     getPublicRestaurantMenuOnce(id, config),
   /** Public: get outlet timings by restaurant id */
   getOutletTimingsByRestaurantId: (id, config = {}) =>

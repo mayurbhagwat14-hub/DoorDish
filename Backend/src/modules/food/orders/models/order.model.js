@@ -237,6 +237,19 @@ const orderSchema = new mongoose.Schema(
             default: 'delivery',
             index: true
         },
+        /** Identifies who placed the order: 'online' = customer, 'admin_offline' = admin on behalf of customer */
+        orderSource: {
+            type: String,
+            enum: ['online', 'admin_offline'],
+            default: 'online',
+            index: true
+        },
+        /** Admin user ID when order is placed by admin (offline order) */
+        placedByAdminId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'FoodUser',
+            default: null
+        },
         userId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'FoodUser',

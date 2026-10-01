@@ -613,6 +613,31 @@ export default function ViewOrderDialog({ isOpen, onOpenChange, order, onOrderUp
                   <p className="text-sm font-medium text-slate-900">{order.deliveryType}</p>
                 </div>
               )}
+
+              {order.deliveryOtp && order.orderSource !== "admin_offline" && (
+                <div className="p-3.5 bg-amber-50/80 border border-amber-200 rounded-xl flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-amber-500 text-white flex items-center justify-center font-bold text-xs shadow-sm">
+                      OTP
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-amber-900 uppercase tracking-wider">
+                        Delivery Handover OTP
+                      </p>
+                      <p className="text-[11px] text-amber-700">
+                        {order.deliveryVerification?.dropOtp?.verified
+                          ? "✓ Verified by delivery partner"
+                          : "Customer verification code shown in user app"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="font-mono font-bold text-xl tracking-widest text-amber-950 bg-white px-3.5 py-1 rounded-lg border border-amber-300 shadow-sm inline-block">
+                      {order.deliveryOtp}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -925,45 +950,96 @@ export default function ViewOrderDialog({ isOpen, onOpenChange, order, onOrderUp
                   </>
                 )
               })()}
-              {order.itemDiscount !== undefined && order.itemDiscount > 0 && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">Discount</span>
-                  <span className="font-medium text-emerald-600">-₹{order.itemDiscount.toFixed(2)}</span>
-                </div>
-              )}
-              {order.couponDiscount !== undefined && order.couponDiscount > 0 && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">Coupon Discount</span>
-                  <span className="font-medium text-emerald-600">-₹{order.couponDiscount.toFixed(2)}</span>
-                </div>
-              )}
-              {order.deliveryCharge !== undefined && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">Delivery Charge</span>
-                  <span className="font-medium text-slate-900">
-                    {order.deliveryCharge > 0 ? `₹${order.deliveryCharge.toFixed(2)}` : <span className="text-emerald-600">Free delivery</span>}
-                  </span>
-                </div>
-              )}
+              {/* Discount */}
+              {(() => {
+                const discount = Number(order.itemDiscount ?? order.discount ?? order.pricing?.discount ?? 0)
+                if (discount <= 0) return null
+                return (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-600">Discount</span>
+                    <span className="font-medium text-emerald-600">-₹{discount.toFixed(2)}</span>
+                  </div>
+                )
+              })()}
+
+              {/* Coupon Discount */}
+              {(() => {
+                const couponDiscount = Number(order.couponDiscount ?? order.pricing?.couponDiscount ?? 0)
+                if (couponDiscount <= 0) return null
+                return (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-600">Coupon Discount</span>
+                    <span className="font-medium text-emerald-600">-₹{couponDiscount.toFixed(2)}</span>
+                  </div>
+                )
+              })()}
+
+              {/* Delivery Charge */}
+              {(() => {
+                const deliveryFee = Number(
+                  order.deliveryCharge ??
+                  order.deliveryFee ??
+                  order.pricing?.deliveryFee ??
+                  order.pricing?.deliveryCharge ??
+                  0
+                )
+                return (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-600">Delivery Charge</span>
+                    <span className="font-medium text-slate-900">
+                      {deliveryFee > 0 ? `₹${deliveryFee.toFixed(2)}` : <span className="text-emerald-600">Free delivery</span>}
+                    </span>
+                  </div>
+                )
+              })()}
+
+              {/* Platform Fee */}
               <div className="flex justify-between text-sm">
                 <span className="text-slate-600">Platform Fee</span>
                 <span className="font-medium text-slate-900">
-                  {order.platformFee !== undefined && order.platformFee > 0 
-                    ? `₹${order.platformFee.toFixed(2)}` 
-                    : <span className="text-slate-400">₹0.00</span>}
+                  {(() => {
+                    const fee = Number(order.platformFee ?? order.pricing?.platformFee ?? 0)
+                    return fee > 0 ? `₹${fee.toFixed(2)}` : <span className="text-slate-400">₹0.00</span>
+                  })()}
                 </span>
               </div>
-              {order.vatTax !== undefined && order.vatTax > 0 && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">Tax (GST)</span>
-                  <span className="font-medium text-slate-900">₹{order.vatTax.toFixed(2)}</span>
-                </div>
-              )}
+
+              {/* Packaging Fee */}
+              {(() => {
+                const packaging = Number(order.packagingCharge ?? order.packagingFee ?? order.pricing?.packagingFee ?? 0)
+                if (packaging <= 0) return null
+                return (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-600">Packaging Fee</span>
+                    <span className="font-medium text-slate-900">₹{packaging.toFixed(2)}</span>
+                  </div>
+                )
+              })()}
+
+              {/* Tax / GST */}
+              {(() => {
+                const tax = Number(order.vatTax ?? order.tax ?? order.pricing?.tax ?? 0)
+                if (tax <= 0) return null
+                return (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-600">Tax (GST)</span>
+                    <span className="font-medium text-slate-900">₹{tax.toFixed(2)}</span>
+                  </div>
+                )
+              })()}
+
+              {/* Total Amount */}
               <div className="pt-2 border-t border-slate-200">
                 <div className="flex justify-between items-center">
                   <span className="text-base font-semibold text-slate-700">Total Amount</span>
                   <span className="text-xl font-bold text-emerald-600">
-                    ₹{(order.totalAmount || order.total || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    ₹{Number(
+                      order.pricing?.total ??
+                      order.totalAmount ??
+                      order.total ??
+                      order.finalTotal ??
+                      0
+                    ).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
               </div>

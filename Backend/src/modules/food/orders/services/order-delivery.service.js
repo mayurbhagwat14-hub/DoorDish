@@ -1018,11 +1018,18 @@ export async function confirmReachedDropDelivery(orderId, deliveryPartnerId) {
     return sanitizeOrderForExternal(order);
   }
 
-  if (!existingOtp) {
+  const isOfflineOrder = order.orderSource === 'admin_offline';
+
+  if (!isOfflineOrder && !existingOtp) {
     order.deliveryOtp = generateFourDigitDeliveryOtp();
   }
 
-  if (!order.deliveryVerification?.dropOtp) {
+  if (isOfflineOrder) {
+    order.deliveryVerification = {
+      ...(order.deliveryVerification?.toObject?.() || order.deliveryVerification || {}),
+      dropOtp: { required: false, verified: true },
+    };
+  } else if (!order.deliveryVerification?.dropOtp) {
     order.deliveryVerification = {
       ...(order.deliveryVerification?.toObject?.() ||
         order.deliveryVerification ||
@@ -1050,14 +1057,16 @@ export async function confirmReachedDropDelivery(orderId, deliveryPartnerId) {
 
   await order.save();
 
-  emitDeliveryDropOtpToUser(order, String(order.deliveryOtp || '').trim());
+  if (!isOfflineOrder && order.deliveryOtp) {
+    emitDeliveryDropOtpToUser(order, String(order.deliveryOtp || '').trim());
+  }
   emitOrderUpdate(order, deliveryPartnerId);
   enqueueOrderEvent('reached_drop', {
     orderMongoId: order._id?.toString?.(),
     orderId: order._id.toString(),
     deliveryPartnerId,
-    dropOtpRequired: order.deliveryVerification?.dropOtp?.required ?? true,
-    dropOtpVerified: order.deliveryVerification?.dropOtp?.verified ?? false,
+    dropOtpRequired: order.deliveryVerification?.dropOtp?.required ?? (!isOfflineOrder),
+    dropOtpVerified: order.deliveryVerification?.dropOtp?.verified ?? isOfflineOrder,
   });
   return sanitizeOrderForExternal(order);
 }
@@ -1129,10 +1138,13 @@ export async function completeDelivery(orderId, deliveryPartnerId, body = {}) {
 
   const { otp, ratings, paymentMethod: selectedPaymentMethod } = body;
 
-  // 1. Handover OTP Verification
+  const isOfflineOrder = order.orderSource === 'admin_offline';
+  const dropOtpRequired = Boolean(!isOfflineOrder && order.deliveryVerification?.dropOtp?.required);
+
+  // 1. Handover OTP Verification (Only required for online orders)
   if (
     otp &&
-    order.deliveryVerification?.dropOtp?.required &&
+    dropOtpRequired &&
     !order.deliveryVerification?.dropOtp?.verified
   ) {
     const orderWithSecret = await FoodOrder.findById(order._id).select('+deliveryOtp');
@@ -1145,13 +1157,21 @@ export async function completeDelivery(orderId, deliveryPartnerId, body = {}) {
   }
 
   if (
-    order.deliveryVerification?.dropOtp?.required &&
+    dropOtpRequired &&
     !order.deliveryVerification?.dropOtp?.verified &&
     !otp
   ) {
     throw new ValidationError(
       'Customer handover OTP is required. Verify the OTP from the customer before completing delivery.',
     );
+  }
+
+  if (isOfflineOrder) {
+    if (!order.deliveryVerification) order.deliveryVerification = {};
+    if (!order.deliveryVerification.dropOtp) order.deliveryVerification.dropOtp = {};
+    order.deliveryVerification.dropOtp.required = false;
+    order.deliveryVerification.dropOtp.verified = true;
+    order.markModified('deliveryVerification.dropOtp');
   }
 
   const from = order.orderStatus;

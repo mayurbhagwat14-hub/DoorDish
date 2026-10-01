@@ -27,6 +27,8 @@ const STABLE_KEYS_BY_PATH = {
   "/admin/food/restaurants/complaints": "restaurant_complaints",
   "/admin/food/restaurants/settings": "restaurant_settings",
   "/admin/food/orders": "orders",
+  "/admin/food/offline-orders": "orders",
+  "/admin/food/offline-orders/new": "orders",
   "/admin/food/orders/all": "orders",
   "/admin/food/orders/pending": "orders",
   "/admin/food/orders/processing": "orders",
@@ -113,8 +115,13 @@ function pushModule(modules, seenKeys, label, path) {
   if (key === "orders") {
     if (seenKeys.has("orders")) {
       const existing = modules.find((m) => m.key === "orders")
-      if (existing && !existing.pathPrefixes.includes("/admin/food/orders")) {
-        existing.pathPrefixes.push("/admin/food/orders")
+      if (existing) {
+        if (!existing.pathPrefixes.includes("/admin/food/orders")) {
+          existing.pathPrefixes.push("/admin/food/orders")
+        }
+        if (!existing.pathPrefixes.includes(cleaned)) {
+          existing.pathPrefixes.push(cleaned)
+        }
       }
       return
     }
@@ -122,7 +129,7 @@ function pushModule(modules, seenKeys, label, path) {
     modules.push({
       key: "orders",
       label: "Orders",
-      pathPrefixes: ["/admin/food/orders"],
+      pathPrefixes: ["/admin/food/orders", cleaned],
     })
     return
   }

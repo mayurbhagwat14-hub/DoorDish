@@ -510,3 +510,22 @@ export async function updateOrderStatusesAdminController(req, res, next) {
         next(err);
     }
 }
+
+export async function createOfflineOrderAdminController(req, res, next) {
+    try {
+        const adminId = req.user?.userId;
+        const result = await orderService.createOfflineOrderAdmin(adminId, req.body);
+        return sendResponse(res, 201, 'Offline order placed successfully', result);
+    } catch (err) {
+        next(err);
+    }
+}
+
+export async function calculateDeliveryFeeAdminController(req, res, next) {
+    try {
+        const result = await orderService.calculateDeliveryFeeAdmin(req.body);
+        return sendResponse(res, 200, 'Delivery fee calculated', result);
+    } catch (err) {
+        next(err);
+    }
+}

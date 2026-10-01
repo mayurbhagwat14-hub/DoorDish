@@ -1,6 +1,7 @@
-import { useState, useEffect, useLayoutEffect, useRef } from "react"
+
+import { useState, useEffect, useLayoutEffect, useRef, Suspense } from "react"
 import { Outlet, useLocation, useNavigate, Navigate } from "react-router-dom"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Loader2 } from "lucide-react"
 import AdminSidebar from "./AdminSidebar"
 import AdminNavbar from "./AdminNavbar"
 import { API_BASE_URL } from "@food/api/config"
@@ -280,7 +281,14 @@ export default function AdminLayout() {
 
         {/* Page Content */}
         <main ref={mainRef} className="flex-1 min-h-0 w-full max-w-full overflow-x-hidden overflow-y-auto bg-neutral-100">
-          <Outlet />
+          <Suspense fallback={
+            <div className="flex flex-col items-center justify-center p-16 min-h-[300px] text-slate-400 gap-3">
+              <Loader2 className="w-8 h-8 animate-spin text-orange-600" />
+              <span className="text-sm font-medium text-slate-500">Loading page...</span>
+            </div>
+          }>
+            <Outlet />
+          </Suspense>
         </main>
       </div>
     </div>

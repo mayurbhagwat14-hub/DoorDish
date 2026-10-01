@@ -87,7 +87,14 @@ export const adminSidebarMenu = [
           { label: "Payment Failed", path: "/admin/food/orders/payment-failed" },
           { label: "Refunded", path: "/admin/food/orders/refunded" },
           { label: "Offline Payments", path: "/admin/food/orders/offline-payments" },
+          { label: "Offline Orders", path: "/admin/food/offline-orders" },
         ],
+      },
+      {
+        type: "link",
+        label: "Offline Orders",
+        path: "/admin/food/offline-orders",
+        icon: "Package",
       },
       {
         type: "link",

@@ -797,12 +797,33 @@ export async function processDispatchTimeout(orderId, partnerId, options = {}) {
 // ----- User: list, get, cancel -----
 export async function listOrdersUser(userId, query) {
   const { page, limit, skip } = buildPaginationOptions(query);
+  
+  const userConditions = [{ userId: new mongoose.Types.ObjectId(userId) }];
+  try {
+    const userDoc = await FoodUser.findById(userId).select("phone").lean();
+    if (userDoc?.phone) {
+      const cleanPhone = String(userDoc.phone).replace(/\D/g, "").slice(-10);
+      if (cleanPhone) {
+        userConditions.push(
+          { customerPhone: cleanPhone },
+          { customerPhone: `+91${cleanPhone}` },
+          { customerPhone: userDoc.phone }
+        );
+      }
+    }
+  } catch (userErr) {
+    logger.warn(`[listOrdersUser] Error resolving user phone conditions: ${userErr?.message || userErr}`);
+  }
+
   const filter = {
-    userId: new mongoose.Types.ObjectId(userId),
-    // Exclude active online orders that have incomplete payments
-    $or: [
-      { "payment.method": { $ne: "razorpay" } },
-      { "payment.status": { $in: ["paid", "authorized", "captured", "settled", "refunded"] } }
+    $and: [
+      { $or: userConditions },
+      {
+        $or: [
+          { "payment.method": { $ne: "razorpay" } },
+          { "payment.status": { $in: ["paid", "authorized", "captured", "settled", "refunded"] } }
+        ]
+      }
     ]
   };
   const [docs, total] = await Promise.all([
@@ -852,7 +873,21 @@ export async function getOrderById(
   const orderRestaurantId = order.restaurantId?._id?.toString() || order.restaurantId?.toString();
   const orderPartnerId = order.dispatch?.deliveryPartnerId?._id?.toString() || order.dispatch?.deliveryPartnerId?.toString();
 
-  if (userId && orderUserId !== userId.toString())
+  let isUserMatch = Boolean(userId && orderUserId === userId.toString());
+  if (!isUserMatch && userId && order.customerPhone) {
+    try {
+      const userDoc = await FoodUser.findById(userId).select("phone").lean();
+      if (userDoc?.phone) {
+        const uClean = String(userDoc.phone).replace(/\D/g, "").slice(-10);
+        const oClean = String(order.customerPhone).replace(/\D/g, "").slice(-10);
+        if (uClean && oClean && uClean === oClean) {
+          isUserMatch = true;
+        }
+      }
+    } catch (_) {}
+  }
+
+  if (userId && !isUserMatch)
     throw new ForbiddenError("Not your order");
   if (restaurantId && orderRestaurantId !== restaurantId.toString())
     throw new ForbiddenError("Not your restaurant order");
@@ -1864,6 +1899,13 @@ export async function listOrdersAdmin(query) {
     typeof query.minAmount === "string" ? query.minAmount.trim() : "";
   const maxAmountRaw =
     typeof query.maxAmount === "string" ? query.maxAmount.trim() : "";
+  const orderSourceRaw =
+    typeof query.orderSource === "string" ? query.orderSource.trim().toLowerCase() : "";
+
+  // Filter by order source (online vs admin_offline)
+  if (orderSourceRaw && orderSourceRaw !== "all") {
+    filter.orderSource = orderSourceRaw;
+  }
 
   if (rawStatus && rawStatus !== "all") {
     switch (rawStatus) {
@@ -2740,6 +2782,9 @@ export async function updateOrderStatusesAdmin(orderId, adminId, { orderStatus, 
         order.deliveryState.deliveredAt = new Date();
       }
       order.deliveryState.currentPhase = "delivered";
+      if (!order.deliveryVerification) order.deliveryVerification = {};
+      if (!order.deliveryVerification.dropOtp) order.deliveryVerification.dropOtp = {};
+      order.deliveryVerification.dropOtp.verified = true;
 
       try {
         const finalPayMethod = order.payment?.method || 'cash';
@@ -2814,3 +2859,357 @@ export async function updateOrderStatusesAdmin(orderId, adminId, { orderStatus, 
   return normalizeOrderForClient(order);
 }
 
+// ──────────────────────────────────────────────────────────────────────────────
+// Offline Orders (Admin places order on behalf of customer)
+// Reuses: calculateOrderPricing, resolveRiderEarningForDelivery,
+//         notifyRestaurantNewOrder, dispatch, and the entire order lifecycle.
+// ──────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Admin creates an order on behalf of a customer.
+ * Payment = cash (COD). Uses the same order pipeline as online orders.
+ */
+export async function createOfflineOrderAdmin(adminId, dto) {
+  const restaurantId = String(dto.restaurantId || "").trim();
+  if (!restaurantId) throw new ValidationError("Restaurant id required");
+
+  const items = Array.isArray(dto.items) ? dto.items : [];
+  if (items.length === 0) throw new ValidationError("At least one item is required");
+
+  const restaurant = await FoodRestaurant.findById(restaurantId)
+    .select("status restaurantName zoneId location isAcceptingOrders takeawaySettings addressLine1 addressLine2 area city state pincode")
+    .lean();
+  if (!restaurant) throw new ValidationError("Restaurant not found");
+  if (restaurant.status !== "approved")
+    throw new ValidationError("Restaurant not accepting orders");
+  if (restaurant.isAcceptingOrders === false)
+    throw new ValidationError("Restaurant is currently not accepting orders");
+
+  // Outlet timings check (same as online)
+  try {
+    const { assertRestaurantOpenForOrders } = await import(
+      "../../restaurant/services/outletTimings.service.js"
+    );
+    await assertRestaurantOpenForOrders(restaurantId);
+  } catch (timingError) {
+    if (timingError instanceof ValidationError) throw timingError;
+    logger.warn(
+      `[OfflineOrder] Outlet timing check skipped for ${restaurantId}: ${timingError?.message || timingError}`
+    );
+  }
+
+  // We need a userId. For offline orders, look up existing user or auto-create minimal user by phone.
+  let userId = null;
+  const customerPhone = String(dto.customerPhone || "").trim();
+  const customerName = String(dto.customerName || "").trim();
+  if (customerPhone) {
+    const cleanDigits = customerPhone.replace(/\D/g, "");
+    const last10 = cleanDigits.slice(-10);
+    const phoneCandidates = [
+      customerPhone,
+      cleanDigits,
+      last10,
+      `+91${last10}`,
+      `91${last10}`,
+      `0${last10}`
+    ].filter(Boolean);
+
+    const existingUser = await FoodUser.findOne({ phone: { $in: phoneCandidates } }).select("_id name phone").lean();
+    if (existingUser) {
+      userId = existingUser._id;
+    } else if (last10 && last10.length === 10) {
+      try {
+        const newUser = await FoodUser.create({
+          phone: last10,
+          countryCode: "+91",
+          name: customerName || "Customer",
+          role: "USER",
+          isActive: true
+        });
+        userId = newUser._id;
+        logger.info(`[OfflineOrder] Created user account for customer phone ${last10}: ${newUser._id}`);
+      } catch (userCreateErr) {
+        logger.warn(`[OfflineOrder] User auto-creation skipped or duplicate: ${userCreateErr?.message}`);
+        const fallbackUser = await FoodUser.findOne({ phone: { $in: phoneCandidates } }).select("_id").lean();
+        if (fallbackUser) userId = fallbackUser._id;
+      }
+    }
+  }
+  // If no user found and could not create, fallback to adminId
+  if (!userId) {
+    userId = new mongoose.Types.ObjectId(adminId);
+  }
+
+  // Server-side pricing from provided items (not from cart)
+  const priced = await calculateOrderPricing(userId, {
+    useCart: false,
+    items,
+    restaurantId,
+    orderType: "delivery",
+    deliveryAddress: dto.deliveryAddress?.location?.coordinates
+      ? { location: { coordinates: dto.deliveryAddress.location.coordinates } }
+      : undefined,
+    couponCode: dto.couponCode || "",
+    zoneId: dto.zoneId || restaurant.zoneId || undefined,
+  });
+
+  const verifiedItems = priced.items || [];
+  if (!verifiedItems.length) throw new ValidationError("No valid items in the order");
+
+  const normalizedPricing = {
+    subtotal: Number(priced.pricing?.subtotal ?? 0),
+    baseSubtotal: Number(priced.pricing?.baseSubtotal ?? priced.pricing?.subtotal ?? 0),
+    markupTotal: Number(priced.pricing?.markupTotal ?? 0),
+    tax: Number(priced.pricing?.tax ?? 0),
+    packagingFee: Number(priced.pricing?.packagingFee ?? 0),
+    deliveryFee: Number(priced.pricing?.deliveryFee ?? 0),
+    platformFee: Number(priced.pricing?.platformFee ?? 0),
+    discount: Number(priced.pricing?.discount ?? 0),
+    total: Number(priced.pricing?.total ?? 0),
+    currency: String(priced.pricing?.currency || "INR"),
+    couponCode: priced.pricing?.couponCode || null,
+  };
+
+  // Allow admin to customize/override delivery charge (including ₹0 for free delivery)
+  const customFeeCandidate =
+    dto.deliveryFeeOverride != null
+      ? dto.deliveryFeeOverride
+      : dto.deliveryFee != null
+        ? dto.deliveryFee
+        : dto.customDeliveryFee;
+  if (customFeeCandidate != null && Number.isFinite(Number(customFeeCandidate))) {
+    const overrideFee = Math.max(0, Number(customFeeCandidate));
+    const feeDiff = overrideFee - normalizedPricing.deliveryFee;
+    normalizedPricing.deliveryFee = overrideFee;
+    normalizedPricing.total = Math.max(0, normalizedPricing.total + feeDiff);
+  }
+
+  const deliveryAddress = {
+    label: dto.deliveryAddress?.label || "Home",
+    name: customerName || dto.deliveryAddress?.name || "",
+    fullName: customerName || dto.deliveryAddress?.fullName || "",
+    street: dto.deliveryAddress?.street || "",
+    additionalDetails: dto.deliveryAddress?.additionalDetails || "",
+    city: dto.deliveryAddress?.city || "",
+    state: dto.deliveryAddress?.state || "",
+    zipCode: dto.deliveryAddress?.zipCode || "",
+    phone: customerPhone || dto.deliveryAddress?.phone || "",
+    location: dto.deliveryAddress?.location?.coordinates
+      ? { type: "Point", coordinates: dto.deliveryAddress.location.coordinates }
+      : undefined,
+  };
+
+  // Rider earning calculation (same as online)
+  let riderEarning = 0;
+  const earningResolved = await resolveRiderEarningForDelivery({
+    restaurant,
+    deliveryAddress,
+    orderType: "delivery",
+    zoneId: restaurant?.zoneId || dto.zoneId || null,
+  });
+  riderEarning = earningResolved.riderEarning || 0;
+
+  if (earningResolved.deliveryGeocoded && earningResolved.deliveryPoint) {
+    deliveryAddress.location = toGeoJsonPoint(earningResolved.deliveryPoint);
+  }
+
+  // Restaurant commission
+  const { commissionAmount: restaurantCommission } =
+    await foodTransactionService.getRestaurantCommissionSnapshot({
+      pricing: normalizedPricing,
+      restaurantId,
+    });
+  normalizedPricing.restaurantCommission = restaurantCommission || 0;
+
+  const platformProfit = Math.max(
+    0,
+    (Number.isFinite(normalizedPricing.deliveryFee) ? normalizedPricing.deliveryFee : 0) +
+      (Number.isFinite(normalizedPricing.platformFee) ? normalizedPricing.platformFee : 0) +
+      (Number.isFinite(normalizedPricing.markupTotal) ? normalizedPricing.markupTotal : 0) +
+      restaurantCommission -
+      riderEarning,
+  );
+
+  const settings = await getDispatchSettings();
+  const dispatchMode = settings.dispatchMode;
+
+  const [restaurantLng, restaurantLat] =
+    restaurant?.location?.coordinates?.length === 2
+      ? restaurant.location.coordinates
+      : [null, null];
+  const restaurantGpsZoneId =
+    restaurantLat != null && restaurantLng != null
+      ? await detectZoneIdForPoint(restaurantLat, restaurantLng)
+      : null;
+  const resolvedOrderZoneId = restaurantGpsZoneId
+    ? new mongoose.Types.ObjectId(restaurantGpsZoneId)
+    : restaurant.zoneId
+      ? new mongoose.Types.ObjectId(restaurant.zoneId)
+      : dto.zoneId
+        ? new mongoose.Types.ObjectId(dto.zoneId)
+        : undefined;
+
+  const order = new FoodOrder({
+    userId: new mongoose.Types.ObjectId(userId),
+    restaurantId: new mongoose.Types.ObjectId(restaurantId),
+    zoneId: resolvedOrderZoneId,
+    items: verifiedItems,
+    deliveryAddress,
+    orderType: "delivery",
+    orderSource: "admin_offline",
+    deliveryOtp: "",
+    deliveryVerification: {
+      dropOtp: { required: false, verified: true },
+    },
+    placedByAdminId: new mongoose.Types.ObjectId(adminId),
+    customerName: customerName || deliveryAddress.fullName || "",
+    customerPhone: customerPhone || deliveryAddress.phone || "",
+    pricing: normalizedPricing,
+    payment: {
+      method: "cash",
+      status: "cod_pending",
+      amountDue: normalizedPricing.total ?? 0,
+    },
+    orderStatus: "created",
+    dispatch: { modeAtCreation: dispatchMode, status: "unassigned" },
+    statusHistory: [
+      {
+        at: new Date(),
+        byRole: "ADMIN",
+        byId: new mongoose.Types.ObjectId(adminId),
+        from: "",
+        to: "created",
+        note: "Offline order placed by admin",
+      },
+    ],
+    note: dto.note || "",
+    restaurantNote: dto.restaurantNote || "",
+    sendCutlery: dto.sendCutlery !== false,
+    deliveryFleet: dto.deliveryFleet || "standard",
+    riderEarning,
+    platformProfit,
+  });
+
+  await order.save();
+
+  // Financial ledger entry (same as online)
+  await foodTransactionService.createInitialTransaction({
+    ...(order.toObject?.() || order),
+    pricing: normalizedPricing,
+    payment: order.payment,
+  });
+
+  // Notify restaurant — exactly like an online order
+  try {
+    await notifyRestaurantNewOrder(order);
+  } catch (err) {
+    logger.warn(`[OfflineOrder] Restaurant notification failed for ${order._id}: ${err?.message || err}`);
+  }
+
+  // Coupon usage tracking (same as online)
+  const couponCode = normalizedPricing?.couponCode
+    ? String(normalizedPricing.couponCode).trim().toUpperCase()
+    : "";
+  if (couponCode) {
+    const offer = await FoodOffer.findOne({ couponCode }).lean();
+    if (offer) {
+      await FoodOffer.updateOne({ _id: offer._id }, { $inc: { usedCount: 1 } });
+      if (userId) {
+        await FoodOfferUsage.updateOne(
+          { offerId: offer._id, userId: new mongoose.Types.ObjectId(userId) },
+          { $inc: { count: 1 }, $set: { lastUsedAt: new Date() } },
+          { upsert: true },
+        );
+      }
+    }
+  }
+
+  const saved = normalizeOrderForClient(order);
+  return { order: saved };
+}
+
+/**
+ * Calculate delivery fee for admin offline order preview.
+ * Reuses the same fee/distance logic as online orders.
+ */
+export async function calculateDeliveryFeeAdmin(dto) {
+  const restaurantId = String(dto.restaurantId || "").trim();
+  if (!restaurantId) throw new ValidationError("Restaurant id required");
+
+  const restaurant = await FoodRestaurant.findById(restaurantId)
+    .select("status location zoneId restaurantName")
+    .lean();
+  if (!restaurant) throw new ValidationError("Restaurant not found");
+
+  const deliveryCoords = dto.deliveryAddress?.location?.coordinates;
+  const rPoint = normalizeGeoPoint(restaurant?.location?.coordinates);
+  const dPoint = normalizeGeoPoint(deliveryCoords);
+
+  let distanceKm = null;
+  if (rPoint && dPoint) {
+    const { fetchDrivingDistanceKm } = await import("../utils/googleMaps.js");
+    const drivingKm = await fetchDrivingDistanceKm(
+      { lat: rPoint.lat, lng: rPoint.lng },
+      { lat: dPoint.lat, lng: dPoint.lng },
+    );
+    if (Number.isFinite(drivingKm) && drivingKm > 0) {
+      distanceKm = drivingKm;
+    } else {
+      const d = haversineKm(rPoint.lat, rPoint.lng, dPoint.lat, dPoint.lng);
+      distanceKm = Number.isFinite(d) ? d : null;
+    }
+  }
+
+  const { resolveFeeSettingsForZone } = await import(
+    "../../admin/services/zoneScopedSettings.service.js"
+  );
+  const pricingZoneId = dto.zoneId || restaurant.zoneId || null;
+  const feeDoc = await resolveFeeSettingsForZone(pricingZoneId);
+  const feeSettings = feeDoc || {
+    deliveryFee: 25,
+    deliveryFeeRanges: [],
+    freeDeliveryUpTo: 0,
+  };
+
+  let deliveryFee = 0;
+  const freeUpTo = Number(feeSettings.freeDeliveryUpTo || 0);
+  const subtotal = Number(dto.subtotal || 0);
+
+  if (Number.isFinite(freeUpTo) && freeUpTo > 0 && subtotal >= freeUpTo) {
+    deliveryFee = 0;
+  } else {
+    const ranges = Array.isArray(feeSettings.deliveryFeeRanges)
+      ? [...feeSettings.deliveryFeeRanges]
+      : [];
+    if (ranges.length > 0 && Number.isFinite(distanceKm)) {
+      ranges.sort((a, b) => Number(a.min) - Number(b.min));
+      let matched = null;
+      for (let i = 0; i < ranges.length; i++) {
+        const r = ranges[i] || {};
+        const min = Number(r.min);
+        const max = Number(r.max);
+        const fee = Number(r.fee);
+        if (!Number.isFinite(min) || !Number.isFinite(max) || !Number.isFinite(fee)) continue;
+        const isLast = i === ranges.length - 1;
+        const inRange = isLast
+          ? distanceKm >= min && distanceKm <= max
+          : distanceKm >= min && distanceKm < max;
+        if (inRange) {
+          matched = fee;
+          break;
+        }
+      }
+      deliveryFee = Number.isFinite(matched) ? matched : Number(feeSettings.deliveryFee || 0);
+    } else {
+      deliveryFee = Number(feeSettings.deliveryFee || 0);
+    }
+  }
+
+  return {
+    distanceKm: distanceKm != null ? Math.round(distanceKm * 10) / 10 : null,
+    deliveryFee,
+    restaurantName: restaurant.restaurantName || "",
+    restaurantLocation: rPoint || null,
+    deliveryLocation: dPoint || null,
+  };
+}

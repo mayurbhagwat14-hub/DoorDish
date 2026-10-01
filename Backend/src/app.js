@@ -1,4 +1,6 @@
 import express from 'express';
+import fs from 'fs';
+import path from 'path';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -138,6 +140,19 @@ app.use(
         dotfiles: 'ignore'
     })
 );
+
+// Fallback for missing uploads: if an uploaded image file is not on local disk, serve default food fallback
+app.use(['/uploads', '/api/uploads', '/api/v1/uploads'], (req, res, next) => {
+    const ext = path.extname(req.path).toLowerCase();
+    if (['.webp', '.png', '.jpg', '.jpeg', '.gif', '.svg'].includes(ext)) {
+        const fallbackPath = path.join(config.uploadsRoot, 'default_food_fallback.webp');
+        if (fs.existsSync(fallbackPath)) {
+            res.setHeader('Content-Type', 'image/webp');
+            return res.sendFile(fallbackPath);
+        }
+    }
+    next();
+});
 
 
 // Rate limit: public free · auth routes use authRateLimiter · private = user+IP

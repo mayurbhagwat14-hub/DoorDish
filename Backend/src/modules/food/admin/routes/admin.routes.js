@@ -245,6 +245,10 @@ router.patch('/orders/:orderId/accept', orderController.acceptOrderAdminControll
 router.patch('/orders/:orderId/reject', orderController.rejectOrderAdminController);
 router.patch('/orders/:orderId/statuses', orderController.updateOrderStatusesAdminController);
 
+// ----- Offline Orders (Admin places order on behalf of customer) -----
+router.post('/orders/offline', orderController.createOfflineOrderAdminController);
+router.post('/orders/calculate-delivery', orderController.calculateDeliveryFeeAdminController);
+
 // ----- CMS Pages (About + legal) -----
 router.get('/pages-social-media/:key', getAdminPageController);
 router.put('/pages-social-media/:key', upsertAdminPageController);
