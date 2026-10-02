@@ -130,7 +130,11 @@ export default function NewOfflineOrderPage() {
     async function loadRestaurants() {
       try {
         setLoadingRestaurants(true)
-        const response = await adminAPI.getRestaurants({ limit: 1000 })
+        const response = await adminAPI.getRestaurants({
+          limit: 1000,
+          status: "approved",
+          isAcceptingOrders: true,
+        })
         const data = response?.data?.data || response?.data || {}
         const list = Array.isArray(data?.restaurants)
           ? data.restaurants
@@ -148,13 +152,14 @@ export default function NewOfflineOrderPage() {
     loadRestaurants()
   }, [])
 
-  // Filter restaurants by search and approval
+  // Filter restaurants by search, approval, and online status.
   const filteredRestaurants = useMemo(() => {
     return restaurants.filter((r) => {
       const name = String(r.restaurantName || r.name || "").toLowerCase()
       const search = restaurantSearch.toLowerCase().trim()
       const isApproved = String(r.status || "").toLowerCase() === "approved"
-      return isApproved && (!search || name.includes(search))
+      const isOnline = r.isAcceptingOrders !== false
+      return isApproved && isOnline && (!search || name.includes(search))
     })
   }, [restaurants, restaurantSearch])
 

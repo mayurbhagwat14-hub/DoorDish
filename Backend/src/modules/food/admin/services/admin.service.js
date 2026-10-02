@@ -377,7 +377,7 @@ export async function updateRestaurantComplaint(id, updateData) {
     return updated;
 }
 
-export async function getRestaurants(query) {
+export async function getRestaurants(query = {}) {
     const limit = Math.min(Math.max(parseInt(query.limit, 10) || 100, 1), 1000);
     const page = Math.max(parseInt(query.page, 10) || 1, 1);
     const skip = (page - 1) * limit;
@@ -389,12 +389,15 @@ export async function getRestaurants(query) {
     if (status && ['pending', 'approved', 'rejected', 'banned'].includes(status)) {
         filter.status = status;
     }
+    if (query.isAcceptingOrders !== undefined && query.isAcceptingOrders !== '') {
+        filter.isAcceptingOrders = parseBooleanLike(query.isAcceptingOrders, 'isAcceptingOrders');
+    }
     const [restaurants, total] = await Promise.all([
         FoodRestaurant.find(filter)
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit)
-            .select('restaurantName location area city profileImage coverImages logo menuImages status ownerName ownerPhone zoneId rating totalRatings pureVegRestaurant')
+            .select('restaurantName location area city profileImage coverImages logo menuImages status ownerName ownerPhone zoneId rating totalRatings pureVegRestaurant isAcceptingOrders openingTime closingTime openDays')
             .populate('zoneId', 'name zoneName')
             .lean(),
         FoodRestaurant.countDocuments(filter)
@@ -6648,4 +6651,3 @@ export async function processRefund(orderId, refundAmount) {
 
     return order;
 }
-
