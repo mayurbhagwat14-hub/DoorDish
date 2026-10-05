@@ -16,6 +16,8 @@ export default function LocationPrompt() {
 
     const timer = setTimeout(() => {
       if (!hasValidStoredUserLocation() && !permissionGranted) {
+        /*
+        // LOCATION POPUP DISABLED AS PER USER REQUEST
         setShowPrompt(true)
         document.body.style.overflow = "hidden"
         if (cardRef.current) {
@@ -28,12 +30,13 @@ export default function LocationPrompt() {
             }
           })
         }
+        */
       }
     }, 400)
 
     return () => {
       clearTimeout(timer)
-      document.body.style.overflow = ""
+      // document.body.style.overflow = ""
     }
   }, [permissionGranted])
 
