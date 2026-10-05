@@ -2802,7 +2802,7 @@ export default function Cart() {
                     <div
                       key={group.baseId}
                       className={`bg-white dark:bg-[#1a1a1a] rounded-3xl p-4 sm:p-5 shadow-[0_4px_24px_rgba(0,0,0,0.03)] border border-[#F0E6DE] dark:border-gray-800 transition-all duration-300 ${
-                        isCartUnavailable ? "opacity-60 grayscale" : ""
+                        isCartUnavailable ? "pointer-events-none" : ""
                       }`}
                     >
                       {isCustomizable && varieties.length > 0 ? (
@@ -2840,7 +2840,7 @@ export default function Cart() {
                             </div>
 
                             {/* Middle: Dish Name & Info */}
-                            <div className="min-w-0 flex-1">
+                            <div className={`min-w-0 flex-1 ${isCartUnavailable ? "grayscale opacity-70" : ""}`}>
                               <div className="flex items-start justify-between gap-2">
                                 <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100 leading-tight">
                                   {group.name}
@@ -2872,7 +2872,7 @@ export default function Cart() {
                           </div>
 
                           {/* Customized Variant Rows */}
-                          <div className="pt-3 space-y-2">
+                          <div className={`pt-3 space-y-2 ${isCartUnavailable ? "grayscale opacity-70" : ""}`}>
                             {varieties.map((variety) => {
                               const activeLine = variety.isBase
                                 ? group.lines.find(
@@ -3012,7 +3012,7 @@ export default function Cart() {
                           </div>
 
                           {/* Middle: Details */}
-                          <div className="min-w-0 flex-1">
+                          <div className={`min-w-0 flex-1 ${isCartUnavailable ? "grayscale opacity-70" : ""}`}>
                             <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100 leading-tight">
                               {group.name}
                             </h3>
@@ -3033,7 +3033,7 @@ export default function Cart() {
                           </div>
 
                           {/* Right: Quantity Stepper & Price */}
-                          <div className="flex flex-col items-end justify-between self-stretch py-0.5 flex-shrink-0">
+                          <div className={`flex flex-col items-end justify-between self-stretch py-0.5 flex-shrink-0 ${isCartUnavailable ? "grayscale opacity-70" : ""}`}>
                             <div className="flex items-center bg-[#FFF5EE] dark:bg-orange-950/30 border border-[#FFE8DC] dark:border-orange-900/40 rounded-full p-1 shadow-xs">
                               <button
                                 onClick={() => updateQuantity(singleLine.id, (singleLine.quantity || 1) - 1)}
