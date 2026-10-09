@@ -12,6 +12,7 @@ import FilterPanel from "@food/components/admin/orders/FilterPanel"
 import ViewOrderDialog from "@food/components/admin/orders/ViewOrderDialog"
 import SettingsDialog from "@food/components/admin/orders/SettingsDialog"
 import RefundModal from "@food/components/admin/orders/RefundModal"
+import AssignDeliveryPartnerModal from "@food/components/admin/orders/AssignDeliveryPartnerModal"
 import { useOrdersManagement } from "@food/components/admin/orders/useOrdersManagement"
 import { Loader2 } from "lucide-react"
 import { OrdersDashboardSkeleton, TableSkeleton } from "@food/components/ui/loading-skeletons"
@@ -60,6 +61,8 @@ export default function OrdersPage({ statusKey = "all" }) {
   const [deletingOrderId, setDeletingOrderId] = useState(null)
   const [refundModalOpen, setRefundModalOpen] = useState(false)
   const [selectedOrderForRefund, setSelectedOrderForRefund] = useState(null)
+  const [assignPartnerModalOpen, setAssignPartnerModalOpen] = useState(false)
+  const [selectedOrderForAssign, setSelectedOrderForAssign] = useState(null)
   const seenOrderIdsRef = useRef(new Set())
   const isFirstLoadRef = useRef(true)
   const fallbackAudioRef = useRef(null)
@@ -807,17 +810,30 @@ export default function OrdersPage({ statusKey = "all" }) {
       fetchOrders({ silent: true, withRingCheck: false })
     }
 
+    const handleAdminDispatchUpdated = (payload = {}) => {
+      const orderId = payload?.orderId || payload?.orderMongoId || ""
+      const partnerName = payload?.deliveryPartner?.name || payload?.partnerName || ""
+      if (partnerName) {
+        toast.info(`Dispatch update: Order ${orderId || ""} assigned to ${partnerName}`)
+      }
+      fetchOrders({ silent: true, withRingCheck: false })
+    }
+
     socket.on("connect", () => {
       socket.emit("join-admin-orders")
     })
     socket.on("admin_new_order", handleIncomingRealtimeOrder)
     socket.on("play_notification_sound", handleIncomingRealtimeOrder)
     socket.on("order_status_update", handleOrderStatusUpdate)
+    socket.on("admin_order_status_update", handleOrderStatusUpdate)
+    socket.on("admin_dispatch_updated", handleAdminDispatchUpdated)
 
     return () => {
       socket.off("admin_new_order", handleIncomingRealtimeOrder)
       socket.off("play_notification_sound", handleIncomingRealtimeOrder)
       socket.off("order_status_update", handleOrderStatusUpdate)
+      socket.off("admin_order_status_update", handleOrderStatusUpdate)
+      socket.off("admin_dispatch_updated", handleAdminDispatchUpdated)
       socket.disconnect()
       socketRef.current = null
     }
@@ -1089,6 +1105,31 @@ export default function OrdersPage({ statusKey = "all" }) {
     }
   }
 
+  const handleOpenAssignModal = useCallback((order) => {
+    setSelectedOrderForAssign(order)
+    setAssignPartnerModalOpen(true)
+  }, [])
+
+  const handleOrderAssigned = useCallback((assignedOrder, partner, result) => {
+    const assignedId = String(assignedOrder?._id || assignedOrder?.id || assignedOrder?.orderId || "")
+    setSelectedOrder((prev) => {
+      if (!prev) return prev
+      const prevId = String(prev._id || prev.id || prev.orderId || "")
+      if (prevId !== assignedId) return prev
+      return {
+        ...prev,
+        deliveryPartnerName: partner.name,
+        deliveryPartnerPhone: partner.phone,
+        dispatch: {
+          ...(prev.dispatch || {}),
+          status: "assigned",
+          deliveryPartnerId: partner,
+        },
+      }
+    })
+    fetchOrders({ silent: true, withRingCheck: false })
+  }, [fetchOrders])
+
   return (
     <div className="p-4 lg:p-6 bg-slate-50 min-h-screen w-full max-w-full overflow-x-hidden">
       <OrdersTopbar 
@@ -1132,6 +1173,7 @@ export default function OrdersPage({ statusKey = "all" }) {
             isOpen={isViewOrderOpen}
             onOpenChange={setIsViewOrderOpen}
             order={selectedOrder}
+            onAssignDeliveryPartner={handleOpenAssignModal}
             onOrderUpdated={(updatedOrder) => {
               if (!updatedOrder) return
               setSelectedOrder(updatedOrder)
@@ -1163,6 +1205,12 @@ export default function OrdersPage({ statusKey = "all" }) {
             onConfirm={handleRefundConfirm}
             isProcessing={processingRefund !== null}
           />
+          <AssignDeliveryPartnerModal
+            isOpen={assignPartnerModalOpen}
+            onOpenChange={setAssignPartnerModalOpen}
+            order={selectedOrderForAssign}
+            onAssigned={handleOrderAssigned}
+          />
           <OrdersTable 
             orders={filteredOrders} 
             visibleColumns={visibleColumns}
@@ -1171,6 +1219,7 @@ export default function OrdersPage({ statusKey = "all" }) {
             onRefund={handleRefund}
             onAcceptOrder={(statusKey === "all" || statusKey === "pending") ? handleAcceptOrder : undefined}
             onRejectOrder={(statusKey === "all" || statusKey === "pending") ? handleRejectOrder : undefined}
+            onAssignDeliveryPartner={handleOpenAssignModal}
             actionLoadingOrderId={processingActionOrderId}
             actionLoadingType={actionLoadingType}
             deletingOrderId={deletingOrderId}

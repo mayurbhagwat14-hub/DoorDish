@@ -670,6 +670,33 @@ export const adminAPI = {
     apiClient.patch(`/food/admin/orders/${String(orderId)}/statuses`, body, {
       contextModule: "admin",
     }),
+  /** Assign or reassign delivery partner (admin) */
+  assignDeliveryPartner: (orderId, body = {}) =>
+    apiClient.patch(`/food/admin/orders/${String(orderId)}/assign-delivery`, body, {
+      contextModule: "admin",
+    }),
+  /** Get delivery partners with workload, active assignment counts, and presence */
+  getDeliveryPartnersWorkload: (params = {}) =>
+    apiClient.get("/food/admin/delivery-partners/workload", {
+      params,
+      contextModule: "admin",
+    }),
+  /** Get delivery partners workload tailored for a specific order (with distance calculation) */
+  getOrderDeliveryPartners: (orderId, params = {}) =>
+    apiClient.get(`/food/admin/orders/${String(orderId)}/delivery-partners`, {
+      params,
+      contextModule: "admin",
+    }),
+  /** Get orders currently searching for / waiting for delivery partner assignment */
+  getSearchingDeliverymanOrders: (params = {}) =>
+    apiClient.get("/food/admin/orders", {
+      params: {
+        orderType: "delivery",
+        dispatchStatus: "unassigned",
+        ...params,
+      },
+      contextModule: "admin",
+    }),
   /** Offline Orders (Admin places order on behalf of customer) */
   createOfflineOrder: (body) =>
     apiClient.post("/food/admin/orders/offline", body ?? {}, {

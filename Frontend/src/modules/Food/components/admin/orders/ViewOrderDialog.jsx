@@ -21,6 +21,7 @@ import {
   resolveRestaurantItemUnitPrice,
   resolveItemMarkupUnit,
 } from "@food/utils/restaurantOrderPricing"
+import AssignDeliveryPartnerModal from "@food/components/admin/orders/AssignDeliveryPartnerModal"
 
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
@@ -123,7 +124,7 @@ const resolveDisplayPaymentStatus = (order) => {
   return "Pending"
 }
 
-export default function ViewOrderDialog({ isOpen, onOpenChange, order, onOrderUpdated }) {
+export default function ViewOrderDialog({ isOpen, onOpenChange, order, onOrderUpdated, onAssignDeliveryPartner }) {
   const [customerTotalOrders, setCustomerTotalOrders] = useState(undefined)
   const [customerDeliveredOrders, setCustomerDeliveredOrders] = useState(undefined)
   const [customerCancelledOrders, setCustomerCancelledOrders] = useState(undefined)
@@ -132,6 +133,7 @@ export default function ViewOrderDialog({ isOpen, onOpenChange, order, onOrderUp
   const [draftOrderStatus, setDraftOrderStatus] = useState("Pending")
   const [draftPaymentStatus, setDraftPaymentStatus] = useState("Pending")
   const [updatingStatuses, setUpdatingStatuses] = useState(false)
+  const [internalAssignOpen, setInternalAssignOpen] = useState(false)
 
   useEffect(() => {
     if (!isOpen || !order) return
@@ -882,28 +884,88 @@ export default function ViewOrderDialog({ isOpen, onOpenChange, order, onOrderUp
           )}
 
           {/* Delivery Partner Information */}
-          {(order.deliveryPartnerName || order.deliveryPartnerPhone) && (
-            <div className="border-t border-slate-200 pt-4">
-              <h3 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2">
-                <Truck className="w-4 h-4" />
-                Delivery Partner
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {order.deliveryPartnerName && (
-                  <div className="space-y-1">
-                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Name</p>
-                    <p className="text-sm font-medium text-slate-900">{order.deliveryPartnerName}</p>
+          {(() => {
+            const isDelivery =
+              order.orderType === 'delivery' ||
+              (order.deliveryType && String(order.deliveryType).toLowerCase().includes('delivery')) ||
+              (!order.orderType && !String(order.deliveryType || '').toLowerCase().includes('dine') && !String(order.deliveryType || '').toLowerCase().includes('takeaway'));
+            const dpName = order.deliveryPartnerName || order.dispatch?.deliveryPartnerId?.name;
+            const dpPhone = order.deliveryPartnerPhone || order.dispatch?.deliveryPartnerId?.phone;
+            const isTerminal =
+              order.orderStatus === 'Delivered' ||
+              String(order.orderStatus || '').toLowerCase().includes('cancel');
+
+            if (!isDelivery && !dpName) return null;
+
+            return (
+              <div className="border-t border-slate-200 pt-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                    <Truck className="w-4 h-4 text-orange-600" />
+                    Delivery Partner Assignment
+                  </h3>
+                  {!isTerminal && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (typeof onAssignDeliveryPartner === 'function') {
+                          onAssignDeliveryPartner(order);
+                        } else {
+                          setInternalAssignOpen(true);
+                        }
+                      }}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm active:scale-95 ${
+                        dpName
+                          ? "bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300"
+                          : "bg-gradient-to-r from-orange-500 to-emerald-600 hover:from-orange-600 hover:to-emerald-700 text-white"
+                      }`}
+                    >
+                      <Truck className="w-3.5 h-3.5" />
+                      {dpName ? "Reassign Delivery Partner" : "Assign Delivery Partner"}
+                    </button>
+                  )}
+                </div>
+
+                {dpName ? (
+                  <div className="p-3.5 bg-emerald-50/70 border border-emerald-200 rounded-xl flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                        {dpName.slice(0, 2).toUpperCase()}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-bold text-slate-900">{dpName}</p>
+                          <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200 uppercase tracking-wider">
+                            {order.dispatch?.status || "Assigned"}
+                          </span>
+                        </div>
+                        {dpPhone && (
+                          <p className="text-xs text-slate-600 mt-0.5 flex items-center gap-1">
+                            <Phone className="w-3 h-3 text-slate-400" />
+                            {dpPhone}
+                          </p>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                )}
-                {order.deliveryPartnerPhone && (
-                  <div className="space-y-1">
-                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Phone</p>
-                    <p className="text-sm font-medium text-slate-900">{order.deliveryPartnerPhone}</p>
+                ) : (
+                  <div className="p-3.5 bg-amber-50/70 border border-amber-200 rounded-xl flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-700 flex items-center justify-center font-bold">
+                        <Truck className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-amber-900">Awaiting Delivery Partner Assignment</p>
+                        <p className="text-xs text-amber-700 mt-0.5">
+                          No delivery partner has been assigned to this order yet.
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* Pricing Breakdown */}
           <div className="border-t border-slate-200 pt-4">
@@ -1046,6 +1108,25 @@ export default function ViewOrderDialog({ isOpen, onOpenChange, order, onOrderUp
             </div>
           </div>
         </div>
+        <AssignDeliveryPartnerModal
+          isOpen={internalAssignOpen}
+          onOpenChange={setInternalAssignOpen}
+          order={order}
+          onAssigned={(assignedOrder, partner, result) => {
+            if (typeof onOrderUpdated === "function") {
+              onOrderUpdated({
+                ...order,
+                deliveryPartnerName: partner.name,
+                deliveryPartnerPhone: partner.phone,
+                dispatch: {
+                  ...(order?.dispatch || {}),
+                  status: "assigned",
+                  deliveryPartnerId: partner,
+                },
+              })
+            }
+          }}
+        />
       </DialogContent>
     </Dialog>
   )

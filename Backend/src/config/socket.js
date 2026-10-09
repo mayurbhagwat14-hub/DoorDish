@@ -34,7 +34,8 @@ const roomNames = {
     restaurant: (id) => `restaurant:${cleanId(id)}`,
     user: (id) => `user:${cleanId(id)}`,
     delivery: (id) => `delivery:${cleanId(id)}`,
-    tracking: (orderId) => `tracking:${cleanId(orderId)}`
+    tracking: (orderId) => `tracking:${cleanId(orderId)}`,
+    admin: () => 'admin_orders'
 };
 
 /**
@@ -121,6 +122,9 @@ export const initSocket = async (server) => {
         if (userId && role) {
             if (role === 'RESTAURANT') socket.join(roomNames.restaurant(userId));
             if (role === 'USER') socket.join(roomNames.user(userId));
+            if (role === 'ADMIN' || role === 'SUB_ADMIN') {
+                socket.join(roomNames.admin());
+            }
             if (role === 'DELIVERY_PARTNER') {
                 socket.join(roomNames.delivery(userId));
                 socket.join('all_delivery'); // Global delivery broadcast room
@@ -131,6 +135,11 @@ export const initSocket = async (server) => {
                 });
             }
         }
+
+        socket.on('join-admin-orders', () => {
+            socket.join(roomNames.admin());
+            socket.emit('admin-orders-room-joined', { room: roomNames.admin() });
+        });
 
         // Explicit join (used by existing restaurant client hook).
         socket.on('join-restaurant', (restaurantId) => {

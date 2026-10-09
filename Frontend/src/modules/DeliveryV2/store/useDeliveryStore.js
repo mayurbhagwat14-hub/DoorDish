@@ -140,8 +140,12 @@ export const useDeliveryStore = create(
         const normalized = sanitizeOrderDispatchMetrics(mapOrderLocations(order) || order);
         const incomingKeys = collectOrderKeys(normalized);
         if (!incomingKeys.length) return;
+        const isDirectAssignment =
+          order?.dispatch?.status === 'assigned' ||
+          order?.isDirectAssignment === true ||
+          order?.directAssignment === true;
         const riderLocation = get().riderLocation;
-        if (!isOrderWithinOfferRange(normalized, riderLocation)) return;
+        if (!isDirectAssignment && !isOrderWithinOfferRange(normalized, riderLocation)) return;
         set((state) => {
           const acceptedExists = state.acceptedOrders.some((item) => ordersShareIdentity(item, normalized));
           if (acceptedExists) return state;
@@ -186,10 +190,11 @@ export const useDeliveryStore = create(
           const focusedOrderId = hadAcceptedOrders || state.focusedOrderId
             ? (state.focusedOrderId || resolveOrderKey(state.acceptedOrders[0]) || orderId)
             : orderId;
+          const initialTripStatus = mapDeliveryPhaseToTripStatus(order);
           const orderSessions = {
             ...state.orderSessions,
             [orderId]: {
-              tripStatus: 'PICKING_UP',
+              tripStatus: initialTripStatus,
               showVerification: false,
               isModalMinimized: false,
               ...(state.orderSessions[orderId] || {}),
@@ -214,10 +219,10 @@ export const useDeliveryStore = create(
       setAcceptedOrders: (orders, options = {}) => {
         const list = Array.isArray(orders) ? orders : [];
         set((state) => {
+          const isFocusedStillValid = list.some((item) => orderMatchesKey(item, state.focusedOrderId));
           const focusedOrderId =
             options.focusedOrderId ??
-            state.focusedOrderId ??
-            resolveOrderKey(list[0]) ??
+            (isFocusedStillValid ? state.focusedOrderId : resolveOrderKey(list[0])) ??
             null;
           const max = options.capacity?.max ?? state.capacity?.max ?? 1;
           const active = list.length;
@@ -231,6 +236,8 @@ export const useDeliveryStore = create(
                 showVerification: false,
                 isModalMinimized: false,
               };
+            } else if (!orderSessions[orderId].tripStatus || orderSessions[orderId].tripStatus === 'IDLE') {
+              orderSessions[orderId].tripStatus = mapDeliveryPhaseToTripStatus(order);
             }
           });
           return {

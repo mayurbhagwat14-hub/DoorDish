@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react"
-import { Eye, Printer, ArrowUpDown, Loader2, Check, X, Trash2, ChevronDown, ChevronUp } from "lucide-react"
+import { Eye, Printer, ArrowUpDown, Loader2, Check, X, Trash2, ChevronDown, ChevronUp, Truck } from "lucide-react"
 import {
   resolveRestaurantItemUnitPrice,
   resolveItemMarkupUnit,
@@ -47,6 +47,7 @@ export default function OrdersTable({
   onDeleteOrder,
   onAcceptOrder,
   onRejectOrder,
+  onAssignDeliveryPartner,
   actionLoadingOrderId,
   actionLoadingType,
   deletingOrderId,
@@ -591,6 +592,45 @@ export default function OrdersTable({
                         </span>
                         <span className="text-xs text-slate-500">{order.deliveryType}</span>
                       </div>
+                      {(() => {
+                        const isDelivery =
+                          order.orderType === 'delivery' ||
+                          (order.deliveryType && String(order.deliveryType).toLowerCase().includes('delivery')) ||
+                          (!order.orderType && !String(order.deliveryType || '').toLowerCase().includes('dine') && !String(order.deliveryType || '').toLowerCase().includes('takeaway'));
+                        if (!isDelivery) return null;
+
+                        const dpName = order.deliveryPartnerName || order.dispatch?.deliveryPartnerId?.name;
+                        const isTerminal =
+                          order.orderStatus === 'Delivered' ||
+                          String(order.orderStatus || '').toLowerCase().includes('cancel');
+
+                        if (dpName) {
+                          return (
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <span
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/60 max-w-[180px] truncate"
+                                title={`Assigned: ${dpName}`}
+                              >
+                                <Truck className="w-3 h-3 shrink-0" />
+                                <span className="truncate">{dpName}</span>
+                              </span>
+                            </div>
+                          );
+                        }
+
+                        if (!isTerminal) {
+                          return (
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200/60">
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                                Unassigned Partner
+                              </span>
+                            </div>
+                          );
+                        }
+
+                        return null;
+                      })()}
                       {order.cancellationReason && (() => {
                         const rowKey = order.id || order.orderId
                         const isOpen = openReasonId === rowKey
@@ -640,6 +680,33 @@ export default function OrdersTable({
                         >
                           <Printer className="w-4 h-4" />
                         </button>
+                        {(() => {
+                          const isDelivery =
+                            order.orderType === 'delivery' ||
+                            (order.deliveryType && String(order.deliveryType).toLowerCase().includes('delivery')) ||
+                            (!order.orderType && !String(order.deliveryType || '').toLowerCase().includes('dine') && !String(order.deliveryType || '').toLowerCase().includes('takeaway'));
+                          const isTerminal =
+                            order.orderStatus === 'Delivered' ||
+                            String(order.orderStatus || '').toLowerCase().includes('cancel');
+
+                          if (!isDelivery || isTerminal || !onAssignDeliveryPartner) return null;
+
+                          const dpName = order.deliveryPartnerName || order.dispatch?.deliveryPartnerId?.name;
+
+                          return (
+                            <button
+                              onClick={() => onAssignDeliveryPartner(order)}
+                              className={`p-1.5 rounded transition-colors flex items-center justify-center ${
+                                dpName
+                                  ? "text-emerald-600 hover:bg-emerald-50"
+                                  : "text-amber-600 hover:bg-amber-50"
+                              }`}
+                              title={dpName ? `Reassign Delivery Partner (Currently: ${dpName})` : "Assign Delivery Partner"}
+                            >
+                              <Truck className="w-4 h-4" />
+                            </button>
+                          );
+                        })()}
                       </div>
 
                       {/* Divider if we have primary actions */}

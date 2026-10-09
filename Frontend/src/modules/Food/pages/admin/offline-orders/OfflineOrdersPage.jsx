@@ -30,6 +30,7 @@ import { Button } from "@food/components/ui/button"
 import { Input } from "@food/components/ui/input"
 import { Badge } from "@food/components/ui/badge"
 import ViewOrderDialog from "@food/components/admin/orders/ViewOrderDialog"
+import AssignDeliveryPartnerModal from "@food/components/admin/orders/AssignDeliveryPartnerModal"
 import { TableSkeleton } from "@food/components/ui/loading-skeletons"
 
 const formatINR = (value, digits = 0) =>
@@ -77,6 +78,10 @@ export default function OfflineOrdersPage() {
 
   const [selectedOrderForView, setSelectedOrderForView] = useState(null)
   const [viewDialogOpen, setViewDialogOpen] = useState(false)
+
+  // Delivery Partner Manual Assignment State
+  const [assignModalOpen, setAssignModalOpen] = useState(false)
+  const [selectedOrderForAssign, setSelectedOrderForAssign] = useState(null)
 
   const socketRef = useRef(null)
 
@@ -126,6 +131,34 @@ export default function OfflineOrdersPage() {
     fetchOfflineOrders()
   }, [fetchOfflineOrders])
 
+  const handleOpenAssignModal = useCallback((order) => {
+    setSelectedOrderForAssign(order)
+    setAssignModalOpen(true)
+  }, [])
+
+  const handleOrderAssigned = useCallback((order, partner, result) => {
+    fetchOfflineOrders(true)
+    if (selectedOrderForView) {
+      const viewKey = String(
+        selectedOrderForView._id || selectedOrderForView.id || selectedOrderForView.orderId || ""
+      )
+      const assignedKey = String(order._id || order.id || order.orderId || "")
+      if (viewKey && viewKey === assignedKey) {
+        setSelectedOrderForView((prev) => ({
+          ...prev,
+          dispatch: {
+            ...(prev?.dispatch || {}),
+            status: "assigned",
+            deliveryPartnerId: partner,
+            assignedAt: new Date(),
+          },
+          deliveryPartnerName: partner.name,
+          deliveryPartnerPhone: partner.phone,
+        }))
+      }
+    }
+  }, [fetchOfflineOrders, selectedOrderForView])
+
   // Setup Real-time updates via Socket.IO
   useEffect(() => {
     let socket = null
@@ -142,10 +175,19 @@ export default function OfflineOrdersPage() {
         socketRef.current = socket
 
         socket.on("connect", () => {
+          socket.emit("join-admin-orders")
           socket.emit("join_admin_orders")
         })
 
         socket.on("order_status_update", () => {
+          fetchOfflineOrders(true)
+        })
+
+        socket.on("admin_dispatch_updated", () => {
+          fetchOfflineOrders(true)
+        })
+
+        socket.on("admin_order_status_update", () => {
           fetchOfflineOrders(true)
         })
 
@@ -415,6 +457,7 @@ export default function OfflineOrdersPage() {
                   <th className="py-3.5 px-4">Amount</th>
                   <th className="py-3.5 px-4">Delivery Fee</th>
                   <th className="py-3.5 px-4">Order Status</th>
+                  <th className="py-3.5 px-4">Delivery Partner</th>
                   <th className="py-3.5 px-4">Order / Payment Type</th>
                   <th className="py-3.5 px-4">Date & Time</th>
                   <th className="py-3.5 px-4 text-right">Actions</th>
@@ -442,6 +485,21 @@ export default function OfflineOrdersPage() {
                     order.pricing?.total ?? order.total ?? order.totalAmount ?? order.finalTotal ?? 0
                   const deliveryFee =
                     order.pricing?.deliveryFee ?? order.deliveryFee ?? order.deliveryCharge ?? 0
+
+                  const dp = order.dispatch?.deliveryPartnerId || order.deliveryPartnerId
+                  const dpName =
+                    (typeof dp === "object" ? dp?.name : null) ||
+                    order.deliveryPartnerName ||
+                    ""
+                  const dpPhone =
+                    (typeof dp === "object" ? dp?.phone : null) ||
+                    order.deliveryPartnerPhone ||
+                    ""
+
+                  const isTerminal =
+                    order.orderStatus === "delivered" ||
+                    order.status === "delivered" ||
+                    String(order.orderStatus || order.status || "").toLowerCase().includes("cancel")
 
                   return (
                     <tr
@@ -490,6 +548,33 @@ export default function OfflineOrdersPage() {
                         {getStatusBadge(order.orderStatus || order.status)}
                       </td>
 
+                      {/* Delivery Partner Status & Quick-Assign */}
+                      <td className="py-3.5 px-4 whitespace-nowrap">
+                        {dpName ? (
+                          <div className="flex flex-col">
+                            <div className="flex items-center gap-1.5 font-medium text-slate-900 text-xs">
+                              <Truck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                              <span className="truncate max-w-[130px] font-semibold">{dpName}</span>
+                            </div>
+                            {dpPhone && (
+                              <span className="text-[11px] text-slate-400 pl-5">{dpPhone}</span>
+                            )}
+                          </div>
+                        ) : isTerminal ? (
+                          <span className="text-xs text-slate-400 font-medium">None</span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleOpenAssignModal(order)}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 hover:border-amber-300 transition-all shadow-xs"
+                            title="Click to assign delivery partner"
+                          >
+                            <AlertCircle className="w-3 h-3 text-amber-600" />
+                            <span>Unassigned</span>
+                          </button>
+                        )}
+                      </td>
+
                       <td className="py-3.5 px-4 whitespace-nowrap">
                         <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-800 border border-amber-200">
                           <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
@@ -502,18 +587,44 @@ export default function OfflineOrdersPage() {
                       </td>
 
                       <td className="py-3.5 px-4 text-right whitespace-nowrap">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedOrderForView(order)
-                            setViewDialogOpen(true)
-                          }}
-                          className="h-8 w-8 p-0 text-slate-600 hover:text-orange-600 hover:bg-orange-50"
-                          title="View Order Details"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
+                        <div className="flex items-center justify-end gap-1.5">
+                          {/* Assign Delivery Partner Button */}
+                          {!isTerminal && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleOpenAssignModal(order)}
+                              className={`h-8 px-2.5 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all ${
+                                dpName
+                                  ? "text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border-emerald-200 hover:border-emerald-300"
+                                  : "text-amber-800 bg-amber-50 hover:bg-amber-100 border-amber-200 hover:border-amber-300 shadow-xs"
+                              }`}
+                              title={
+                                dpName
+                                  ? `Reassign Delivery Partner (Currently: ${dpName})`
+                                  : "Assign Delivery Partner"
+                              }
+                            >
+                              <Truck className="w-3.5 h-3.5 text-current" />
+                              <span className="hidden sm:inline">
+                                {dpName ? "Reassign" : "Assign Partner"}
+                              </span>
+                            </Button>
+                          )}
+
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedOrderForView(order)
+                              setViewDialogOpen(true)
+                            }}
+                            className="h-8 w-8 p-0 text-slate-600 hover:text-orange-600 hover:bg-orange-50 rounded-lg"
+                            title="View Order Details"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   )
@@ -566,9 +677,18 @@ export default function OfflineOrdersPage() {
           order={selectedOrderForView}
           isOpen={viewDialogOpen}
           onOpenChange={setViewDialogOpen}
+          onAssignDeliveryPartner={handleOpenAssignModal}
           onOrderUpdated={() => fetchOfflineOrders(true)}
         />
       )}
+
+      {/* Manual Delivery Partner Assignment Modal */}
+      <AssignDeliveryPartnerModal
+        isOpen={assignModalOpen}
+        onOpenChange={setAssignModalOpen}
+        order={selectedOrderForAssign}
+        onAssigned={handleOrderAssigned}
+      />
     </div>
   )
 }

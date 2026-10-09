@@ -236,25 +236,32 @@ async function listNearbyOnlineDeliveryPartners(
 }
 
 export async function getDispatchSettings() {
-  return { dispatchMode: "auto" };
+  const setting = await FoodSettings.findOne({ key: "dispatch" }).lean();
+  return { dispatchMode: setting?.dispatchMode || "manual" };
 }
 
 export async function updateDispatchSettings(dispatchMode, adminId) {
-  // Always set to auto
+  const mode = dispatchMode === "auto" ? "auto" : "manual";
   await FoodSettings.findOneAndUpdate(
     { key: "dispatch" },
     {
       $set: {
-        dispatchMode: "auto",
+        dispatchMode: mode,
         updatedBy: { role: "ADMIN", adminId, at: new Date() },
       },
     },
     { upsert: true, new: true },
   );
-  return getDispatchSettings();
+  return { dispatchMode: mode };
 }
 
 export async function tryAutoAssign(orderId, options = {}) {
+  const settings = await getDispatchSettings();
+  if (settings.dispatchMode !== "auto") {
+    logger.info(`tryAutoAssign: Skipping auto-assign for order ${orderId} because dispatchMode is '${settings.dispatchMode}' (manual admin assignment mode active).`);
+    return null;
+  }
+
   const attempt = options.attempt || 1;
   const lockTimeout = 55000; // 55 seconds lock interval
 

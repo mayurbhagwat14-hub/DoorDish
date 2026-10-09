@@ -429,8 +429,33 @@ export async function assignDeliveryPartnerController(req, res, next) {
         const adminId = req.user?.userId;
         const orderId = req.params.orderId;
         const dto = validateAssignDeliveryDto(req.body);
-        const order = await orderService.assignDeliveryPartnerAdmin(orderId, dto.deliveryPartnerId, adminId);
-        return sendResponse(res, 200, 'Delivery partner assigned', { order });
+        const order = await orderService.assignDeliveryPartnerAdmin(
+            orderId,
+            dto.deliveryPartnerId,
+            adminId,
+            {
+                allowOffline: dto.allowOffline,
+                reassign: dto.reassign
+            }
+        );
+        return sendResponse(res, 200, 'Delivery partner assigned successfully', { order });
+    } catch (err) {
+        next(err);
+    }
+}
+
+export async function getDeliveryPartnersWorkloadController(req, res, next) {
+    try {
+        const orderId = req.params.orderId || req.query.orderId || null;
+        const data = await orderService.getDeliveryPartnersWorkload({
+            orderId,
+            search: req.query.search,
+            presence: req.query.presence,
+            workload: req.query.workload,
+            page: req.query.page,
+            limit: req.query.limit
+        });
+        return sendResponse(res, 200, 'Delivery partners workload retrieved successfully', data);
     } catch (err) {
         next(err);
     }

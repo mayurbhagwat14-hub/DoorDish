@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react"
-import { Eye, Printer, ArrowUpDown } from "lucide-react"
+import { Eye, Printer, ArrowUpDown, Truck } from "lucide-react"
 
-export default function DispatchOrdersTable({ orders, visibleColumns, onViewOrder, onPrintOrder }) {
+export default function DispatchOrdersTable({ orders, visibleColumns, onViewOrder, onPrintOrder, onAssignDeliveryPartner }) {
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
   const totalPages = Math.ceil(orders.length / itemsPerPage)
@@ -177,6 +177,15 @@ export default function DispatchOrdersTable({ orders, visibleColumns, onViewOrde
                       >
                         <Printer className="w-4 h-4" />
                       </button>
+                      {onAssignDeliveryPartner && (
+                        <button 
+                          onClick={() => onAssignDeliveryPartner(order)}
+                          className="p-1.5 rounded text-amber-600 hover:bg-amber-50 transition-colors"
+                          title="Assign Delivery Partner"
+                        >
+                          <Truck className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </td>
                 )}

@@ -15,6 +15,7 @@ import {
   getMonthRangeInTimeZone,
   APP_TIMEZONE,
 } from '../../../../utils/timezone.js';
+import { getIO, rooms } from '../../../../config/socket.js';
 
 export const normalizeDeliveryPhone = (phone) => {
     const digits = String(phone || '').replace(/\D/g, '');
@@ -485,6 +486,22 @@ export const updateDeliveryAvailability = async (userId, payload) => {
         partner.lastLocationAt = new Date();
     }
     await partner.save();
+
+    try {
+        const io = getIO();
+        if (io) {
+            io.to(rooms.admin()).emit('admin_dispatch_updated', {
+                type: 'delivery_partner_availability_changed',
+                partnerId: partner._id.toString(),
+                status: partner.availabilityStatus,
+                isOnline: partner.availabilityStatus === 'online',
+                at: new Date()
+            });
+        }
+    } catch (socketErr) {
+        logger.warn(`Failed emitting availability change to admin: ${socketErr?.message || socketErr}`);
+    }
+
     return { availabilityStatus: partner.availabilityStatus };
 };
 

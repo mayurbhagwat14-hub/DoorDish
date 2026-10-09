@@ -603,16 +603,21 @@ export const useDeliveryNotifications = () => {
     if (isOrderInAcceptedQueue(orderData)) {
       return;
     }
-    if (isProcessedOrder(orderData)) {
+    const isDirectAssignment =
+      orderData?.dispatch?.status === 'assigned' ||
+      orderData?.isDirectAssignment === true ||
+      orderData?.directAssignment === true;
+
+    if (!isDirectAssignment && isProcessedOrder(orderData)) {
       return;
     }
-    if (!shouldProcessOrderAlert(orderData)) {
+    if (!isDirectAssignment && !shouldProcessOrderAlert(orderData)) {
       return;
     }
 
     const mappedOrder = sanitizeOrderDispatchMetrics(mapOrderLocations(orderData) || orderData);
     const riderLocation = useDeliveryStore.getState().riderLocation;
-    if (!isOrderWithinOfferRange(mappedOrder, riderLocation)) {
+    if (!isDirectAssignment && !isOrderWithinOfferRange(mappedOrder, riderLocation)) {
       debugLog('Ignored out-of-range order offer', {
         orderId: mappedOrder?.orderId || mappedOrder?._id,
       });
@@ -690,6 +695,11 @@ export const useDeliveryNotifications = () => {
           { capacity: currentPayload?.capacity },
         );
         return;
+      } else if (currentTripResult.status === 'fulfilled') {
+        const currentAccepted = useDeliveryStore.getState().acceptedOrders || [];
+        if (currentAccepted.length > 0) {
+          useDeliveryStore.getState().setAcceptedOrders([], { capacity: currentPayload?.capacity });
+        }
       }
 
       if (currentPayload && (currentPayload._id || currentPayload.orderId)) {
@@ -717,8 +727,17 @@ export const useDeliveryNotifications = () => {
 
       const recoverableOrder = availableOrders.find((order) => {
         const dispatchStatus = order?.dispatch?.status;
+        const isAssignedToMe =
+          String(order?.dispatch?.deliveryPartnerId || '') === String(deliveryPartnerId) &&
+          dispatchStatus === 'assigned';
+
+        if (isAssignedToMe) {
+          const TERMINAL = ['delivered', 'cancelled_by_user', 'cancelled_by_restaurant', 'cancelled_by_admin'];
+          return !TERMINAL.includes(order?.orderStatus);
+        }
+
         const isEligibleStatus = ['unassigned', 'assigned'].includes(dispatchStatus) &&
-          ['preparing', 'ready_for_pickup'].includes(order?.orderStatus);
+          ['created', 'pending', 'confirmed', 'preparing', 'ready_for_pickup'].includes(order?.orderStatus);
           
         if (!isEligibleStatus) return false;
         
@@ -741,16 +760,18 @@ export const useDeliveryNotifications = () => {
 
       newOffers.forEach((order) => useDeliveryStore.getState().addNewOrder(order));
 
-      if (recoverableOrder && !isProcessedOrder(recoverableOrder)) {
-        debugLog('Recovered available delivery order after reconnect/focus:', recoverableOrder);
-        setNewOrder(recoverableOrder);
-        useDeliveryStore.getState().addNewOrder(recoverableOrder);
-        handleIncomingOrderAlert(recoverableOrder);
+      const offerToPresent = recoverableOrder || (newOffers.length > 0 ? newOffers[0] : null);
+
+      if (offerToPresent && !isOrderInAcceptedQueue(offerToPresent)) {
+        debugLog('Recovered available delivery order after reconnect/focus:', offerToPresent);
+        setNewOrder(offerToPresent);
+        useDeliveryStore.getState().addNewOrder(offerToPresent);
+        handleIncomingOrderAlert(offerToPresent);
       }
     } catch (error) {
       debugWarn('Delivery recovery sync failed:', error?.message || error);
     }
-  }, [deliveryPartnerId, handleIncomingOrderAlert, isProcessedOrder]);
+  }, [deliveryPartnerId, handleIncomingOrderAlert, isOrderInAcceptedQueue]);
 
   const joinDeliveryRoomIfPossible = useCallback(() => {
     if (!socketRef.current?.connected || !deliveryPartnerId) {
@@ -1195,7 +1216,14 @@ export const useDeliveryNotifications = () => {
         orderId: orderData?.orderId || orderData?.orderMongoId || orderData?._id,
         dispatchStatus: orderData?.dispatch?.status,
       });
-      if (isOrderInAcceptedQueue(orderData) || isProcessedOrder(orderData)) {
+      if (isOrderInAcceptedQueue(orderData)) {
+        return;
+      }
+      const isDirect =
+        orderData?.dispatch?.status === 'assigned' ||
+        orderData?.isDirectAssignment === true ||
+        orderData?.directAssignment === true;
+      if (!isDirect && isProcessedOrder(orderData)) {
         return;
       }
       setNewOrder(orderData);
@@ -1209,7 +1237,14 @@ export const useDeliveryNotifications = () => {
         phase: orderData?.phase || 'unknown',
         dispatchStatus: orderData?.dispatch?.status,
       });
-      if (isOrderInAcceptedQueue(orderData) || isProcessedOrder(orderData)) {
+      if (isOrderInAcceptedQueue(orderData)) {
+        return;
+      }
+      const isDirect =
+        orderData?.dispatch?.status === 'assigned' ||
+        orderData?.isDirectAssignment === true ||
+        orderData?.directAssignment === true;
+      if (!isDirect && isProcessedOrder(orderData)) {
         return;
       }
       setNewOrder(orderData);
@@ -1240,6 +1275,25 @@ export const useDeliveryNotifications = () => {
         activeOrderRef.current = null;
         setNewOrder(null);
       }
+    });
+
+    socketRef.current.on('direct_assignment', (orderData) => {
+      debugLog('Direct assignment received via socket', {
+        orderId: orderData?.orderId || orderData?.orderMongoId || orderData?._id,
+      });
+      toast.info('New Order Assigned by Admin!', {
+        description: `Order #${orderData?.orderId || orderData?.orderMongoId || ''} assigned to you.`,
+        id: `direct-assign-${orderData?.orderId || orderData?.orderMongoId || Date.now()}`,
+        duration: 6000,
+      });
+      if (orderData && !isOrderInAcceptedQueue(orderData)) {
+        clearOrderMuteState(orderData);
+        setNewOrder(orderData);
+        handleIncomingOrderAlert(orderData);
+      } else if (orderData) {
+        playNotificationSound(orderData);
+      }
+      void recoverDeliveryState();
     });
 
     socketRef.current.on('play_notification_sound', (data) => {
@@ -1329,6 +1383,21 @@ export const useDeliveryNotifications = () => {
     socketRef.current.on('order_reassigned_elsewhere', (data) => {
       debugLog('?? Order reassigned to another partner:', data);
       handleOfferTakenElsewhere(data, { showToast: true });
+    });
+
+    socketRef.current.on('order_unassigned', (data) => {
+      debugLog('Order unassigned/reassigned by admin:', data);
+      const targetId = data?.orderMongoId || data?.orderId;
+      if (targetId) {
+        useDeliveryStore.getState().removeAcceptedOrder(targetId);
+        useDeliveryStore.getState().removeNewOrder(targetId);
+        toast.warning(data?.reason || 'An assigned order was unassigned or reassigned by admin.', {
+          id: `order-unassigned-${targetId}`,
+          duration: 5000,
+        });
+      }
+      handleOfferTakenElsewhere(data, { showToast: false });
+      void recoverDeliveryState();
     });
 
     // Backend emits 'order_claimed' when another delivery boy accepts an offered order

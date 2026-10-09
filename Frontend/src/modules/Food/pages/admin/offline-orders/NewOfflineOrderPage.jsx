@@ -32,6 +32,7 @@ import { Input } from "@food/components/ui/input"
 import { Badge } from "@food/components/ui/badge"
 import { normalizeImageUrl } from "@food/utils/common"
 import ViewOrderDialog from "@food/components/admin/orders/ViewOrderDialog"
+import AssignDeliveryPartnerModal from "@food/components/admin/orders/AssignDeliveryPartnerModal"
 
 const resolveRestaurantImage = (restaurant) => {
   if (!restaurant) return ""
@@ -124,6 +125,7 @@ export default function NewOfflineOrderPage() {
   // SUCCESS state
   const [createdOrder, setCreatedOrder] = useState(null)
   const [viewDialogOpen, setViewDialogOpen] = useState(false)
+  const [assignModalOpen, setAssignModalOpen] = useState(false)
 
   // Load restaurants on mount
   useEffect(() => {
@@ -555,6 +557,19 @@ export default function NewOfflineOrderPage() {
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+            {/* Quick Assign Delivery Partner Button */}
+            <Button
+              onClick={() => setAssignModalOpen(true)}
+              className="w-full sm:w-auto bg-gradient-to-r from-orange-600 to-emerald-600 hover:from-orange-700 hover:to-emerald-700 text-white font-semibold flex items-center gap-1.5 shadow-sm"
+            >
+              <Truck className="w-4 h-4" />
+              <span>
+                {createdOrder.dispatch?.deliveryPartnerId || createdOrder.deliveryPartnerName
+                  ? "Reassign Delivery Partner"
+                  : "Assign Delivery Partner"}
+              </span>
+            </Button>
+
             <Button
               variant="outline"
               onClick={() => {
@@ -568,7 +583,7 @@ export default function NewOfflineOrderPage() {
 
             <Button
               onClick={() => navigate("/admin/food/offline-orders")}
-              className="w-full sm:w-auto bg-orange-600 hover:bg-orange-700 text-white font-medium"
+              className="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 text-white font-medium"
             >
               Back to Offline Orders
             </Button>
@@ -605,8 +620,31 @@ export default function NewOfflineOrderPage() {
             order={createdOrder}
             isOpen={viewDialogOpen}
             onOpenChange={setViewDialogOpen}
+            onAssignDeliveryPartner={() => setAssignModalOpen(true)}
             onOrderUpdated={(updated) => {
               if (updated) setCreatedOrder(updated)
+            }}
+          />
+        )}
+
+        {/* Manual Delivery Partner Assignment Modal */}
+        {createdOrder && (
+          <AssignDeliveryPartnerModal
+            isOpen={assignModalOpen}
+            onOpenChange={setAssignModalOpen}
+            order={createdOrder}
+            onAssigned={(order, partner) => {
+              setCreatedOrder((prev) => ({
+                ...prev,
+                dispatch: {
+                  ...(prev?.dispatch || {}),
+                  status: "assigned",
+                  deliveryPartnerId: partner,
+                  assignedAt: new Date(),
+                },
+                deliveryPartnerName: partner?.name,
+                deliveryPartnerPhone: partner?.phone,
+              }))
             }}
           />
         )}

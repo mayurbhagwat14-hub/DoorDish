@@ -194,7 +194,9 @@ export function validateOrderStatusDto(body) {
 
 export function validateAssignDeliveryDto(body) {
     const schema = z.object({
-        deliveryPartnerId: z.string().min(1, 'Delivery partner id required')
+        deliveryPartnerId: z.string().min(1, 'Delivery partner id required'),
+        allowOffline: z.boolean().optional().default(false),
+        reassign: z.boolean().optional().default(false)
     });
     const result = schema.safeParse(body);
     if (!result.success) {

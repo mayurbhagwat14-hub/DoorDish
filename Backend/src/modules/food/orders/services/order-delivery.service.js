@@ -61,7 +61,16 @@ function isOtpMatch(expectedOtp, enteredOtp) {
   return false;
 }
 
-const ACTIVE_TRIP_ORDER_STATUSES = ['preparing', 'ready_for_pickup', 'picked_up'];
+const ACTIVE_TRIP_ORDER_STATUSES = [
+  'created',
+  'pending',
+  'confirmed',
+  'preparing',
+  'ready_for_pickup',
+  'reached_pickup',
+  'picked_up',
+  'reached_drop',
+];
 
 export async function getMaxConcurrentOrders() {
   const doc = await FoodDeliveryCashLimit.findOne({ isActive: true })
@@ -75,7 +84,7 @@ export async function countActiveTripsForPartner(deliveryPartnerId) {
   const partnerId = new mongoose.Types.ObjectId(deliveryPartnerId);
   return FoodOrder.countDocuments({
     'dispatch.deliveryPartnerId': partnerId,
-    'dispatch.status': 'accepted',
+    'dispatch.status': { $in: ['assigned', 'accepted'] },
     orderStatus: { $in: ACTIVE_TRIP_ORDER_STATUSES },
   });
 }
@@ -470,14 +479,28 @@ export async function listOrdersAvailableDelivery(deliveryPartnerId, query) {
   const newOffers = enriched.filter((order) => {
     const dispatchStatus = String(order?.dispatch?.status || '').toLowerCase();
     const orderStatus = String(order?.orderStatus || '').toLowerCase();
+
+    // If an order has been directly assigned to this partner by admin and not yet accepted
+    const isAssignedToThisPartner =
+      String(order?.dispatch?.deliveryPartnerId || '') === String(deliveryPartnerId) &&
+      dispatchStatus === 'assigned';
+
+    if (isAssignedToThisPartner) {
+      const TERMINAL = ['delivered', 'cancelled_by_user', 'cancelled_by_restaurant', 'cancelled_by_admin'];
+      return !TERMINAL.includes(orderStatus);
+    }
+
+    // If this partner already accepted this order, it is an active trip, not a new offer
     const isOwnAccepted =
-      String(order?.dispatch?.deliveryPartnerId || '') === String(deliveryPartnerId);
+      String(order?.dispatch?.deliveryPartnerId || '') === String(deliveryPartnerId) &&
+      dispatchStatus === 'accepted';
     if (isOwnAccepted) return false;
+
     return (
       partnerZoneId &&
       isRestaurantInPartnerZone(order) &&
       isWithinOfferDistance(order) &&
-      ['unassigned', 'assigned'].includes(dispatchStatus) &&
+      dispatchStatus === 'unassigned' &&
       ['preparing', 'ready_for_pickup'].includes(orderStatus)
     );
   });
@@ -527,7 +550,11 @@ export async function acceptOrderDelivery(orderId, deliveryPartnerId) {
     existingOrder?.dispatch?.status === 'accepted' &&
     String(existingOrder?.dispatch?.deliveryPartnerId || '') === String(deliveryPartnerId);
 
-  if (!alreadyAcceptedByPartnerEarly) {
+  const isDirectlyAssignedToPartner =
+    String(existingOrder?.dispatch?.deliveryPartnerId || '') === String(deliveryPartnerId) &&
+    ['assigned', 'accepted'].includes(String(existingOrder?.dispatch?.status || ''));
+
+  if (!alreadyAcceptedByPartnerEarly && !isDirectlyAssignedToPartner) {
     if (!partnerZoneId || !orderZoneId || partnerZoneId !== orderZoneId) {
       throw new ForbiddenError('This order is outside your service zone');
     }
@@ -555,7 +582,7 @@ export async function acceptOrderDelivery(orderId, deliveryPartnerId) {
   const offeredEntry = (existingOrder?.dispatch?.offeredTo || []).find(
     (entry) => String(entry?.partnerId || '') === String(deliveryPartnerId),
   );
-  const canBypassCashLimit = Boolean(offeredEntry?.allowOverLimit);
+  const canBypassCashLimit = Boolean(offeredEntry?.allowOverLimit) || isDirectlyAssignedToPartner;
 
   const partnerCapacity = await getPartnerCashCapacity(deliveryPartnerId);
   const hasAmountCapacity = Number(partnerCapacity.availableCashLimit || 0) >= orderAmount;
@@ -571,12 +598,19 @@ export async function acceptOrderDelivery(orderId, deliveryPartnerId) {
   const orderCapacity = await getPartnerOrderCapacity(deliveryPartnerId);
   const alreadyAcceptedByPartner = alreadyAcceptedByPartnerEarly;
 
-  if (!alreadyAcceptedByPartner && orderCapacity.remaining <= 0) {
+  if (!alreadyAcceptedByPartner && !isDirectlyAssignedToPartner && orderCapacity.remaining <= 0) {
     throw new ValidationError('Maximum concurrent orders reached');
   }
 
   const now = new Date();
-  const acceptedStatuses = ['preparing', 'ready_for_pickup', 'picked_up'];
+  const acceptedStatuses = [
+    'created',
+    'pending',
+    'confirmed',
+    'preparing',
+    'ready_for_pickup',
+    'picked_up',
+  ];
   const cancellableStatuses = [
     'cancelled_by_user',
     'cancelled_by_restaurant',
@@ -611,6 +645,7 @@ export async function acceptOrderDelivery(orderId, deliveryPartnerId) {
         'dispatch.status': 'accepted',
         'dispatch.assignedAt': now,
         'dispatch.acceptedAt': now,
+        ...(existingOrder?.orderStatus === 'created' ? { orderStatus: 'confirmed' } : {}),
       },
       $push: {
         statusHistory: statusHistoryEntry,
@@ -831,11 +866,21 @@ export async function rejectOrderDelivery(orderId, deliveryPartnerId) {
     deliveryPartnerId,
   });
 
-  void dispatchService
-    .tryAutoAssign(order._id)
-    .catch((error) =>
-      logger.error(`SmartDispatch: Auto-assign after reject failed: ${error.message}`),
-    );
+  try {
+    const io = getIO();
+    if (io) {
+      io.to(rooms.admin()).emit('admin_dispatch_updated', {
+        orderId: order._id?.toString?.(),
+        orderMongoId: order._id?.toString?.(),
+        status: 'unassigned',
+        deliveryPartnerId: null,
+        rejectedByPartnerId: deliveryPartnerId,
+        reason: 'Partner rejected assignment'
+      });
+    }
+  } catch (ioErr) {
+    logger.warn(`Failed emitting admin_dispatch_updated on reject: ${ioErr?.message || ioErr}`);
+  }
 
   return order.toObject();
 }
@@ -862,6 +907,10 @@ export async function confirmReachedPickupDelivery(orderId, deliveryPartnerId) {
   }
 
   const from = currentStatus || currentPhase || order.orderStatus;
+  if (order.dispatch?.status === 'assigned') {
+    order.dispatch.status = 'accepted';
+    order.dispatch.acceptedAt = order.dispatch.acceptedAt || new Date();
+  }
   order.deliveryState = {
     ...(order.deliveryState?.toObject?.() || order.deliveryState || {}),
     currentPhase: 'at_pickup',
@@ -937,6 +986,10 @@ export async function confirmPickupDelivery(orderId, deliveryPartnerId, billImag
       throw new ValidationError(`Order is already at status '${from}'. Cannot re-mark as '${nextStatus}'.`);
   }
   order.orderStatus = nextStatus;
+  if (order.dispatch?.status === 'assigned') {
+    order.dispatch.status = 'accepted';
+    order.dispatch.acceptedAt = order.dispatch.acceptedAt || new Date();
+  }
   order.deliveryState = {
     ...(order.deliveryState?.toObject?.() || order.deliveryState || {}),
     currentPhase: 'en_route_to_delivery',

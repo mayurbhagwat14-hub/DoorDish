@@ -455,6 +455,11 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
             else if (currentPhase === 'at_pickup' || backendStatus === 'reached_pickup') nextStatus = 'REACHED_PICKUP';
             updateOrderSession(orderId, { tripStatus: nextStatus });
           });
+        } else {
+          const current = useDeliveryStore.getState().acceptedOrders;
+          if (current && current.length > 0) {
+            setAcceptedOrders([], { capacity: payload.capacity });
+          }
         }
       } catch (err) {
         console.error('Order Sync Failed:', err);
@@ -643,6 +648,11 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
             activeOrders.map(mapOrderLocations).filter(Boolean),
             { capacity: currentPayload.capacity },
           );
+        } else if (!cancelled && !activeOrders.length) {
+          const current = useDeliveryStore.getState().acceptedOrders;
+          if (current && current.length > 0) {
+            setAcceptedOrders([], { capacity: currentPayload.capacity });
+          }
         }
 
         const availableResponse = await deliveryAPI.getOrders({ limit: 20, page: 1 });
@@ -849,11 +859,23 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
                 <div className="bg-white/5 rounded-2xl p-4 flex items-center border border-white/5 shadow-sm backdrop-blur-md">
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 bg-green-500/10 rounded-full flex items-center justify-center">
-                      <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500 animate-pulse' : 'bg-gray-500'}`} />
+                      <div className={`w-2 h-2 rounded-full ${!isOnline ? 'bg-gray-500' : isSocketConnected ? 'bg-green-500 animate-pulse' : 'bg-amber-400 animate-ping'}`} />
                     </div>
                     <div>
-                      <h3 className="text-white font-black text-[11px] uppercase tracking-widest leading-none mb-1">{isOnline ? 'System Online' : 'System Offline'}</h3>
-                      <p className="text-gray-400 text-[10px] font-bold uppercase tracking-tight">{isOnline ? 'Waiting for order requests' : 'Go online to receive jobs'}</p>
+                      <h3 className="text-white font-black text-[11px] uppercase tracking-widest leading-none mb-1">
+                        {!isOnline
+                          ? 'System Offline'
+                          : isSocketConnected
+                            ? 'System Online'
+                            : 'Reconnecting Live Dispatch…'}
+                      </h3>
+                      <p className="text-gray-400 text-[10px] font-bold uppercase tracking-tight">
+                        {!isOnline
+                          ? 'Go online to receive jobs'
+                          : isSocketConnected
+                            ? 'Waiting for order requests'
+                            : 'Live events will resume automatically'}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -1018,8 +1040,8 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
                     isWithinRange={isWithinRange} 
                     distanceToTarget={distanceToTarget}
                     eta={eta}
-                    onReachedPickup={reachPickup} 
-                    onPickedUp={(billImageUrl) => pickUpOrder(billImageUrl)} 
+                    onReachedPickup={() => reachPickup(activeOrder)} 
+                    onPickedUp={(billImageUrl) => pickUpOrder(billImageUrl, activeOrder)} 
                     onMinimize={() => setIsModalMinimized(true)}
                   />
                 )}
@@ -1140,7 +1162,7 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
                              </div>
                           </div>
                         )}
-                        <ActionSlider label="Slide to Arrive" successLabel="Arrived ✓" disabled={false} onConfirm={reachDrop} color="bg-blue-600" />
+                        <ActionSlider label="Slide to Arrive" successLabel="Arrived ✓" disabled={false} onConfirm={() => reachDrop(activeOrder)} color="bg-blue-600" />
                       </div>
                     ) : (
                       <button 
@@ -1160,14 +1182,30 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
                   <DeliveryVerificationModal 
                     order={activeOrder} 
                     onComplete={async (otp, paymentOverride) => {
-                      const res = await completeDelivery(otp, paymentOverride);
+                      const res = await completeDelivery(otp, paymentOverride, activeOrder);
                       setShowVerification(false);
                       return res;
                     }}
                     onClose={() => setShowVerification(false)}
                   />
                 )}
-                {tripStatus === 'COMPLETED' && <OrderSummaryModal order={activeOrder} onDone={() => { resetTrip(activeOrder); navigate('/food/delivery', { replace: true }); }} />}
+                {tripStatus === 'COMPLETED' && (
+                  <OrderSummaryModal
+                    order={activeOrder}
+                    onDone={() => {
+                      const finishedKey = resolveOrderKey(activeOrder);
+                      resetTrip(activeOrder);
+                      const remaining = (useDeliveryStore.getState().acceptedOrders || []).filter(
+                        (o) => resolveOrderKey(o) !== finishedKey
+                      );
+                      if (remaining.length > 0) {
+                        switchFocusedOrder(resolveOrderKey(remaining[0]));
+                      } else {
+                        navigate('/food/delivery', { replace: true });
+                      }
+                    }}
+                  />
+                )}
               </div>
             </motion.div>
           )}

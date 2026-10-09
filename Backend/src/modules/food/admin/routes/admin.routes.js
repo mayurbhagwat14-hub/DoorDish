@@ -244,6 +244,10 @@ router.delete('/orders/:orderId', orderController.deleteOrderAdminController);
 router.patch('/orders/:orderId/accept', orderController.acceptOrderAdminController);
 router.patch('/orders/:orderId/reject', orderController.rejectOrderAdminController);
 router.patch('/orders/:orderId/statuses', orderController.updateOrderStatusesAdminController);
+router.patch('/orders/:orderId/assign-delivery', orderController.assignDeliveryPartnerController);
+router.post('/orders/:orderId/assign-delivery', orderController.assignDeliveryPartnerController);
+router.get('/orders/:orderId/delivery-partners', orderController.getDeliveryPartnersWorkloadController);
+router.get('/delivery-partners/workload', orderController.getDeliveryPartnersWorkloadController);
 
 // ----- Offline Orders (Admin places order on behalf of customer) -----
 router.post('/orders/offline', orderController.createOfflineOrderAdminController);

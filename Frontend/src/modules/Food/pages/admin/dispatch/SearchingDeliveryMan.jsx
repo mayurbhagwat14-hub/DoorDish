@@ -1,9 +1,12 @@
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo, useEffect, useCallback } from "react"
+import io from "socket.io-client"
+import { getSocketUrl } from "@food/utils/socketConfig"
 import OrdersTopbar from "@food/components/admin/orders/OrdersTopbar"
 import DispatchOrdersTable from "@food/components/admin/orders/DispatchOrdersTable"
 import DispatchFilterPanel from "@food/components/admin/orders/DispatchFilterPanel"
 import ViewOrderDialog from "@food/components/admin/orders/ViewOrderDialog"
 import SettingsDialog from "@food/components/admin/orders/SettingsDialog"
+import AssignDeliveryPartnerModal from "@food/components/admin/orders/AssignDeliveryPartnerModal"
 import { useGenericTableManagement } from "@food/components/admin/orders/useGenericTableManagement"
 import { adminAPI } from "@food/api"
 import { toast } from "sonner"
@@ -38,69 +41,67 @@ export default function SearchingDeliveryMan() {
     return () => clearTimeout(timer)
   }, [searchQuery])
 
-  // Fetch orders from API
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        setLoading(true)
-        const response = await adminAPI.getSearchingDeliverymanOrders({
-          search: debouncedSearchQuery || undefined,
-          limit: 1000 // Get all orders
-        })
+  const [assignModalOpen, setAssignModalOpen] = useState(false)
+  const [selectedOrderForAssign, setSelectedOrderForAssign] = useState(null)
 
-        if (response?.data?.success && response.data.data?.orders) {
-          setOrders(response.data.data.orders)
-        } else {
-          setOrders([])
-          if (response?.data?.message) {
-            toast.error(response.data.message)
-          }
-        }
-      } catch (error) {
-        debugError("Error fetching searching deliveryman orders:", error)
-        debugError("Error details:", {
-          message: error.message,
-          code: error.code,
-          response: error.response ? {
-            status: error.response.status,
-            statusText: error.response.statusText,
-            data: error.response.data
-          } : null,
-          request: error.request ? {
-            url: error.config?.url,
-            method: error.config?.method,
-            baseURL: error.config?.baseURL
-          } : null
-        })
-        
-        if (error.response) {
-          const status = error.response.status
-          const errorData = error.response.data
-          
-          if (status === 401) {
-            toast.error('Authentication required. Please login again.')
-          } else if (status === 403) {
-            toast.error('Access denied. You do not have permission.')
-          } else if (status === 404) {
-            toast.error('Endpoint not found. Please check backend server.')
-          } else if (status >= 500) {
-            toast.error('Server error. Please try again later.')
-          } else {
-            toast.error(errorData?.message || `Error ${status}: Failed to fetch orders`)
-          }
-        } else if (error.request) {
-          toast.error('Cannot connect to server. Please check if backend is running.')
-        } else {
-          toast.error(error.message || 'Failed to fetch orders')
-        }
+  // Fetch orders from API
+  const fetchOrders = useCallback(async (silent = false) => {
+    try {
+      if (!silent) setLoading(true)
+      const response = await adminAPI.getSearchingDeliverymanOrders({
+        search: debouncedSearchQuery || undefined,
+        limit: 1000 // Get all orders
+      })
+
+      if (response?.data?.success && response.data.data?.orders) {
+        setOrders(response.data.data.orders)
+      } else {
         setOrders([])
-      } finally {
-        setLoading(false)
+        if (response?.data?.message && !silent) {
+          toast.error(response.data.message)
+        }
       }
+    } catch (error) {
+      if (!silent) {
+        toast.error(error.response?.data?.message || error.message || 'Failed to fetch orders')
+      }
+      setOrders([])
+    } finally {
+      if (!silent) setLoading(false)
+    }
+  }, [debouncedSearchQuery])
+
+  useEffect(() => {
+    fetchOrders(false)
+  }, [fetchOrders])
+
+  // Socket listener for live updates
+  useEffect(() => {
+    const socketUrl = getSocketUrl()
+    const socket = io(socketUrl, {
+      transports: ["websocket", "polling"],
+      reconnection: true,
+    })
+
+    socket.on("connect", () => {
+      socket.emit("join-admin-orders")
+    })
+
+    const handleUpdate = () => {
+      fetchOrders(true)
     }
 
-    fetchOrders()
-  }, [debouncedSearchQuery])
+    socket.on("admin_dispatch_updated", handleUpdate)
+    socket.on("admin_order_status_update", handleUpdate)
+    socket.on("admin_new_order", handleUpdate)
+
+    return () => {
+      socket.off("admin_dispatch_updated", handleUpdate)
+      socket.off("admin_order_status_update", handleUpdate)
+      socket.off("admin_new_order", handleUpdate)
+      socket.disconnect()
+    }
+  }, [fetchOrders])
 
   const {
     isFilterOpen,
@@ -207,12 +208,27 @@ export default function SearchingDeliveryMan() {
         isOpen={isViewOrderOpen}
         onOpenChange={setIsViewOrderOpen}
         order={selectedOrder}
+        onAssignDeliveryPartner={(ord) => {
+          setSelectedOrderForAssign(ord)
+          setAssignModalOpen(true)
+        }}
+        onOrderUpdated={() => fetchOrders(true)}
+      />
+      <AssignDeliveryPartnerModal
+        isOpen={assignModalOpen}
+        onOpenChange={setAssignModalOpen}
+        order={selectedOrderForAssign}
+        onAssigned={() => fetchOrders(true)}
       />
       <DispatchOrdersTable 
         orders={filteredData} 
         visibleColumns={visibleColumns}
         onViewOrder={handleViewOrder}
         onPrintOrder={handlePrintOrder}
+        onAssignDeliveryPartner={(ord) => {
+          setSelectedOrderForAssign(ord)
+          setAssignModalOpen(true)
+        }}
       />
     </div>
   )

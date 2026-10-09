@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { AlertCircle, Loader2, RefreshCw, WifiOff } from 'lucide-react';
 import { deliveryAPI } from '@food/api';
 import { useDeliveryStore, resolveOrderKey, dedupeOrdersByIdentity } from '@/modules/DeliveryV2/store/useDeliveryStore';
 import { useOrderManager } from '@/modules/DeliveryV2/hooks/useOrderManager';
@@ -23,12 +24,25 @@ export default function OrdersV2() {
   const setFocusedOrder = useDeliveryStore((state) => state.setFocusedOrder);
 
   const { acceptOrder } = useOrderManager();
-  const { isOrderAlertMuted, toggleOrderAlertMuted, clearNewOrder, stopSound, muteUiTick, triggerOrderAlertFor10Sec } = useDeliveryNotificationsContext();
+  const {
+    isOrderAlertMuted,
+    toggleOrderAlertMuted,
+    clearNewOrder,
+    stopSound,
+    triggerOrderAlertFor10Sec,
+    isConnected: isSocketConnected,
+  } = useDeliveryNotificationsContext();
+
   const [activeTab, setActiveTab] = useState('new');
   const [expandedOrderId, setExpandedOrderId] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
   const prevNewCountRef = useRef(visibleNewOrders.length);
+  const hasAutoSwitchedTabRef = useRef(false);
 
   const hydrateOrders = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
     try {
       const [currentRes, availableRes] = await Promise.all([
         deliveryAPI.getCurrentDelivery(),
@@ -48,6 +62,11 @@ export default function OrdersV2() {
 
       if (activeOrders.length) {
         setAcceptedOrders(activeOrders.map(mapOrderLocations).filter(Boolean));
+      } else {
+        const currentAccepted = useDeliveryStore.getState().acceptedOrders;
+        if (currentAccepted && currentAccepted.length > 0) {
+          setAcceptedOrders([]);
+        }
       }
 
       const availablePayload = availableRes?.data?.data || availableRes?.data || {};
@@ -60,8 +79,19 @@ export default function OrdersV2() {
         : [];
 
       offers.forEach((order) => addNewOrder(order));
-    } catch (error) {
-      console.warn('[OrdersV2] hydrate failed:', error?.message || error);
+
+      // Auto-select accepted tab on first load if partner has active assignments and no pending offers
+      if (!hasAutoSwitchedTabRef.current) {
+        hasAutoSwitchedTabRef.current = true;
+        if (activeOrders.length > 0 && offers.length === 0) {
+          setActiveTab('accepted');
+        }
+      }
+    } catch (err) {
+      console.warn('[OrdersV2] hydrate failed:', err?.message || err);
+      setError('Unable to sync orders. Please check your connection.');
+    } finally {
+      setIsLoading(false);
     }
   }, [addNewOrder, setAcceptedOrders, setCapacity]);
 
@@ -160,10 +190,28 @@ export default function OrdersV2() {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <div className="bg-[#121212] text-white px-4 pt-6 pb-4">
-        <h1 className="text-xl font-black uppercase tracking-tight">Orders</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-xl font-black uppercase tracking-tight">Orders</h1>
+          <button
+            type="button"
+            onClick={hydrateOrders}
+            disabled={isLoading}
+            className="p-1.5 text-gray-400 hover:text-white rounded-lg active:scale-95 transition-all"
+            aria-label="Refresh orders"
+          >
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-orange-400' : ''}`} />
+          </button>
+        </div>
         <p className="text-xs text-gray-400 mt-1 font-semibold">
           {capacity.active}/{capacity.max} active slots used
         </p>
+
+        {!isSocketConnected && (
+          <div className="mt-2.5 flex items-center gap-2 rounded-xl bg-amber-500/15 border border-amber-400/30 px-3 py-1.5 text-amber-300 text-[11px] font-semibold">
+            <WifiOff className="w-3.5 h-3.5 shrink-0 animate-pulse" />
+            <span>Reconnecting to live dispatch... Updates will refresh automatically.</span>
+          </div>
+        )}
 
         <div className="mt-4 flex rounded-2xl bg-white/10 p-1 border border-white/10">
           <button
@@ -193,7 +241,7 @@ export default function OrdersV2() {
               activeTab === 'accepted' ? 'bg-white text-gray-950 shadow' : 'text-white/70'
             }`}
           >
-            Accepted
+            Active & Assigned
             {acceptedOrders.length > 0 ? (
               <span
                 className={`ml-1.5 inline-flex min-w-[20px] h-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[10px] font-black leading-none ${
@@ -210,7 +258,28 @@ export default function OrdersV2() {
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 pb-28">
-        {activeTab === 'new' ? (
+        {error ? (
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-center text-sm text-red-700 mb-4 flex flex-col items-center gap-2">
+            <div className="flex items-center gap-2 font-bold">
+              <AlertCircle className="w-4 h-4" />
+              <span>{error}</span>
+            </div>
+            <button
+              type="button"
+              onClick={hydrateOrders}
+              className="text-xs font-black uppercase tracking-wider text-red-800 underline hover:no-underline"
+            >
+              Tap to Retry
+            </button>
+          </div>
+        ) : null}
+
+        {isLoading && visibleNewOrders.length === 0 && acceptedOrders.length === 0 ? (
+          <div className="py-12 flex flex-col items-center justify-center text-gray-400 gap-2">
+            <Loader2 className="w-6 h-6 animate-spin text-orange-500" />
+            <p className="text-xs font-semibold">Loading orders...</p>
+          </div>
+        ) : activeTab === 'new' ? (
           visibleNewOrders.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-6 text-center text-sm text-gray-500">
               No new order requests right now.
@@ -238,7 +307,7 @@ export default function OrdersV2() {
           )
         ) : acceptedOrders.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-6 text-center text-sm text-gray-500">
-            Accepted orders will appear here.
+            No active or assigned orders right now.
           </div>
         ) : (
           <div className="space-y-3">

@@ -132,7 +132,7 @@ const paymentSchema = new mongoose.Schema(
 
 const dispatchSchema = new mongoose.Schema(
     {
-        modeAtCreation: { type: String, enum: ['auto'], default: 'auto' },
+        modeAtCreation: { type: String, enum: ['auto', 'manual'], default: 'manual' },
         status: {
             type: String,
             enum: ['unassigned', 'assigned', 'accepted', 'rejected', 'cancelled'],

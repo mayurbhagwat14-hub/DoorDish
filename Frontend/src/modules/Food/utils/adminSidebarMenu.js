@@ -161,6 +161,7 @@ export const adminSidebarMenu = [
         label: "Deliveryman",
         icon: "Package",
         subItems: [
+          { label: "Fleet Workload & Ops", path: "/admin/food/delivery-partners/workload" },
           { label: "New Join Request", path: "/admin/food/delivery-partners/join-request" },
           { label: "Deliveryman List", path: "/admin/food/delivery-partners" },
           { label: "Deliveryman Reviews", path: "/admin/food/delivery-partners/reviews" },

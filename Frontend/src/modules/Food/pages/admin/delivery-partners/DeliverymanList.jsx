@@ -800,7 +800,16 @@ availableCashLimit: deliveryman.availableCashLimit || 0,
                           <td className="px-6 py-4">
                             <div className="flex flex-col">
                               <span className="text-xs">
-                                Active Status: <span className={`${dm.status === 'Online' ? 'text-blue-600' : 'text-slate-600'} underline`}>{dm.status}</span>
+                                Active Status:{" "}
+                                <span
+                                  className={`font-semibold ${
+                                    dm.availabilityStatus === "online" || dm.isOnline
+                                      ? "text-emerald-600"
+                                      : "text-slate-500"
+                                  }`}
+                                >
+                                  {dm.availabilityStatus === "online" || dm.isOnline ? "Online" : "Offline"}
+                                </span>
                               </span>
                             </div>
                           </td>

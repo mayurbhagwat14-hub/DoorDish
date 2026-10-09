@@ -4976,6 +4976,8 @@ export async function getDeliveryPartners(query) {
         zone: doc.city || doc.state || doc.address || '',
         vehicleType: doc.vehicleType || '',
         status: doc.status,
+        availabilityStatus: doc.availabilityStatus || 'offline',
+        isOnline: doc.availabilityStatus === 'online',
         totalOrders: countsMap.get(String(doc._id)) || 0,
         rating: ratingMap.get(String(doc._id))?.avg || 0,
         totalRatings: ratingMap.get(String(doc._id))?.count || 0,
