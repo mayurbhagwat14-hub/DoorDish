@@ -20,6 +20,7 @@ import OrderSwitcher from '@/modules/DeliveryV2/components/orders/OrderSwitcher'
 import DeliveryBottomNav from '@/modules/DeliveryV2/components/DeliveryBottomNav';
 
 // Sub Pages
+import DeliveryDashboardHome from '@/modules/DeliveryV2/pages/DeliveryDashboardHome';
 import PocketV2 from '@/modules/DeliveryV2/pages/PocketV2';
 import HistoryV2 from '@/modules/DeliveryV2/pages/HistoryV2';
 import ProfileV2 from '@/modules/DeliveryV2/pages/ProfileV2';
@@ -66,7 +67,7 @@ function BottomPopup({ isOpen, onClose, title, children }) {
  * DeliveryHomeV2 - Premium 1:1 Match with Original App UI.
  * Featuring logical tab switching for Feed, Pocket, History, and Profile.
  */
-export default function DeliveryHomeV2({ tab = 'feed' }) {
+export default function DeliveryHomeV2({ tab = 'home' }) {
   const navigate = useNavigate();
   const { isOnline, toggleOnline, riderLocation, acceptedOrders, focusedOrderId, orderSessions, setRiderLocation, setAcceptedOrders, setCapacity, setFocusedOrder, updateOrderSession, updateTripStatus, removeAcceptedOrder, newOrders, removeNewOrder } = useDeliveryStore();
   const activeOrder = useDeliveryStore((state) => state.getFocusedOrder());
@@ -755,8 +756,8 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
 
   return (
     <div className="relative h-screen w-full bg-white text-gray-900 overflow-hidden flex flex-col">
-      {/* ─── 1. TOP HEADER (Premium Dark Gray) ─── */}
-      {currentTab !== 'history' && (
+      {/* ─── 1. TOP HEADER (Premium Dark Gray - for Feed/LiveMap only) ─── */}
+      {currentTab !== 'history' && currentTab !== 'home' && (
       <div className="absolute top-0 inset-x-0 bg-[#121212]/95 backdrop-blur-2xl shadow-2xl z-[200] safe-top pb-2 border-b border-white/10">
         <div className="flex items-center justify-between px-4 py-2">
           <div className="flex items-center gap-4">
@@ -906,8 +907,15 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
       )}
 
       {/* ─── 2. MAIN CONTENT ─── */}
-      <div className={`flex-1 relative overflow-y-auto ${currentTab === 'history' ? 'pt-0' : 'pt-[120px]'} no-scrollbar`}>
-         {currentTab === 'feed' ? (
+      <div className={`flex-1 relative overflow-y-auto ${currentTab === 'history' || currentTab === 'home' ? 'pt-0' : 'pt-[120px]'} no-scrollbar pb-20`}>
+         {currentTab === 'home' ? (
+           <DeliveryDashboardHome
+             onNavigateTab={(targetTab) => {
+               if (targetTab === 'orders') navigate('/food/delivery/orders');
+               else setCurrentTab(targetTab);
+             }}
+           />
+         ) : currentTab === 'feed' ? (
            <div className="absolute inset-0 top-[-120px]">
              <LiveMap 
                onMapLoad={(m) => mapRef.current = m}

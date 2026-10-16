@@ -770,6 +770,7 @@ const formatTripTimeIST = (value) => {
 
 const computeRange = (period, date) => {
   const p = String(period || 'daily').toLowerCase();
+  if (p === 'all' || p === 'all_time' || p === 'lifetime') return null;
   const anchor = date instanceof Date && !Number.isNaN(date.getTime()) ? date : new Date();
   if (p === 'weekly' || p === 'week') return getWeekRange(anchor);
   if (p === 'monthly' || p === 'month') return getMonthRange(anchor);
@@ -848,31 +849,42 @@ export const getDeliveryPartnerTripHistory = async (deliveryPartnerId, query = {
     const statusFilter = normalizeStatusFilter(query.status);
     const limit = Math.min(Math.max(parseInt(query.limit, 10) || 50, 1), 1000);
 
-    const { start, end } = computeRange(period, date);
+    const range = computeRange(period, date);
 
     const partnerId = new mongoose.Types.ObjectId(deliveryPartnerId);
     const match = { 'dispatch.deliveryPartnerId': partnerId };
 
     const sf = String(statusFilter || '').toLowerCase();
     if (sf === 'completed') {
-        // Same day axis as ALL TRIPS (order placed / createdAt) so Completed ⊆ ALL
-        // for that day. Using deliveredAt here dropped orders placed yesterday but
-        // delivered next day (or missing deliveredAt), which made COD/earnings smaller.
         match.orderStatus = 'delivered';
-        match.createdAt = { $gte: start, $lte: end };
+        if (range) {
+            match.$or = [
+                { 'deliveryState.deliveredAt': { $gte: range.start, $lte: range.end } },
+                { createdAt: { $gte: range.start, $lte: range.end } },
+                { updatedAt: { $gte: range.start, $lte: range.end } }
+            ];
+        }
     } else if (sf === 'cancelled') {
         match.orderStatus = { $regex: '^cancelled', $options: 'i' };
-        match.createdAt = { $gte: start, $lte: end };
+        if (range) {
+            match.createdAt = { $gte: range.start, $lte: range.end };
+        }
     } else if (sf === 'pending') {
-        match.createdAt = { $gte: start, $lte: end };
-        // Pending = not delivered and not cancelled
+        if (range) {
+            match.createdAt = { $gte: range.start, $lte: range.end };
+        }
         match.$and = [
             { orderStatus: { $ne: 'delivered' } },
             { orderStatus: { $not: { $regex: '^cancelled', $options: 'i' } } },
         ];
     } else {
-        // ALL TRIPS: show anything created in range
-        match.createdAt = { $gte: start, $lte: end };
+        // ALL TRIPS: show anything created in range if range is specified
+        if (range) {
+            match.$or = [
+                { createdAt: { $gte: range.start, $lte: range.end } },
+                { 'deliveryState.deliveredAt': { $gte: range.start, $lte: range.end } }
+            ];
+        }
     }
 
     const orders = await FoodOrder.find(match)
@@ -890,7 +902,7 @@ export const getDeliveryPartnerTripHistory = async (deliveryPartnerId, query = {
     return {
         period,
         date: (date || new Date()).toISOString(),
-        range: { start: start.toISOString(), end: end.toISOString() },
+        range: range ? { start: range.start.toISOString(), end: range.end.toISOString() } : null,
         trips
     };
 };

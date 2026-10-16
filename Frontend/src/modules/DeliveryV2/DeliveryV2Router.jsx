@@ -87,8 +87,10 @@ const DeliveryV2Router = () => {
             <DeliveryRealtimeShell />
           </ProtectedRoute>
         }>
-          <Route path="" element={<DeliveryHomeV2 tab="feed" />} />
+          <Route path="" element={<DeliveryHomeV2 tab="home" />} />
+          <Route path="home" element={<DeliveryHomeV2 tab="home" />} />
           <Route path="feed" element={<DeliveryHomeV2 tab="feed" />} />
+          <Route path="map" element={<DeliveryHomeV2 tab="feed" />} />
           <Route path="orders" element={<OrdersV2 />} />
           <Route path="pocket" element={<DeliveryHomeV2 tab="pocket" />} />
           <Route path="history" element={<DeliveryHomeV2 tab="history" />} />
