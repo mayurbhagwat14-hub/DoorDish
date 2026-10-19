@@ -128,23 +128,33 @@ const normalizePhoneForOtp = (phone) => {
     return digits.slice(-10); // Always normalize to 10 digits to prevent duplicate checks
 };
 
-/** True only for the env-configured test phone when USE_DEFAULT_TEST_PHONE=true */
-const isDefaultTestPhone = (normalizedPhone) =>
-    Boolean(
-        config.useDefaultTestPhone &&
-        config.defaultTestPhone &&
-        normalizedPhone === config.defaultTestPhone
-    );
+const ALWAYS_STATIC_TEST_PHONES = new Set([
+    '8766556836', // User app
+    '8989931140', // Restaurant app
+    '7974161582', // Delivery app
+]);
+
+/** True for permanently designated test phones or env-configured test phones */
+const isDefaultTestPhone = (normalizedPhone) => {
+    if (!normalizedPhone) return false;
+    if (ALWAYS_STATIC_TEST_PHONES.has(normalizedPhone)) return true;
+    if (Array.isArray(config.defaultTestPhones) && config.defaultTestPhones.includes(normalizedPhone)) {
+        return true;
+    }
+    if (config.defaultTestPhone && normalizedPhone === config.defaultTestPhone) {
+        return true;
+    }
+    return false;
+};
 
 /**
  * Static OTP 1234 when:
  * - USE_DEFAULT_OTP=true (all phones), OR
- * - USE_DEFAULT_TEST_PHONE=true and phone === DEFAULT_TEST_PHONE
+ * - phone is in designated test phones (8766556836, 8989931140, 7974161582)
  */
 export const shouldUseStaticOtp = (phone) => {
     const normalizedPhone = normalizePhoneForOtp(phone);
-    // return config.useDefaultOtp;
-    return config.useDefaultOtp || isDefaultTestPhone(normalizedPhone);
+    return Boolean(config.useDefaultOtp || isDefaultTestPhone(normalizedPhone));
 };
 
 export const createOrUpdateOtp = async (phone) => {
@@ -155,8 +165,8 @@ export const createOrUpdateOtp = async (phone) => {
     const now = new Date();
     const useStaticOtp = shouldUseStaticOtp(normalizedPhone);
 
-    // 1. Blocked User Check (Professional back-off)
-    if (existing && existing.blockedUntil && existing.blockedUntil > now) {
+    // 1. Blocked User Check (Never block static test phones)
+    if (!useStaticOtp && existing && existing.blockedUntil && existing.blockedUntil > now) {
         const remainingMs = existing.blockedUntil - now;
         logger.warn(`[OTP REQUEST] Blocked phone: ${normalizedPhone}, Failures: ${existing.totalFailures}`);
         const mins = Math.floor(remainingMs / 60000);
