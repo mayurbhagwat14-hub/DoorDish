@@ -47,6 +47,7 @@ export const config = {
     smsApiKey: process.env.SMS_INDIA_HUB_API_KEY,
     smsSenderId: process.env.SMS_INDIA_HUB_SENDER_ID,
     smsDltTemplateId: process.env.SMS_INDIA_HUB_DLT_TEMPLATE_ID,
+    smsAppName: process.env.SMS_APP_NAME || 'DoorDish',
 
     // Service Toggles
     smsHubEnabled: process.env.SMS_HUB_ENABLED === 'true',
