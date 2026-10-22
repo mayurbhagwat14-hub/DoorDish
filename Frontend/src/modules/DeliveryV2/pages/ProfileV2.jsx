@@ -11,7 +11,14 @@ import {
   X,
   Briefcase,
   Trash2,
-  AlertTriangle
+  AlertTriangle,
+  ShieldCheck,
+  CreditCard,
+  FileText,
+  Contact,
+  HelpCircle,
+  ExternalLink,
+  Gift
 } from "lucide-react"
 import { deliveryAPI, authAPI } from "@food/api"
 import { toast } from "sonner"
@@ -19,10 +26,6 @@ import { showUserFacingApiError } from "@/shared/utils/apiError"
 import { showAccountDeletedToast } from "@/shared/utils/customToasts"
 import { clearModuleAuth } from "@food/utils/auth"
 
-/**
- * ProfileV2 - 1:1 EXACT Restoration of the Legacy Profile Hub.
- * Matches ProfilePage.jsx exactly.
- */
 export const ProfileV2 = () => {
   const navigate = useNavigate()
   const location = useLocation()
@@ -82,10 +85,10 @@ export const ProfileV2 = () => {
   const handleShareReferral = async () => {
     if (!referralLink) return
     const rewardText = referralReward > 0 ? `₹${referralReward}` : "rewards"
-    const shareText = `Join as a delivery partner and earn ${rewardText}.`
+    const shareText = `Join as a delivery partner on DoorDish and earn ${rewardText}. Register with my referral link:`
     try {
       if (navigator.share) {
-        await navigator.share({ title: "Delivery referral", text: shareText, url: referralLink })
+        await navigator.share({ title: "DoorDish Delivery Referral", text: shareText, url: referralLink })
       } else {
         const fallbackUrl = `https://wa.me/?text=${encodeURIComponent(`${shareText} ${referralLink}`)}`
         window.open(fallbackUrl, "_blank", "noopener,noreferrer")
@@ -119,219 +122,352 @@ export const ProfileV2 = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center font-poppins">
-        <div className="flex items-center gap-2 text-gray-700">
-          <div className="w-5 h-5 border-2 border-gray-400 border-t-gray-600 rounded-full animate-spin" />
-          <span className="text-sm font-medium">Loading profile...</span>
+      <div className="min-h-screen bg-[#F6F8FB] flex items-center justify-center font-sans">
+        <div className="flex items-center gap-2 text-slate-600">
+          <div className="w-5 h-5 border-2 border-slate-300 border-t-orange-500 rounded-full animate-spin" />
+          <span className="text-xs font-semibold">Loading partner profile...</span>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 text-gray-900 font-poppins pb-24">
-      {/* Profile Header Block */}
-      <div className="bg-white p-4 w-full shadow-sm">
+    <div className="min-h-screen bg-[#F6F8FB] text-slate-800 font-sans pb-28 sm:pb-32 select-none antialiased w-full overflow-x-hidden">
+      <main className="max-w-lg mx-auto px-3 sm:px-4 pt-3.5 space-y-3 w-full">
+        {/* ─── 1. PROFILE IDENTITY HERO CARD ─── */}
         <div 
           onClick={() => navigate("/food/delivery/profile/details")}
-          className="flex items-start justify-between cursor-pointer"
+          className="rounded-2xl sm:rounded-3xl bg-white p-4 sm:p-5 shadow-[0_3px_20px_rgba(0,0,0,0.04)] border border-slate-200/80 cursor-pointer active:scale-[0.99] transition-all"
         >
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <h2 className="text-2xl md:text-3xl font-bold">{profile?.name || ""}</h2>
-              <ChevronRight className="w-5 h-5 text-gray-400" />
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3.5 min-w-0 flex-1">
+              <div className="relative shrink-0">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden border-2 border-slate-200 bg-slate-100 shadow-xs">
+                  <img 
+                    src={profile?.profileImage?.url || "/assets/images/profile_avatar.webp"} 
+                    alt="Profile" 
+                    className="w-full h-full object-cover" 
+                  />
+                </div>
+                <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-1 shadow-sm border border-slate-200">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                </div>
+              </div>
+
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <h2 className="text-base sm:text-lg font-black text-slate-900 truncate tracking-tight">
+                    {profile?.name || "Delivery Partner"}
+                  </h2>
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    Active Partner
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-500 font-medium truncate">
+                  <span className="font-mono bg-slate-100 border border-slate-200/60 px-1.5 py-0.5 rounded text-[10px] text-orange-600 font-bold shrink-0">
+                    ID: {profile?.deliveryId || (profile?._id ? profile._id.slice(-6).toUpperCase() : "PARTNER")}
+                  </span>
+                  <span>•</span>
+                  <span className="truncate">{profile?.phone || "DoorDish Rider"}</span>
+                </div>
+              </div>
             </div>
-            <p className="text-gray-600 text-sm md:text-base mb-3 font-medium">{profile?.deliveryId || ""}</p>
-          </div>
-          <div className="relative shrink-0 ml-4">
-            {profile?.profileImage?.url ? (
-              <img src={profile.profileImage.url} alt="Profile" className="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover border-2 border-gray-200" />
-            ) : (
-              <img src="/assets/images/profile_avatar.webp" alt="Profile" className="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover border-2 border-gray-200" />
-            )}
-            <div className="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow-md border-2 border-white">
-              <Briefcase className="w-4 h-4 text-gray-600" />
+
+            <div className="flex items-center gap-1 text-slate-400 shrink-0">
+              <span className="text-[11px] font-semibold text-slate-400 hidden sm:inline">Details</span>
+              <ChevronRight className="w-4.5 h-4.5" />
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="px-4 py-6">
-        {/* Navigation Buttons */}
-        <div className="grid grid-cols-2 gap-3 mb-6">
+        {/* ─── 2. PRIMARY QUICK SERVICE TILES (2x2) ─── */}
+        <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
           <button
+            type="button"
             onClick={() => navigate("/food/delivery/history")}
-            className="bg-white rounded-xl p-4 flex flex-col items-center gap-2 border border-transparent active:bg-gray-50 transition-colors"
+            className="bg-white p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-200/70 shadow-xs flex items-center gap-3 text-left hover:border-blue-300 active:scale-[0.98] transition-all cursor-pointer group"
           >
-            <div className="rounded-full bg-gray-50 p-3">
-              <Bike className="w-6 h-6 text-gray-700" />
+            <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-colors border border-blue-500/20">
+              <Bike className="w-5 h-5" />
             </div>
-            <span className="text-sm font-bold text-gray-900">Trips history</span>
+            <div className="min-w-0 flex-1">
+              <h4 className="text-xs sm:text-[13px] font-extrabold text-slate-900 truncate">Trips History</h4>
+              <p className="text-[9.5px] text-slate-400 font-medium truncate">Completed deliveries</p>
+            </div>
           </button>
+
           <button
+            type="button"
             onClick={() => navigate("/food/delivery/profile/reviews")}
-            className="bg-white rounded-xl p-4 flex flex-col items-center gap-2 border border-transparent active:bg-gray-50 transition-colors"
+            className="bg-white p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-200/70 shadow-xs flex items-center gap-3 text-left hover:border-amber-300 active:scale-[0.98] transition-all cursor-pointer group"
           >
-            <div className="rounded-full bg-gray-50 p-3">
-              <Star className="w-6 h-6 text-orange-500" />
+            <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0 group-hover:bg-amber-500 group-hover:text-white transition-colors border border-amber-500/20">
+              <Star className="w-5 h-5 fill-amber-500" />
             </div>
-            <span className="text-sm font-bold text-gray-900">My reviews</span>
+            <div className="min-w-0 flex-1">
+              <h4 className="text-xs sm:text-[13px] font-extrabold text-slate-900 truncate">My Reviews</h4>
+              <p className="text-[9.5px] text-slate-400 font-medium truncate">Ratings & feedback</p>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => navigate("/food/delivery/profile/bank")}
+            className="bg-white p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-200/70 shadow-xs flex items-center gap-3 text-left hover:border-emerald-300 active:scale-[0.98] transition-all cursor-pointer group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition-colors border border-emerald-500/20">
+              <CreditCard className="w-5 h-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h4 className="text-xs sm:text-[13px] font-extrabold text-slate-900 truncate">Bank & Payouts</h4>
+              <p className="text-[9.5px] text-slate-400 font-medium truncate">Account details</p>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => navigate("/food/delivery/profile/documents")}
+            className="bg-white p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-200/70 shadow-xs flex items-center gap-3 text-left hover:border-purple-300 active:scale-[0.98] transition-all cursor-pointer group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-600 flex items-center justify-center shrink-0 group-hover:bg-purple-600 group-hover:text-white transition-colors border border-purple-500/20">
+              <FileText className="w-5 h-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h4 className="text-xs sm:text-[13px] font-extrabold text-slate-900 truncate">My Documents</h4>
+              <p className="text-[9.5px] text-slate-400 font-medium truncate">License, RC, PAN</p>
+            </div>
           </button>
         </div>
 
-        {/* Sections */}
-        <div className="space-y-4">
-          {/* Support Section */}
-          <div>
-            <h3 className="text-gray-400 text-[10px] font-black uppercase tracking-[0.2em] mb-3 px-1">Support</h3>
-            <div 
-              onClick={() => navigate("/food/delivery/help/tickets")}
-              className="bg-white rounded-xl p-4 flex items-center justify-between cursor-pointer active:bg-gray-50 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <Ticket className="w-5 h-5 text-gray-700" />
-                <span className="text-sm font-bold text-gray-900">Support tickets</span>
+        {/* ─── 3. REFER & EARN BANNER ─── */}
+        {referralLink && (
+          <div className="rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 p-4 text-white shadow-md shadow-orange-500/15 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0">
+                <Gift className="w-5 h-5 text-yellow-200" />
               </div>
-              <ChevronRight className="w-5 h-5 text-gray-300" />
+              <div className="min-w-0">
+                <h4 className="text-xs sm:text-sm font-black truncate">Refer a Partner & Earn</h4>
+                <p className="text-[10px] sm:text-[11px] text-orange-100 font-medium truncate">
+                  Get {referralReward > 0 ? `₹${referralReward}` : "cash bonuses"} for every friend who joins
+                </p>
+              </div>
             </div>
+            <button
+              type="button"
+              onClick={handleShareReferral}
+              className="bg-white text-orange-700 px-3.5 py-1.5 rounded-xl font-black text-xs shadow-xs active:scale-95 transition-all shrink-0 cursor-pointer flex items-center gap-1.5"
+            >
+              <Share2 className="w-3.5 h-3.5" />
+              <span>Share</span>
+            </button>
+          </div>
+        )}
+
+        {/* ─── 4. SUPPORT & HELP SERVICES (GROUPED LIST) ─── */}
+        <div className="rounded-2xl sm:rounded-3xl bg-white shadow-[0_3px_20px_rgba(0,0,0,0.04)] border border-slate-200/80 overflow-hidden divide-y divide-slate-100">
+          <div className="px-4 py-2.5 bg-slate-50/50">
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Support & Identification</span>
           </div>
 
-          {/* Logout Section */}
-          <div className="pt-2">
-            <div 
-              onClick={() => setShowLogoutConfirm(true)}
-              className="bg-white rounded-[1.2rem] p-4 flex items-center justify-between cursor-pointer border border-red-100 hover:bg-red-50 active:bg-red-100 transition-all shadow-[0_4px_20px_-4px_rgba(220,38,38,0.05)]"
-            >
-              <div className="flex items-center gap-4 min-w-0">
-                <div className="flex h-[3.2rem] w-[3.2rem] items-center justify-center rounded-full bg-red-50 shrink-0">
-                  <LogOut className="w-5 h-5 text-[#FF3131] ml-0.5" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[17px] font-bold text-[#FF3131] mb-0.5">Logout</p>
-                  <p className="text-[13px] text-gray-500 font-medium">Tap to logout from this device</p>
-                </div>
+          {/* Support Tickets */}
+          <div 
+            onClick={() => navigate("/food/delivery/help/tickets")}
+            className="p-3.5 sm:p-4 flex items-center justify-between hover:bg-slate-50 active:bg-slate-100 transition-colors cursor-pointer"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center shrink-0">
+                <Ticket className="w-4.5 h-4.5" />
               </div>
-              <ChevronRight className="w-[18px] h-[18px] text-gray-300 shrink-0" />
+              <div className="min-w-0">
+                <span className="text-xs sm:text-sm font-extrabold text-slate-900 block truncate">Support Tickets</span>
+                <p className="text-[9.5px] text-slate-400 font-medium truncate">Get help with orders or payments</p>
+              </div>
             </div>
+            <ChevronRight className="w-4 h-4 text-slate-300 shrink-0" />
+          </div>
+
+          {/* Partner Digital ID Card */}
+          <div 
+            onClick={() => navigate("/food/delivery/help/id-card")}
+            className="p-3.5 sm:p-4 flex items-center justify-between hover:bg-slate-50 active:bg-slate-100 transition-colors cursor-pointer"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-600 flex items-center justify-center shrink-0">
+                <Contact className="w-4.5 h-4.5" />
+              </div>
+              <div className="min-w-0">
+                <span className="text-xs sm:text-sm font-extrabold text-slate-900 block truncate">Digital Partner ID Card</span>
+                <p className="text-[9.5px] text-slate-400 font-medium truncate">Official DoorDish Rider identification</p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-slate-300 shrink-0" />
+          </div>
+
+          {/* Help Center Info */}
+          <div 
+            onClick={() => navigate("/food/delivery/help/content")}
+            className="p-3.5 sm:p-4 flex items-center justify-between hover:bg-slate-50 active:bg-slate-100 transition-colors cursor-pointer"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0">
+                <HelpCircle className="w-4.5 h-4.5" />
+              </div>
+              <div className="min-w-0">
+                <span className="text-xs sm:text-sm font-extrabold text-slate-900 block truncate">Help & Guidelines</span>
+                <p className="text-[9.5px] text-slate-400 font-medium truncate">FAQs, policies, and rider safety</p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-slate-300 shrink-0" />
+          </div>
+        </div>
+
+        {/* ─── 5. ACCOUNT ACTIONS (LOGOUT & DELETE) ─── */}
+        <div className="rounded-2xl sm:rounded-3xl bg-white shadow-[0_3px_20px_rgba(0,0,0,0.04)] border border-slate-200/80 overflow-hidden divide-y divide-slate-100">
+          {/* Logout */}
+          <div 
+            onClick={() => setShowLogoutConfirm(true)}
+            className="p-3.5 sm:p-4 flex items-center justify-between hover:bg-rose-50/50 active:bg-rose-50 transition-colors cursor-pointer group"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-rose-500/10 text-rose-600 flex items-center justify-center shrink-0 group-hover:bg-rose-600 group-hover:text-white transition-colors">
+                <LogOut className="w-4.5 h-4.5" />
+              </div>
+              <div className="min-w-0">
+                <span className="text-xs sm:text-sm font-extrabold text-rose-600 block truncate">Log Out</span>
+                <p className="text-[9.5px] text-slate-400 font-medium truncate">End shift session on this phone</p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-slate-300 shrink-0" />
           </div>
 
           {/* Delete Account */}
-          <div className="pt-0">
-            <div
-              onClick={() => { 
-                setDeleteCaptcha(""); 
-                setDeleteAccountOpen(true);
-              }}
-              className="bg-white rounded-[1.2rem] p-4 flex items-center justify-between cursor-pointer border border-red-50 hover:bg-red-50 active:bg-red-100 transition-all active:scale-[0.99]"
-            >
-              <div className="flex items-center gap-4 min-w-0">
-                <div className="flex h-[3.2rem] w-[3.2rem] items-center justify-center rounded-full bg-[#FFF1F2] shrink-0">
-                  {isCheckingBalance ? (
-                    <div className="w-5 h-5 border-2 border-[#FF3131]/30 border-t-[#FF3131] rounded-full animate-spin" />
-                  ) : (
-                    <Trash2 className="w-5 h-5 text-[#FF3131]" />
-                  )}
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[17px] font-bold text-[#FF3131] mb-0.5">Delete Account</p>
-                  <p className="text-[13px] text-gray-500 font-medium">Tap to delete your account</p>
-                </div>
+          <div
+            onClick={() => { 
+              setDeleteCaptcha(""); 
+              setDeleteAccountOpen(true);
+            }}
+            className="p-3.5 sm:p-4 flex items-center justify-between hover:bg-rose-50/50 active:bg-rose-50 transition-colors cursor-pointer group"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center shrink-0 group-hover:bg-rose-100 group-hover:text-rose-600 transition-colors">
+                {isCheckingBalance ? (
+                  <div className="w-4 h-4 border-2 border-slate-300 border-t-rose-600 rounded-full animate-spin" />
+                ) : (
+                  <Trash2 className="w-4.5 h-4.5" />
+                )}
               </div>
-              <ChevronRight className="w-[18px] h-[18px] text-[#FF3131]/30 shrink-0" />
+              <div className="min-w-0">
+                <span className="text-xs sm:text-sm font-extrabold text-slate-700 group-hover:text-rose-600 block truncate transition-colors">
+                  Delete Account
+                </span>
+                <p className="text-[9.5px] text-slate-400 font-medium truncate">Permanent partner deregistration</p>
+              </div>
             </div>
+            <ChevronRight className="w-4 h-4 text-slate-300 shrink-0" />
           </div>
         </div>
-      </div>
+      </main>
 
-      {/* Logout Confirm Popup */}
+      {/* ─── 6. LOGOUT CONFIRM POPUP (APPLE MODAL STYLE) ─── */}
       {showLogoutConfirm && (
         <div 
-          className="fixed inset-0 bg-black/50 z-[1000] flex items-center justify-center px-4 backdrop-blur-sm overflow-y-auto py-10"
+          className="fixed inset-0 bg-black/60 z-[1000] flex items-center justify-center p-4 backdrop-blur-xs"
           onClick={() => setShowLogoutConfirm(false)}
         >
           <div 
-            className="w-full max-w-[340px] rounded-[1.8rem] bg-white p-7 shadow-2xl flex flex-col items-center"
+            className="w-full max-w-sm rounded-[24px] bg-white p-6 shadow-2xl flex flex-col items-center border border-slate-100"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="relative mb-3">
-              {profile?.profileImage?.url ? (
-                <img src={profile.profileImage.url} alt="Profile" className="w-[84px] h-[84px] rounded-full object-cover shadow-sm ring-4 ring-gray-50" />
-              ) : (
-                <img src="/assets/images/profile_avatar.webp" alt="Profile" className="w-[84px] h-[84px] rounded-full object-cover shadow-sm ring-4 ring-gray-50" />
-              )}
+              <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-slate-200 bg-slate-100 shadow-sm">
+                <img 
+                  src={profile?.profileImage?.url || "/assets/images/profile_avatar.webp"} 
+                  alt="Profile" 
+                  className="w-full h-full object-cover" 
+                />
+              </div>
             </div>
             
-            <h3 className="text-[19px] font-black text-[#1F2937] leading-tight mb-1">{profile?.name || "Delivery Partner"}</h3>
-            {profile?.deliveryId && <p className="text-[13px] font-medium text-gray-500 mb-6">{profile.deliveryId}</p>}
+            <h3 className="text-base sm:text-lg font-black text-slate-900 leading-tight mb-1 text-center">
+              {profile?.name || "Delivery Partner"}
+            </h3>
+            {profile?.deliveryId && (
+              <p className="text-[11px] font-mono text-slate-400 mb-5">{profile.deliveryId}</p>
+            )}
 
-            <div className="w-full space-y-3">
+            <p className="text-xs text-slate-500 text-center mb-5">
+              Are you sure you want to log out from this device?
+            </p>
+
+            <div className="w-full space-y-2.5">
               <button
                 type="button"
                 onClick={handleLogout}
                 disabled={logoutSubmitting}
-                className="w-full rounded-[14px] bg-[#DC2626] py-[14px] text-[15px] font-bold text-white transition-all active:scale-[0.98] disabled:opacity-50"
+                className="w-full rounded-xl bg-rose-600 hover:bg-rose-700 py-3 text-xs sm:text-sm font-black text-white transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer shadow-md shadow-rose-600/20"
               >
-                {logoutSubmitting ? "Logging out..." : "Logout"}
+                {logoutSubmitting ? "Logging out..." : "Log Out"}
               </button>
               <button
                 type="button"
                 onClick={handleLogoutAllDevices}
                 disabled={logoutSubmitting}
-                className="w-full rounded-[14px] border-[1.5px] border-[#DC2626] bg-white py-[14px] text-[15px] font-bold text-[#DC2626] transition-all active:scale-[0.98] disabled:opacity-50"
+                className="w-full rounded-xl border border-rose-200 hover:bg-rose-50 bg-white py-3 text-xs sm:text-sm font-black text-rose-600 transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer"
               >
-                {logoutSubmitting ? "Logging out..." : "Logout from all devices"}
+                {logoutSubmitting ? "Logging out..." : "Log Out From All Devices"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowLogoutConfirm(false)}
+                disabled={logoutSubmitting}
+                className="w-full py-2.5 text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors disabled:opacity-50 cursor-pointer uppercase tracking-wider"
+              >
+                Cancel
               </button>
             </div>
-            
-            <button
-              type="button"
-              onClick={() => setShowLogoutConfirm(false)}
-              disabled={logoutSubmitting}
-              className="mt-5 text-[15px] font-bold text-[#6B7280] hover:text-[#374151] transition-colors disabled:opacity-50"
-            >
-              Cancel
-            </button>
           </div>
         </div>
       )}
 
-      {/* Balance Warning Popup */}
+      {/* ─── 7. BALANCE WARNING POPUP ─── */}
       {showBalanceWarning && (
-        <div className="fixed inset-0 bg-black/80 z-[1000] flex items-center justify-center px-4 backdrop-blur-sm overflow-y-auto py-10">
+        <div className="fixed inset-0 bg-black/60 z-[1000] flex items-center justify-center p-4 backdrop-blur-xs">
           <div 
-            className="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-6"
+            className="bg-white w-full max-w-sm rounded-[24px] shadow-2xl p-6 border border-slate-100"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex flex-col items-center text-center mb-4">
-              <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center mb-3">
-                <AlertTriangle className="w-8 h-8 text-orange-600" />
+              <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center mb-2.5 border border-amber-500/20">
+                <AlertTriangle className="w-7 h-7" />
               </div>
-              <h3 className="text-xl font-black text-gray-900">Wait! Balance Found</h3>
+              <h3 className="text-base sm:text-lg font-black text-slate-900">Wait! Balance Found</h3>
             </div>
 
-            <div className="bg-gray-50 rounded-xl p-4 mb-5 text-center">
-              <p className="text-xs text-gray-500 uppercase font-black tracking-widest mb-1">{balanceData.type}</p>
-              <p className="text-3xl font-black text-black">₹{balanceData.balance.toLocaleString('en-IN')}</p>
+            <div className="bg-slate-50 rounded-2xl p-4 mb-4 text-center border border-slate-200/60">
+              <p className="text-[10px] text-slate-400 uppercase font-black tracking-wider mb-0.5">{balanceData.type}</p>
+              <p className="text-2xl sm:text-3xl font-black text-slate-900">₹{balanceData.balance.toLocaleString('en-IN')}</p>
             </div>
 
-            <p className="text-sm text-gray-600 mb-6 text-center leading-relaxed">
-              You still have money in your account. Do you want to continue deleting your account or go back and withdraw?
+            <p className="text-xs text-slate-600 mb-5 text-center leading-relaxed">
+              You still have money in your partner account. Do you want to continue or go back and withdraw first?
             </p>
 
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2.5">
               <button
                 onClick={() => {
                   setShowBalanceWarning(false);
                   setDeleteCaptcha("");
                   setDeleteAccountOpen(true);
                 }}
-                className="w-full h-12 rounded-xl bg-gray-100 text-gray-700 font-bold hover:bg-gray-200 transition-colors"
+                className="w-full py-3 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 transition-colors text-xs cursor-pointer"
               >
                 Continue Anyway
               </button>
               <button
                 onClick={() => setShowBalanceWarning(false)}
-                className="w-full h-12 rounded-xl bg-black text-white font-bold hover:bg-gray-900 transition-colors"
+                className="w-full py-3 rounded-xl bg-slate-900 text-white font-bold hover:bg-slate-800 transition-colors text-xs cursor-pointer"
               >
                 Cancel & Withdraw
               </button>
@@ -340,76 +476,74 @@ export const ProfileV2 = () => {
         </div>
       )}
 
+      {/* ─── 8. DELETE ACCOUNT CAPTCHA POPUP ─── */}
       {deleteAccountOpen && (
-        <div 
-          className="fixed inset-0 z-[1000] overflow-y-auto bg-black/80 backdrop-blur-sm"
-        >
-          <div className="flex min-h-screen items-center justify-center p-4 py-10">
-            <div 
-              className="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-6"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Icon + Title centered */}
-              <div className="flex flex-col items-center text-center mb-4">
-                <div className="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center mb-3">
-                  <Trash2 className="w-7 h-7 text-red-600" />
-                </div>
-                <h3 className="text-xl font-black text-gray-900">Delete Your Account?</h3>
+        <div className="fixed inset-0 z-[1000] overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div 
+            className="bg-white w-full max-w-sm rounded-[24px] shadow-2xl p-5 sm:p-6 border border-slate-100"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex flex-col items-center text-center mb-3">
+              <div className="w-13 h-13 rounded-2xl bg-rose-500/10 text-rose-600 flex items-center justify-center mb-2.5 border border-rose-500/20">
+                <Trash2 className="w-6 h-6" />
               </div>
+              <h3 className="text-base sm:text-lg font-black text-slate-900">Delete Account?</h3>
+            </div>
 
-              <p className="text-sm text-gray-600 mb-4 leading-relaxed text-center">
-                Are you sure you want to delete your account?
+            <p className="text-xs text-slate-600 mb-3.5 leading-relaxed text-center">
+              Are you sure you want to delete your delivery account?
+            </p>
+
+            <div className="mb-4 bg-rose-50 border border-rose-200 rounded-xl p-3">
+              <div className="flex items-center gap-1.5 mb-1">
+                <AlertTriangle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                <span className="text-xs font-bold text-rose-800">Permanent Action</span>
+              </div>
+              <p className="text-[10px] text-rose-700 leading-relaxed">
+                Your account will be permanently closed. Historical records will be kept for financial reporting.
               </p>
+            </div>
+            
+            <div className="mb-5">
+              <input 
+                type="text" 
+                placeholder="Type DELETE to confirm" 
+                value={deleteCaptcha}
+                onChange={(e) => setDeleteCaptcha(e.target.value.toUpperCase())}
+                className="w-full py-3 px-3.5 rounded-xl border-2 border-slate-200 focus:border-rose-500 focus:ring-4 focus:ring-rose-50 outline-none transition-all font-black text-center tracking-widest text-xs uppercase placeholder:tracking-normal placeholder:font-medium placeholder:text-slate-400"
+              />
+            </div>
 
-              <div className="mb-4 bg-red-50 border-l-4 border-red-500 rounded-r-xl p-3">
-                <div className="flex items-center gap-2 mb-1">
-                  <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0" />
-                  <span className="text-sm font-bold text-red-700">Warning</span>
-                </div>
-                <p className="text-xs text-red-700 leading-relaxed">
-                  Your account will be Deleted. Admin will keep your historical records for revenue reporting.
-                </p>
-              </div>
-              
-              <div className="mb-6">
-                <input 
-                  type="text" 
-                  placeholder="Type DELETE to confirm" 
-                  value={deleteCaptcha}
-                  onChange={(e) => setDeleteCaptcha(e.target.value.toUpperCase())}
-                  className="w-full h-12 px-4 rounded-xl border-2 border-gray-200 focus:border-red-500 focus:ring-4 focus:ring-red-50 outline-none transition-all font-bold text-center tracking-widest placeholder:tracking-normal placeholder:font-medium placeholder:text-gray-400"
-                />
-              </div>
-
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setDeleteAccountOpen(false)}
-                  className="flex-1 h-12 rounded-xl border-2 border-gray-300 text-gray-700 font-bold hover:bg-gray-50 active:bg-gray-100 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={async () => {
-                    if (isDeleting || deleteCaptcha !== "DELETE") return;
-                    setIsDeleting(true);
-                    try {
-                      await authAPI.deleteAccount("delivery");
-                      showAccountDeletedToast();
-                      clearModuleAuth("delivery");
-                      navigate("/food/delivery/login", { replace: true });
-                    } catch (err) {
-                      showUserFacingApiError(err, "Failed to delete account");
-                    } finally {
-                      setIsDeleting(false);
-                      setDeleteAccountOpen(false);
-                    }
-                  }}
-                  disabled={isDeleting || deleteCaptcha !== "DELETE"}
-                  className="flex-1 h-12 rounded-xl bg-red-600 text-white font-bold disabled:opacity-60 disabled:cursor-not-allowed hover:bg-red-700 active:bg-red-800 transition-colors shadow-lg shadow-red-600/20"
-                >
-                  {isDeleting ? "Deleting..." : "Delete Account"}
-                </button>
-              </div>
+            <div className="flex items-center gap-2.5">
+              <button
+                type="button"
+                onClick={() => setDeleteAccountOpen(false)}
+                className="flex-1 py-3 rounded-xl border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-colors text-xs cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  if (isDeleting || deleteCaptcha !== "DELETE") return;
+                  setIsDeleting(true);
+                  try {
+                    await authAPI.deleteAccount("delivery");
+                    showAccountDeletedToast();
+                    clearModuleAuth("delivery");
+                    navigate("/food/delivery/login", { replace: true });
+                  } catch (err) {
+                    showUserFacingApiError(err, "Failed to delete account");
+                  } finally {
+                    setIsDeleting(false);
+                    setDeleteAccountOpen(false);
+                  }
+                }}
+                disabled={isDeleting || deleteCaptcha !== "DELETE"}
+                className="flex-1 py-3 rounded-xl bg-rose-600 text-white font-black text-xs disabled:opacity-50 disabled:cursor-not-allowed hover:bg-rose-700 transition-colors shadow-md shadow-rose-600/20 cursor-pointer"
+              >
+                {isDeleting ? "Deleting..." : "Confirm Delete"}
+              </button>
             </div>
           </div>
         </div>
