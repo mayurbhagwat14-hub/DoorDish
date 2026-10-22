@@ -61,10 +61,6 @@
   background-color: var(--dv-bg) !important;
 }
 
-.delivery-v2-theme [class*="bg-[#121212]"] {
-  background: linear-gradient(160deg, #FF5A1F 0%, #E64A0F 100%) !important;
-}
-
 .delivery-v2-theme [class*="text-[#ff8100]"],
 .delivery-v2-theme [class*="text-[#EB590E]"],
 .delivery-v2-theme [class*="text-[#10B981]"],

@@ -181,68 +181,68 @@ export const HistoryV2 = () => {
 
   return (
     <div className="min-h-screen bg-white font-poppins pb-32">
-       {/* 1. Header (Premium V2 Styled) */}
-       <div className="bg-[#121212] border-b border-white/10 px-6 py-3 flex items-center justify-between sticky top-0 z-[100] backdrop-blur-2xl">
-          <div className="flex items-center gap-4">
-            <button onClick={goBack} className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white border border-white/10 active:scale-90 transition-all">
-               <ArrowLeft className="w-5 h-5" />
+       {/* 1. Header (Clean Apple Glassmorphism) */}
+       <div className="bg-white/95 border-b border-slate-200/80 px-4 sm:px-6 py-3 flex items-center justify-between sticky top-0 z-[100] backdrop-blur-xl shadow-xs">
+          <div className="flex items-center gap-3">
+            <button onClick={goBack} className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-700 border border-slate-200 active:scale-95 transition-all hover:bg-slate-200 cursor-pointer">
+               <ArrowLeft className="w-4.5 h-4.5" />
             </button>
             <div>
-               <h1 className="text-xl font-black text-white uppercase tracking-tighter">Trip History</h1>
-               <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">Your delivery milestones</p>
+               <h1 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">Trip History</h1>
+               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Your delivery milestones</p>
             </div>
           </div>
-          <button onClick={() => setShowBonusModal(true)} className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center text-[#10B981] border border-green-500/20 relative active:scale-90 transition-all">
-             <Gift className="w-5 h-5" />
+          <button onClick={() => setShowBonusModal(true)} className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 border border-emerald-200 relative active:scale-95 transition-all cursor-pointer shadow-xs">
+             <Gift className="w-4.5 h-4.5" />
              {bonusTransactions.length > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#10B981] text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+                <span className="absolute -top-1 -right-1 w-4.5 h-4.5 bg-emerald-600 text-white text-[9.5px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-xs">
                    {bonusTransactions.length}
                 </span>
              )}
           </button>
        </div>
 
-       {/* 2. Selection Tabs (Matched to Image) */}
-       <div className="bg-white px-4 flex items-center gap-8 sticky top-[61px] z-[90] border-b border-gray-100">
+       {/* 2. Selection Tabs */}
+       <div className="bg-white px-4 flex items-center gap-6 sticky top-[57px] z-[90] border-b border-slate-100">
           {['daily', 'weekly', 'monthly'].map((tab) => (
              <button
                key={tab}
                onClick={() => setActiveTab(tab)}
-               className={`py-4 text-base font-medium capitalize relative ${activeTab === tab ? 'text-[#10B981]' : 'text-gray-400'}`}
+               className={`py-3 text-xs sm:text-sm font-extrabold capitalize relative tracking-wide cursor-pointer transition-colors ${activeTab === tab ? 'text-emerald-600' : 'text-slate-400 hover:text-slate-600'}`}
              >
                 {tab}
-                {activeTab === tab && <motion.div layoutId="tab-indicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#10B981]" />}
+                {activeTab === tab && <motion.div layoutId="tab-indicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 rounded-full" />}
              </button>
           ))}
        </div>
 
-       {/* 3. Filter Controls (Matched to Image) */}
-       <div className="bg-white px-4 py-4 flex gap-3 sticky top-[118px] z-[80]">
+       {/* 3. Filter Controls */}
+       <div className="bg-white px-4 py-3 flex gap-2.5 sticky top-[102px] z-[80] border-b border-slate-100/60">
           <button 
              onClick={() => { setShowDatePicker(!showDatePicker); setShowTripTypePicker(false); }}
-             className="flex-1 px-4 py-3 bg-[#f8f9fa] border border-gray-100 rounded-xl flex items-center justify-between text-gray-800"
+             className="flex-1 px-3.5 py-2.5 bg-slate-50 border border-slate-200/80 rounded-xl flex items-center justify-between text-slate-800 cursor-pointer shadow-xs active:scale-[0.99] transition-all"
           >
-             <span className="text-sm font-medium">{formatDateDisplay(selectedDate)}</span>
-             <ChevronDown className={`w-4 h-4 text-gray-400 transform transition-transform ${showDatePicker ? 'rotate-180' : ''}`} />
+             <span className="text-xs sm:text-sm font-bold text-slate-700">{formatDateDisplay(selectedDate)}</span>
+             <ChevronDown className={`w-4 h-4 text-slate-400 transform transition-transform ${showDatePicker ? 'rotate-180' : ''}`} />
           </button>
           <button 
              onClick={() => { setShowTripTypePicker(!showTripTypePicker); setShowDatePicker(false); }}
-             className="w-[140px] px-4 py-3 bg-[#f8f9fa] border border-gray-100 rounded-xl flex items-center justify-between text-gray-800"
+             className="w-[130px] sm:w-[140px] px-3.5 py-2.5 bg-slate-50 border border-slate-200/80 rounded-xl flex items-center justify-between text-slate-800 cursor-pointer shadow-xs active:scale-[0.99] transition-all"
           >
-             <span className="text-sm font-medium">{selectedTripType}</span>
-             <ChevronDown className={`w-4 h-4 text-gray-400 transform transition-transform ${showTripTypePicker ? 'rotate-180' : ''}`} />
+             <span className="text-xs sm:text-sm font-bold text-slate-700">{selectedTripType}</span>
+             <ChevronDown className={`w-4 h-4 text-slate-400 transform transition-transform ${showTripTypePicker ? 'rotate-180' : ''}`} />
           </button>
        </div>
 
        {/* Dropdowns */}
        <AnimatePresence>
           {showDatePicker && (
-             <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} className="fixed left-4 right-4 top-[185px] z-[200] bg-white rounded-2xl shadow-2xl border border-gray-100 max-h-[300px] overflow-y-auto p-2">
+             <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} className="fixed left-4 right-4 top-[165px] z-[200] bg-white rounded-2xl shadow-2xl border border-slate-100 max-h-[300px] overflow-y-auto p-2">
                 {recentDates.map((date, idx) => (
                    <button 
                       key={idx} 
                       onClick={() => { setSelectedDate(date); setShowDatePicker(false); }}
-                      className={`w-full text-left p-4 rounded-xl text-sm font-medium ${date.toDateString() === selectedDate.toDateString() ? 'bg-green-50 text-[#10B981] font-bold' : 'text-gray-700 hover:bg-gray-50'}`}
+                      className={`w-full text-left p-3.5 rounded-xl text-xs sm:text-sm font-bold ${date.toDateString() === selectedDate.toDateString() ? 'bg-emerald-50 text-emerald-700 font-black' : 'text-slate-700 hover:bg-slate-50'}`}
                    >
                       {formatDateDisplay(date)}
                    </button>
@@ -250,12 +250,12 @@ export const HistoryV2 = () => {
              </motion.div>
           )}
           {showTripTypePicker && (
-             <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} className="fixed right-4 top-[185px] w-48 z-[200] bg-white rounded-2xl shadow-2xl border border-gray-100 p-2">
+             <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} className="fixed right-4 top-[165px] w-48 z-[200] bg-white rounded-2xl shadow-2xl border border-slate-100 p-2">
                 {tripTypes.map((type, idx) => (
                    <button 
                       key={idx} 
                       onClick={() => { setSelectedTripType(type); setShowTripTypePicker(false); }}
-                      className={`w-full text-left p-4 rounded-xl text-sm font-medium ${type === selectedTripType ? 'bg-green-50 text-[#10B981] font-bold' : 'text-gray-700 hover:bg-gray-50'}`}
+                      className={`w-full text-left p-3.5 rounded-xl text-xs sm:text-sm font-bold ${type === selectedTripType ? 'bg-emerald-50 text-emerald-700 font-black' : 'text-slate-700 hover:bg-slate-50'}`}
                    >
                       {type}
                    </button>
@@ -265,18 +265,18 @@ export const HistoryV2 = () => {
        </AnimatePresence>
 
        {/* 4. Page Content */}
-       <div className="px-4 py-2 space-y-5">
-          {/* Performance Summary Banner (Matched to Image) */}
-          <div className="bg-[#E9F9F4] rounded-2xl p-6 border border-[#D1F2E8] flex justify-between items-center">
+       <div className="px-4 py-3 space-y-4">
+          {/* Performance Summary Banner */}
+          <div className="bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-50/50 rounded-2xl p-4 sm:p-5 border border-emerald-200/70 shadow-xs flex justify-between items-center">
              <div>
-                <p className="text-[11px] font-bold text-[#10B981] mb-1">COD Collected</p>
-                <h3 className="text-xl font-bold text-gray-950 min-h-[1.75rem] flex items-center">
+                <p className="text-[10px] font-black uppercase tracking-wider text-emerald-700 mb-0.5">COD Collected</p>
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 min-h-[1.75rem] flex items-center">
                    {loading ? <Skeleton className="h-7 w-24" /> : `₹${metrics.cod.toFixed(2)}`}
                 </h3>
              </div>
              <div className="text-right">
-                <p className="text-[11px] font-bold text-[#10B981] mb-1">Earnings</p>
-                <h3 className="text-xl font-bold text-gray-950 min-h-[1.75rem] flex items-center justify-end">
+                <p className="text-[10px] font-black uppercase tracking-wider text-emerald-700 mb-0.5">Earnings</p>
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 min-h-[1.75rem] flex items-center justify-end">
                    {loading ? <Skeleton className="h-7 w-24" /> : `₹${metrics.earnings.toFixed(2)}`}
                 </h3>
              </div>

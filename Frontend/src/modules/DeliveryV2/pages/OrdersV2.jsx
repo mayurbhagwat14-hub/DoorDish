@@ -188,48 +188,45 @@ export default function OrdersV2() {
   const acceptDisabled = capacity.remaining <= 0;
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      <div className="bg-[#121212] text-white px-4 pt-6 pb-4">
+    <div className="min-h-screen bg-[#F6F8FB] flex flex-col font-sans select-none antialiased">
+      {/* ─── Apple iOS Top Bar ─── */}
+      <div className="bg-white/95 border-b border-slate-200/80 px-4 pt-4 sm:pt-5 pb-3 sticky top-0 z-[100] backdrop-blur-xl shadow-xs">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-black uppercase tracking-tight">Orders</h1>
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">Orders Center</h1>
+            <span className="text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full border border-slate-200">
+              {capacity.active}/{capacity.max} Slots
+            </span>
+          </div>
           <button
             type="button"
             onClick={hydrateOrders}
             disabled={isLoading}
-            className="p-1.5 text-gray-400 hover:text-white rounded-lg active:scale-95 transition-all"
+            className="w-9 h-9 flex items-center justify-center text-slate-500 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-xl active:scale-95 transition-all cursor-pointer border border-slate-200/60"
             aria-label="Refresh orders"
           >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-orange-400' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-orange-500' : ''}`} />
           </button>
         </div>
-        <p className="text-xs text-gray-400 mt-1 font-semibold">
-          {capacity.active}/{capacity.max} active slots used
-        </p>
 
         {!isSocketConnected && (
-          <div className="mt-2.5 flex items-center gap-2 rounded-xl bg-amber-500/15 border border-amber-400/30 px-3 py-1.5 text-amber-300 text-[11px] font-semibold">
-            <WifiOff className="w-3.5 h-3.5 shrink-0 animate-pulse" />
+          <div className="mt-2.5 flex items-center gap-2 rounded-xl bg-amber-50 border border-amber-300 px-3 py-1.5 text-amber-900 text-[11px] font-semibold">
+            <WifiOff className="w-3.5 h-3.5 shrink-0 text-amber-600 animate-pulse" />
             <span>Reconnecting to live dispatch... Updates will refresh automatically.</span>
           </div>
         )}
 
-        <div className="mt-4 flex rounded-2xl bg-white/10 p-1 border border-white/10">
+        <div className="mt-3 flex rounded-xl bg-slate-100 p-1 border border-slate-200/60">
           <button
             type="button"
             onClick={() => setActiveTab('new')}
-            className={`flex-1 rounded-xl py-2.5 text-[11px] font-black uppercase tracking-widest transition-all ${
-              activeTab === 'new' ? 'bg-white text-gray-950 shadow' : 'text-white/70'
+            className={`flex-1 rounded-lg py-2 text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+              activeTab === 'new' ? 'bg-white text-slate-950 shadow-xs' : 'text-slate-500 hover:text-slate-800'
             }`}
           >
-            New Orders
+            <span>New Requests</span>
             {visibleNewOrders.length > 0 ? (
-              <span
-                className={`ml-1.5 inline-flex min-w-[20px] h-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[10px] font-black leading-none ${
-                  activeTab === 'new'
-                    ? '!bg-[#15498b] !text-white'
-                    : '!bg-orange-500 !text-white shadow-sm ring-1 ring-white/25'
-                }`}
-              >
+              <span className="inline-flex min-w-[20px] h-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[9.5px] font-black leading-none bg-orange-500 text-white shadow-xs">
                 {visibleNewOrders.length > 9 ? '9+' : visibleNewOrders.length}
               </span>
             ) : null}
@@ -237,19 +234,13 @@ export default function OrdersV2() {
           <button
             type="button"
             onClick={() => setActiveTab('accepted')}
-            className={`flex-1 rounded-xl py-2.5 text-[11px] font-black uppercase tracking-widest transition-all ${
-              activeTab === 'accepted' ? 'bg-white text-gray-950 shadow' : 'text-white/70'
+            className={`flex-1 rounded-lg py-2 text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+              activeTab === 'accepted' ? 'bg-white text-slate-950 shadow-xs' : 'text-slate-500 hover:text-slate-800'
             }`}
           >
-            Active & Assigned
+            <span>Active Queue</span>
             {acceptedOrders.length > 0 ? (
-              <span
-                className={`ml-1.5 inline-flex min-w-[20px] h-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[10px] font-black leading-none ${
-                  activeTab === 'accepted'
-                    ? '!bg-[#15498b] !text-white'
-                    : '!bg-orange-500 !text-white shadow-sm ring-1 ring-white/25'
-                }`}
-              >
+              <span className="inline-flex min-w-[20px] h-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[9.5px] font-black leading-none bg-emerald-600 text-white shadow-xs">
                 {acceptedOrders.length > 9 ? '9+' : acceptedOrders.length}
               </span>
             ) : null}

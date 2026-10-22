@@ -756,14 +756,14 @@ export default function DeliveryHomeV2({ tab = 'home' }) {
 
   return (
     <div className="relative h-screen w-full bg-white text-gray-900 overflow-hidden flex flex-col">
-      {/* ─── 1. TOP HEADER (Premium Dark Gray - for Feed/LiveMap only) ─── */}
+      {/* ─── 1. TOP HEADER (Apple Glassmorphism Light Bar) ─── */}
       {currentTab !== 'history' && currentTab !== 'home' && (
-      <div className="absolute top-0 inset-x-0 bg-[#121212]/95 backdrop-blur-2xl shadow-2xl z-[200] safe-top pb-2 border-b border-white/10">
-        <div className="flex items-center justify-between px-4 py-2">
-          <div className="flex items-center gap-4">
+      <div className="absolute top-0 inset-x-0 bg-white/95 backdrop-blur-xl shadow-[0_2px_12px_rgba(0,0,0,0.06)] z-[200] safe-top pb-2.5 border-b border-slate-200/80">
+        <div className="flex items-center justify-between px-3 sm:px-4 py-2">
+          <div className="flex items-center gap-3">
              <div 
                 onClick={() => navigate('/food/delivery/profile')}
-                className="w-10 h-10 rounded-full border border-white/20 p-0.5 shadow-xl overflow-hidden bg-white/5 cursor-pointer active:scale-95 transition-all"
+                className="w-10 h-10 rounded-full border-2 border-slate-200 p-0.5 shadow-xs overflow-hidden bg-slate-100 cursor-pointer active:scale-95 transition-all"
              >
                 <img src={profileImage || "/assets/images/profile_avatar.webp"} alt="Profile" className="w-full h-full object-cover rounded-full" />
              </div>
@@ -780,32 +780,40 @@ export default function DeliveryHomeV2({ tab = 'home' }) {
                      deliveryAPI.updateOnlineStatus(false).catch(() => {});
                   }
                 }}
-                className={`delivery-online-toggle relative w-[92px] h-8 rounded-full p-1 transition-all duration-500 flex items-center ${isOnline ? 'is-online bg-green-500 shadow-lg shadow-green-500/20' : 'is-offline bg-green-400 shadow-lg shadow-green-400/20'}`}
+                className={`delivery-online-toggle relative w-[96px] h-8 rounded-full p-1 transition-all duration-300 flex items-center shadow-xs cursor-pointer ${
+                  isOnline 
+                    ? 'is-online bg-emerald-500 shadow-emerald-500/20' 
+                    : 'is-offline bg-slate-300'
+                }`}
               >
-                <div className={`flex items-center justify-between w-full px-2 text-[8.5px] font-black uppercase tracking-widest text-white`}>
+                <div className={`flex items-center justify-between w-full px-2 text-[8.5px] font-black uppercase tracking-wider text-white`}>
                   <span>{isOnline ? 'Online' : ''}</span>
                   <span>{!isOnline ? 'Offline' : ''}</span>
                 </div>
-                <motion.div animate={{ x: isOnline ? 59 : 0 }} className="absolute left-1 w-6 h-6 bg-white rounded-full shadow-sm" />
+                <motion.div animate={{ x: isOnline ? 62 : 0 }} className="absolute left-1 w-6 h-6 bg-white rounded-full shadow-md" />
               </button>
 
               {/* DEV SIMULATION TOGGLE */}
               {import.meta.env.DEV && (
                  <button 
                    onClick={() => setIsSimMode(!isSimMode)}
-                   className={`px-3 h-8 rounded-lg text-[9px] font-black border transition-all ${isSimMode ? 'bg-orange-500 border-orange-400 text-white animate-pulse' : 'bg-white/10 border-white/20 text-white/40'}`}
+                   className={`px-2.5 h-8 rounded-xl text-[9px] font-black border transition-all cursor-pointer ${isSimMode ? 'bg-orange-500 border-orange-500 text-white shadow-xs' : 'bg-slate-100 border-slate-200 text-slate-500'}`}
                  >
                    SIM
                  </button>
               )}
            </div>
-          <div className="flex items-center gap-3">
-             <button onClick={() => setShowEmergencyPopup(true)} className="w-9 h-9 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 border border-red-500/20 active:scale-95 transition-all shadow-lg"><AlertTriangle className="w-4 h-4" /></button>
-             <button onClick={() => navigate('/food/delivery/help/id-card')} className="w-9 h-9 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 border border-blue-500/20 active:scale-95 transition-all shadow-lg"><Contact className="w-4 h-4" /></button>
-             <button onClick={() => setShowNotifications(true)} className="relative w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white border border-white/10 active:scale-95 transition-all shadow-lg">
+          <div className="flex items-center gap-2">
+             <button onClick={() => setShowEmergencyPopup(true)} className="w-9 h-9 rounded-full bg-red-50 hover:bg-red-100 flex items-center justify-center text-red-600 border border-red-200 active:scale-95 transition-all shadow-xs cursor-pointer" aria-label="SOS Alert">
+               <AlertTriangle className="w-4 h-4" />
+             </button>
+             <button onClick={() => navigate('/food/delivery/help/id-card')} className="w-9 h-9 rounded-full bg-blue-50 hover:bg-blue-100 flex items-center justify-center text-blue-600 border border-blue-200 active:scale-95 transition-all shadow-xs cursor-pointer" aria-label="ID Card">
+               <Contact className="w-4 h-4" />
+             </button>
+             <button onClick={() => setShowNotifications(true)} className="relative w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 border border-slate-200 active:scale-95 transition-all shadow-xs cursor-pointer" aria-label="Notifications">
                 <Bell className="w-4 h-4" />
                 {notificationUnreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-orange-600 flex items-center justify-center text-[9px] font-black text-white border-2 border-[#121212] shadow-xl animate-in zoom-in duration-300">
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-orange-600 flex items-center justify-center text-[9px] font-black text-white border-2 border-white shadow-sm">
                     {notificationUnreadCount > 9 ? '9+' : notificationUnreadCount}
                   </span>
                 )}
@@ -813,7 +821,7 @@ export default function DeliveryHomeV2({ tab = 'home' }) {
           </div>
         </div>
 
-        {/* ─── LIVE STATUS / PROGRESS BADGE (MATCHED PRO) ─── */}
+        {/* ─── LIVE STATUS / PROGRESS BADGE ─── */}
         <AnimatePresence>
           {currentTab === 'feed' && (
             <motion.div 
@@ -823,59 +831,65 @@ export default function DeliveryHomeV2({ tab = 'home' }) {
               className="px-3 md:px-4 mt-1"
             >
               {activeOrder ? (
-                <div className="grid grid-cols-2 gap-3 w-full">
-                  {/* LEFT: DISTANCE (Vibrant Orange Card) */}
-                  <div className="bg-[#ff8100] rounded-2xl p-3.5 shadow-xl shadow-orange-500/20 border border-orange-400/50 flex items-center justify-between overflow-hidden relative">
+                <div className="grid grid-cols-2 gap-2.5 w-full">
+                  {/* LEFT: DISTANCE */}
+                  <div className="bg-gradient-to-r from-orange-500 to-amber-500 rounded-2xl p-3 shadow-md shadow-orange-500/15 border border-orange-400/40 flex items-center justify-between overflow-hidden relative text-white">
                     <div className="flex flex-col z-10">
-                      <span className="text-[9px] text-white/70 font-black uppercase tracking-[0.15em] mb-1">Distance</span>
+                      <span className="text-[9px] text-white/80 font-black uppercase tracking-wider mb-0.5">Distance</span>
                       <div className="flex items-end gap-1">
-                        <span className="text-2xl font-black text-white leading-none tracking-tighter">
+                        <span className="text-xl sm:text-2xl font-black leading-none tracking-tight">
                           {formatTripDistanceKm(distanceToTarget)}
                         </span>
-                        <span className="text-[11px] text-white/80 font-bold mb-0.5">KM</span>
+                        <span className="text-[10px] text-white/90 font-bold mb-0.5">KM</span>
                       </div>
                     </div>
-                    <div className="w-9 h-9 bg-white rounded-xl flex items-center justify-center z-10 shadow-lg">
-                      <Navigation2 className="w-4 h-4 text-[#ff8100] rotate-45" />
+                    <div className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center z-10 shadow-xs">
+                      <Navigation2 className="w-4 h-4 text-white rotate-45" />
                     </div>
                   </div>
 
-                  {/* RIGHT: TIME (Emerald PRO Content) */}
-                  <div className="bg-[#10B981] rounded-2xl p-3.5 shadow-xl shadow-green-500/20 border border-green-400/50 flex items-center justify-between relative overflow-hidden group">
+                  {/* RIGHT: TIME */}
+                  <div className="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-2xl p-3 shadow-md shadow-emerald-500/15 border border-emerald-400/40 flex items-center justify-between overflow-hidden relative text-white">
                     <div className="flex flex-col z-10">
-                      <span className="text-[9px] text-white/70 font-black uppercase tracking-[0.15em] mb-1">Arrival</span>
+                      <span className="text-[9px] text-white/80 font-black uppercase tracking-wider mb-0.5">Arrival</span>
                       <div className="flex items-end gap-1">
-                        <span className="text-2xl font-black text-white leading-none tracking-tighter">
+                        <span className="text-xl sm:text-2xl font-black leading-none tracking-tight">
                           {eta ? String(eta) : '--'}
                         </span>
-                        <span className="text-[11px] text-white/80 font-bold mb-0.5">MIN</span>
+                        <span className="text-[10px] text-white/90 font-bold mb-0.5">MIN</span>
                       </div>
                     </div>
-                    <div className="w-9 h-9 bg-white rounded-xl flex items-center justify-center z-10 shadow-lg">
-                       <Clock className="w-4 h-4 text-[#10B981]" />
+                    <div className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center z-10 shadow-xs">
+                       <Clock className="w-4 h-4 text-white" />
                     </div>
                   </div>
                 </div>
               ) : (
-                <div className="bg-white/5 rounded-2xl p-4 flex items-center border border-white/5 shadow-sm backdrop-blur-md">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-green-500/10 rounded-full flex items-center justify-center">
-                      <div className={`w-2 h-2 rounded-full ${!isOnline ? 'bg-gray-500' : isSocketConnected ? 'bg-green-500 animate-pulse' : 'bg-amber-400 animate-ping'}`} />
+                <div className="bg-slate-50 rounded-2xl p-3.5 flex items-center border border-slate-200/80 shadow-xs">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                      !isOnline 
+                        ? 'bg-slate-200 text-slate-500' 
+                        : isSocketConnected 
+                          ? 'bg-emerald-100 text-emerald-600' 
+                          : 'bg-amber-100 text-amber-600'
+                    }`}>
+                      <div className={`w-2.5 h-2.5 rounded-full ${!isOnline ? 'bg-slate-400' : isSocketConnected ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500 animate-ping'}`} />
                     </div>
-                    <div>
-                      <h3 className="text-white font-black text-[11px] uppercase tracking-widest leading-none mb-1">
+                    <div className="min-w-0">
+                      <h3 className="text-slate-900 font-extrabold text-xs uppercase tracking-wider leading-none mb-1">
                         {!isOnline
                           ? 'System Offline'
                           : isSocketConnected
-                            ? 'System Online'
-                            : 'Reconnecting Live Dispatch…'}
+                            ? 'System Online & Ready'
+                            : 'Connecting Live Dispatch…'}
                       </h3>
-                      <p className="text-gray-400 text-[10px] font-bold uppercase tracking-tight">
+                      <p className="text-slate-500 text-[10.5px] font-medium leading-none">
                         {!isOnline
-                          ? 'Go online to receive jobs'
+                          ? 'Switch Online to receive delivery orders'
                           : isSocketConnected
-                            ? 'Waiting for order requests'
-                            : 'Live events will resume automatically'}
+                            ? 'Actively scanning for nearby delivery offers'
+                            : 'Reconnecting automatically to dispatch server'}
                       </p>
                     </div>
                   </div>
@@ -883,12 +897,12 @@ export default function DeliveryHomeV2({ tab = 'home' }) {
               )}
 
               {!activeOrder && cashLimitNotice?.blocked && (
-                <div className="mt-3 rounded-2xl border border-amber-300/40 bg-amber-500/10 px-4 py-3">
-                  <p className="text-[10px] font-black uppercase tracking-[0.14em] text-amber-200">
-                    Cash Limit Alert
+                <div className="mt-2.5 rounded-2xl border border-amber-300 bg-amber-50 px-3.5 py-2.5 shadow-xs">
+                  <p className="text-[9.5px] font-black uppercase tracking-wider text-amber-800">
+                    Cash Limit Notice
                   </p>
-                  <p className="mt-1 text-[11px] font-semibold text-amber-100">
-                    {cashLimitNotice?.message || 'Please deposit your amount to get orders.'}
+                  <p className="mt-0.5 text-xs font-semibold text-amber-900">
+                    {cashLimitNotice?.message || 'Please deposit your collected cash to receive new orders.'}
                   </p>
                 </div>
               )}
