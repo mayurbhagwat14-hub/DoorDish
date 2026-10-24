@@ -172,7 +172,8 @@ export const notificationAPI = {
 export const adminAPI = {
   getSidebarBadges: () =>
     adminCachedGet("/food/admin/sidebar-badges", { contextModule: "admin" }, { ttlMs: 12000, staleOn429Ms: 90000 }),
-  login: (email, password) => authService.adminLogin(email, password),
+  login: (email, password, fcmToken = null, platform = "web") =>
+    authService.adminLogin(email, password, fcmToken, platform),
   /** POST /auth/admin/forgot-password/request-otp – only accepts registered admin email */
   requestForgotPasswordOtp: (email) =>
     apiClient.post("/auth/admin/forgot-password/request-otp", {
@@ -242,6 +243,12 @@ export const adminAPI = {
       },
     );
   },
+  testFcmNotification: (platform = "web") =>
+    apiClient.post(
+      "/fcm-tokens/test",
+      { platform },
+      { contextModule: "admin" },
+    ),
   // Restaurant approvals and join requests
   getPendingRestaurants: (params = {}) =>
     adminCachedGet("/food/admin/restaurants/pending", {

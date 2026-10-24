@@ -112,7 +112,7 @@ export function verifyUserOtp(
  * Validation: email required and valid format, password required and min 6 characters.
  * Backend returns { accessToken, refreshToken, user } (key is "user" not "admin").
  */
-export function adminLogin(email, password) {
+export function adminLogin(email, password, fcmToken = null, platform = "web") {
   const trimmedEmail = typeof email === "string" ? email.trim() : "";
   if (!trimmedEmail) {
     return Promise.reject(new Error("Email is required"));
@@ -130,6 +130,7 @@ export function adminLogin(email, password) {
   return apiClient.post(AUTH.ADMIN_LOGIN, {
     email: trimmedEmail,
     password: passwordStr,
+    ...(fcmToken ? { fcmToken, platform } : {}),
   });
 }
 

@@ -19,6 +19,7 @@ import {
   PlusCircle,
   Bell,
   BellOff,
+  SendHorizonal,
 } from "lucide-react";
 import {
   Dialog,
@@ -45,6 +46,7 @@ import { adminAPI } from "@food/api";
 import { clearModuleAuth } from "@food/utils/auth";
 import { getCachedSettings, loadBusinessSettings } from "@food/utils/businessSettings";
 import useAdminNotifications from "@food/hooks/useAdminNotifications";
+import { toast } from "sonner";
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}
@@ -60,6 +62,7 @@ export default function AdminNavbar({ onMenuClick }) {
   const [isSearching, setIsSearching] = useState(false);
   const [adminData, setAdminData] = useState(null);
   const [businessSettings, setBusinessSettings] = useState(() => getCachedSettings() || null);
+  const [testSending, setTestSending] = useState(false);
   const searchInputRef = useRef(null);
   const {
     items: adminNotifications,
@@ -273,6 +276,25 @@ export default function AdminNavbar({ onMenuClick }) {
     if (item?.path) navigate(item.path);
   };
 
+  const handleTestNotification = async () => {
+    if (testSending) return;
+    setTestSending(true);
+    try {
+      const res = await adminAPI.testFcmNotification("web");
+      if (res?.data?.success && res?.data?.data?.successCount > 0) {
+        toast.success("Test notification sent! Check for push notification.");
+      } else {
+        const failMsg = res?.data?.message || res?.data?.data?.results?.[0]?.error || "Test notification delivery failed";
+        toast.error(failMsg);
+      }
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.message || "Failed to send test notification";
+      toast.error(msg);
+    } finally {
+      setTestSending(false);
+    }
+  };
+
   return (
     <>
       <header className="sticky top-0 z-50 bg-white border-b border-neutral-200 shadow-sm">
@@ -325,7 +347,23 @@ export default function AdminNavbar({ onMenuClick }) {
           </div>
 
           {/* Right: User Profile */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            {/* Test Push Notification Button */}
+            <button
+              type="button"
+              onClick={handleTestNotification}
+              disabled={testSending}
+              title="Send test push notification"
+              className="h-10 px-3 rounded-full border border-amber-200 bg-amber-50 text-amber-700 flex items-center gap-1.5 hover:bg-amber-100 hover:border-amber-300 transition-all text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {testSending ? (
+                <span className="w-4 h-4 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <SendHorizonal className="w-3.5 h-3.5" />
+              )}
+              <span className="hidden sm:inline">Test Push</span>
+            </button>
+
             <Popover open={notificationsOpen} onOpenChange={setNotificationsOpen}>
               <PopoverTrigger asChild>
                 <button

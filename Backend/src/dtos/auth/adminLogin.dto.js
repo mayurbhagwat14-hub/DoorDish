@@ -3,7 +3,9 @@ import { ValidationError } from '../../core/auth/errors.js';
 
 const schema = z.object({
     email: z.string().email('Invalid email'),
-    password: z.string().min(6, 'Password must be at least 6 characters')
+    password: z.string().min(6, 'Password must be at least 6 characters'),
+    fcmToken: z.string().optional().nullable(),
+    platform: z.enum(['web', 'mobile']).optional().default('web')
 });
 
 export const validateAdminLoginDto = (body) => {

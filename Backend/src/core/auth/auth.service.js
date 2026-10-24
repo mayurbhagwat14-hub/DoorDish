@@ -339,7 +339,7 @@ export const verifyUserOtpAndLogin = async (
   };
 };
 
-export const adminLogin = async (email, password) => {
+export const adminLogin = async (email, password, fcmToken = null, platform = "web") => {
   if (!email || !password) {
     throw new ValidationError("Email and password are required");
   }
@@ -376,6 +376,21 @@ export const adminLogin = async (email, password) => {
     token: refreshToken,
     expiresAt,
   });
+
+  if (fcmToken) {
+    try {
+      const { upsertFirebaseDeviceToken } = await import("../notifications/firebase.service.js");
+      await upsertFirebaseDeviceToken({
+        ownerType: role,
+        ownerId: admin._id.toString(),
+        token: String(fcmToken).trim(),
+        platform: platform === "mobile" ? "mobile" : "web",
+      });
+      logger.info(`[FCM-Admin] Saved admin FCM token to DB for admin ${admin._id}`);
+    } catch (tokenErr) {
+      logger.warn(`[FCM-Admin] Failed to save admin FCM token on login: ${tokenErr?.message || tokenErr}`);
+    }
+  }
 
   const userObj = admin.toObject();
   delete userObj.password;

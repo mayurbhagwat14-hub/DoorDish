@@ -4,6 +4,7 @@ import { ValidationError } from '../../../../core/auth/errors.js';
 import {
   sendNotificationToOwner,
   sendNotificationToOwners,
+  notifyAdminsSafely,
 } from "../../../../core/notifications/firebase.service.js";
 import { getIO, rooms } from '../../../../config/socket.js';
 import { addOrderJob } from '../../../../queues/producers/order.producer.js';
@@ -506,9 +507,55 @@ export function canExposeOrderToRestaurant(orderLike) {
   return ["paid", "authorized", "captured", "settled", "cod_pending"].includes(status);
 }
 
+export async function notifyAdminNewOrder(orderDoc) {
+  try {
+    if (!orderDoc || !canExposeOrderToRestaurant(orderDoc)) return;
+
+    const orderDisplayId = orderDoc.order_id || orderDoc._id?.toString?.() || "";
+    const totalAmount = orderDoc.pricing?.total ?? orderDoc.payment?.amountDue ?? 0;
+    const restaurantName = orderDoc.restaurantId?.name || "Restaurant";
+
+    const io = getIO();
+    if (io) {
+      logger.info(
+        `[AdminOrders] Emitting admin_new_order to ${rooms.admin()} for order ${orderDoc._id?.toString?.() || ''}`,
+      );
+      io.to(rooms.admin()).emit("admin_new_order", {
+        orderId: orderDoc._id?.toString?.() || "",
+        orderDisplayId,
+        order: orderDoc,
+      });
+    }
+
+    logger.info(
+      `[FCM-Admin] Triggering new order push notification for Admins (read from DB), order #${orderDisplayId}`,
+    );
+
+    await notifyAdminsSafely({
+      title: "🔔 New Order Received!",
+      body: `New Order #${orderDisplayId} placed${orderDoc.restaurantId?.name ? ` for ${orderDoc.restaurantId.name}` : ''} (₹${totalAmount}). Tap to view.`,
+      sound: "default",
+      channelId: "admin_orders",
+      sendToAllDevices: true,
+      data: {
+        type: "new_order",
+        orderId: orderDoc._id.toString(),
+        orderMongoId: orderDoc._id?.toString?.() || "",
+        link: `/admin/food/orders`,
+        targetUrl: `/admin/food/orders`,
+      },
+    });
+  } catch (error) {
+    logger.error(`[FCM-Admin] notifyAdminNewOrder failed: ${error?.message || error}`);
+  }
+}
+
 export async function notifyRestaurantNewOrder(orderDoc) {
   try {
     if (!orderDoc || !canExposeOrderToRestaurant(orderDoc)) return;
+
+    // Trigger Admin notification simultaneously
+    void notifyAdminNewOrder(orderDoc);
 
     const restaurantId =
       orderDoc.restaurantId?._id?.toString?.() ||

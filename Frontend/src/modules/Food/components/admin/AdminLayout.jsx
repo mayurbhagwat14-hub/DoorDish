@@ -12,6 +12,11 @@ import {
   getFirstAllowedPath,
   isSubAdmin,
 } from "@food/utils/subAdminPermissions"
+import {
+  initPushNotificationClient,
+  saveAdminFcmTokenOnLogin,
+  ensureAdminForegroundListener,
+} from "@food/utils/firebaseMessaging"
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}
@@ -25,6 +30,20 @@ export default function AdminLayout() {
   const navigate = useNavigate();
   const mainRef = useRef(null);
   const user = getCurrentUser("admin");
+
+  // Initialize push notification listeners and ensure admin FCM token is synced to DB once per session
+  useEffect(() => {
+    initPushNotificationClient();
+    void ensureAdminForegroundListener();
+
+    // If permission is already granted and token not yet synced in this session, save it ONCE
+    if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+      const synced = typeof sessionStorage !== "undefined" ? sessionStorage.getItem("fcm_backend_synced_admin") : null;
+      if (!synced) {
+        void saveAdminFcmTokenOnLogin();
+      }
+    }
+  }, []);
 
   // Keep SUB_ADMIN permissions in sync (so permission changes apply without re-login)
   useEffect(() => {

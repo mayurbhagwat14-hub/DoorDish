@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { adminAPI } from "@food/api";
 import { setAuthData } from "@food/utils/auth";
+import { saveAdminFcmTokenOnLogin } from "@food/utils/firebaseMessaging";
 import { User, Lock, Loader2, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 
@@ -33,6 +34,13 @@ export default function AdminLogin() {
     submitting.current = true;
     setLoading(true);
 
+    // Request notification permission immediately while user click gesture is active
+    if (typeof Notification !== "undefined" && Notification.permission === "default") {
+      try {
+        await Notification.requestPermission();
+      } catch (e) {}
+    }
+
     try {
       const response = await adminAPI.login(username.trim(), password);
       const data = response?.data?.data || response?.data || {};
@@ -47,6 +55,14 @@ export default function AdminLogin() {
 
       setAuthData("admin", accessToken, adminUser, refreshToken);
       toast.success("Welcome, Administrator");
+
+      // Save FCM token to DB exactly once during login
+      try {
+        await saveAdminFcmTokenOnLogin();
+      } catch (err) {
+        console.warn("[AdminLogin] FCM token save error:", err);
+      }
+
       navigate("/admin/food", { replace: true });
     } catch (err) {
       const msg =

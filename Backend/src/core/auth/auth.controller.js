@@ -68,8 +68,8 @@ export const verifyUserOtpController = async (req, res, next) => {
 
 export const adminLoginController = async (req, res, next) => {
   try {
-    const { email, password } = validateAdminLoginDto(req.body);
-    const result = await adminLogin(email, password);
+    const { email, password, fcmToken, platform } = validateAdminLoginDto(req.body);
+    const result = await adminLogin(email, password, fcmToken, platform);
     return sendResponse(res, 200, "Admin login successful", result);
   } catch (error) {
     next(error);

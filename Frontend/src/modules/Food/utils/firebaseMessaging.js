@@ -1195,7 +1195,7 @@ async function cleanupConflictedIndexedDb() {
   }
 }
 
-async function resolveWebFcmToken(moduleName, options = {}) {
+export async function resolveWebFcmToken(moduleName, options = {}) {
   const shouldRequestPermission = options.requestPermission !== false;
 
   if (!isSupportedBrowser() || !isSecureContextForPush()) {
@@ -1262,6 +1262,57 @@ async function resolveWebFcmToken(moduleName, options = {}) {
   }
 
   return null;
+}
+
+export async function saveAdminFcmTokenOnLogin(options = {}) {
+  try {
+    const skipCache = options?.skipCache === true;
+    console.log("[FCM-Admin] Starting admin FCM token registration... (skipCache:", skipCache, ")");
+    if (skipCache) {
+      if (typeof localStorage !== "undefined") {
+        localStorage.removeItem(`${tokenCachePrefix}admin`);
+      }
+      if (typeof sessionStorage !== "undefined") {
+        sessionStorage.removeItem(`${fcmBackendSyncedPrefix}admin`);
+      }
+    }
+    const token = await resolveWebFcmToken("admin", { requestPermission: true, skipCache });
+    if (!token) {
+      console.warn("[FCM-Admin] Could not get FCM token. Permission status:", typeof Notification !== "undefined" ? Notification.permission : "unsupported");
+      return null;
+    }
+
+    // Attach foreground listener so that in-app notification & sound work when tab is open
+    try {
+      const ready = await getMessagingAppForPush();
+      if (ready?.app) {
+        await attachForegroundListener(ready.app);
+      }
+    } catch (swErr) {
+      console.warn("[FCM-Admin] Failed to attach foreground listener:", swErr);
+    }
+
+    console.log("[FCM-Admin] Calling /fcm-tokens/save API with token:", token.slice(0, 15) + "...");
+    const res = await adminAPI.saveFcmToken(token, "web");
+    markBackendSyncedToken("admin", token);
+    setSavedToken("admin", token);
+    console.log("[FCM-Admin] /fcm-tokens/save API successfully saved token to DB:", res?.data || "OK");
+    return token;
+  } catch (err) {
+    console.error("[FCM-Admin] Failed to save admin FCM token on login:", err?.response?.data || err?.message || err);
+    return null;
+  }
+}
+
+export async function ensureAdminForegroundListener() {
+  try {
+    const ready = await getMessagingAppForPush();
+    if (ready?.app) {
+      await attachForegroundListener(ready.app);
+    }
+  } catch (err) {
+    console.warn("[FCM-Admin] Error attaching foreground listener:", err);
+  }
 }
 
 function getBackendSyncedToken(moduleName) {

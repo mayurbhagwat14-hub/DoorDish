@@ -219,9 +219,21 @@ router.post('/test', authMiddleware, async (req, res, next) => {
         }
 
         const result = await sendTestNotification({ ownerType, ownerId, platform });
+        if (!result || result.successCount === 0) {
+            const failReason =
+                result?.results?.[0]?.error ||
+                (result?.results?.length === 0
+                    ? 'No registered device tokens found for this account. Please allow notifications or re-login.'
+                    : 'Failed to deliver push notification to device');
+            return res.status(400).json({
+                success: false,
+                message: failReason,
+                data: result
+            });
+        }
         return res.status(200).json({
             success: true,
-            message: 'Test notification sent',
+            message: 'Test notification sent successfully',
             data: result
         });
     } catch (error) {
