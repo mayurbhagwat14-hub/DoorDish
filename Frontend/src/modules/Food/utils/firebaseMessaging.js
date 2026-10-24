@@ -54,8 +54,8 @@ function isRecord(value) {
 }
 
 function getPushSoundSources(moduleName = normalizeModuleFromPath()) {
-  if (moduleName === "restaurant") {
-    return [restaurantAlertSoundPath];
+  if (moduleName === "admin" || moduleName === "restaurant") {
+    return [restaurantAlertSoundPath, fallbackNotificationSound];
   }
   if (moduleName === "delivery") {
     return [restaurantAlertSoundPath, fallbackNotificationSound];
@@ -73,7 +73,7 @@ const ORDER_ALERT_PUSH_TYPES = new Set([
 
 function shouldPlayAlertSoundForPush(payload = {}) {
   const moduleName = normalizeModuleFromPath();
-  if (moduleName !== "restaurant" && moduleName !== "delivery") {
+  if (moduleName !== "restaurant" && moduleName !== "delivery" && moduleName !== "admin") {
     return false;
   }
 
