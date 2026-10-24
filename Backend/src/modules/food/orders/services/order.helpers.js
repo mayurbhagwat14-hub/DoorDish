@@ -513,7 +513,15 @@ export async function notifyAdminNewOrder(orderDoc) {
 
     const orderDisplayId = orderDoc.order_id || orderDoc._id?.toString?.() || "";
     const totalAmount = orderDoc.pricing?.total ?? orderDoc.payment?.amountDue ?? 0;
-    const restaurantName = orderDoc.restaurantId?.name || "Restaurant";
+    
+    let restaurantName = orderDoc.restaurantId?.name || "";
+    if (!restaurantName && orderDoc.restaurantId) {
+      try {
+        const { FoodRestaurant } = await import("../../restaurant/models/restaurant.model.js");
+        const rDoc = await FoodRestaurant.findById(orderDoc.restaurantId).select("name").lean();
+        if (rDoc?.name) restaurantName = rDoc.name;
+      } catch {}
+    }
 
     const io = getIO();
     if (io) {
@@ -533,7 +541,7 @@ export async function notifyAdminNewOrder(orderDoc) {
 
     await notifyAdminsSafely({
       title: "🔔 New Order Received!",
-      body: `New Order #${orderDisplayId} placed${orderDoc.restaurantId?.name ? ` for ${orderDoc.restaurantId.name}` : ''} (₹${totalAmount}). Tap to view.`,
+      body: `New Order #${orderDisplayId} placed${restaurantName ? ` for ${restaurantName}` : ''} (₹${totalAmount}). Tap to view.`,
       sound: "default",
       channelId: "admin_orders",
       sendToAllDevices: true,
