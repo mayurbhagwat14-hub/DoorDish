@@ -29,11 +29,13 @@ export async function calculateOrderPricing(userId, dto) {
   if (restaurant.status !== "approved")
     throw new ValidationError("Restaurant not available");
 
-  assertRestaurantDeliversToZone(restaurant, {
-    zoneId: dto.zoneId,
-    orderType: dto.orderType,
-    deliveryAddress: dto.deliveryAddress,
-  });
+  if (!dto.skipDistanceCheck && !dto.isOfflineAdmin) {
+    assertRestaurantDeliversToZone(restaurant, {
+      zoneId: dto.zoneId,
+      orderType: dto.orderType,
+      deliveryAddress: dto.deliveryAddress,
+    });
+  }
 
   const couponCode = String(
     dto.couponCode || resolved.couponCode || dto.pricing?.couponCode || "",

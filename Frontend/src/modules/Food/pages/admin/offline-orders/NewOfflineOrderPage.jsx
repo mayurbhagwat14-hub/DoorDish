@@ -33,6 +33,7 @@ import { Badge } from "@food/components/ui/badge"
 import { normalizeImageUrl } from "@food/utils/common"
 import ViewOrderDialog from "@food/components/admin/orders/ViewOrderDialog"
 import AssignDeliveryPartnerModal from "@food/components/admin/orders/AssignDeliveryPartnerModal"
+import LocationSearchInput from "@food/components/restaurant/LocationSearchInput"
 
 const resolveRestaurantImage = (restaurant) => {
   if (!restaurant) return ""
@@ -102,11 +103,14 @@ export default function NewOfflineOrderPage() {
     area: "",
     landmark: "",
     city: "",
-    state: "Maharashtra",
+    state: "",
     pincode: "",
     lat: "",
     lng: "",
   })
+
+  // Auto-confirm order toggle
+  const [autoConfirmOrder, setAutoConfirmOrder] = useState(true)
 
   // STEP 4: Delivery Charge state
   const [calculatingFee, setCalculatingFee] = useState(false)
@@ -212,11 +216,11 @@ export default function NewOfflineOrderPage() {
     setCurrentStep(2)
 
     // Pre-fill city and state from restaurant if customer hasn't typed any yet
-    if (restaurant.city && !customerForm.city) {
+    if (restaurant) {
       setCustomerForm((prev) => ({
         ...prev,
-        city: restaurant.city || "",
-        state: restaurant.state || prev.state,
+        city: prev.city || restaurant.city || "Nimbahera",
+        state: prev.state || restaurant.state || "Rajasthan",
       }))
     }
 
@@ -347,6 +351,23 @@ export default function NewOfflineOrderPage() {
     })
   }, [allMenuItems, menuSearch, selectedCategory])
 
+  // Handle address select from Google Maps Places Autocomplete
+  const handleLocationSelected = useCallback((loc) => {
+    if (!loc) return
+    setCustomerForm((prev) => ({
+      ...prev,
+      houseFlat: loc.addressLine1 || loc.placeName || prev.houseFlat,
+      area: loc.area || prev.area,
+      landmark: loc.landmark || prev.landmark,
+      city: loc.city || selectedRestaurant?.city || prev.city || "Nimbahera",
+      state: loc.state || selectedRestaurant?.state || prev.state || "Rajasthan",
+      pincode: loc.pincode || prev.pincode,
+      lat: loc.latitude != null ? String(loc.latitude) : prev.lat,
+      lng: loc.longitude != null ? String(loc.longitude) : prev.lng,
+    }))
+    toast.success("Delivery location pinned from Google Maps!")
+  }, [selectedRestaurant])
+
   // STEP 4: Calculate Delivery Fee from backend
   const calculateDeliveryCharge = useCallback(async () => {
     if (!selectedRestaurant) return
@@ -358,7 +379,7 @@ export default function NewOfflineOrderPage() {
       const customerCoords =
         customerForm.lng && customerForm.lat
           ? [Number(customerForm.lng), Number(customerForm.lat)]
-          : rCoords || [73.8567, 18.5204]
+          : rCoords || [74.6866837, 24.6258698]
 
       const payload = {
         restaurantId: selectedRestaurant._id || selectedRestaurant.id,
@@ -467,7 +488,7 @@ export default function NewOfflineOrderPage() {
       const customerCoords =
         customerForm.lng && customerForm.lat
           ? [Number(customerForm.lng), Number(customerForm.lat)]
-          : rCoords || [73.8567, 18.5204]
+          : rCoords || [74.6866837, 24.6258698]
 
       const payload = {
         restaurantId: selectedRestaurant._id || selectedRestaurant.id,
@@ -476,16 +497,18 @@ export default function NewOfflineOrderPage() {
         items: itemsPayload,
         deliveryFeeOverride: effectiveDeliveryFee,
         deliveryFee: effectiveDeliveryFee,
+        autoAccept: autoConfirmOrder,
+        confirmImmediately: autoConfirmOrder,
         deliveryAddress: {
           name: customerForm.name.trim(),
           phone: customerForm.phone.trim(),
           street: customerForm.houseFlat.trim(),
           additionalDetails: customerForm.landmark.trim(),
           area: customerForm.area.trim(),
-          city: customerForm.city.trim(),
-          state: customerForm.state.trim() || "Maharashtra",
+          city: customerForm.city.trim() || selectedRestaurant?.city || "Nimbahera",
+          state: customerForm.state.trim() || selectedRestaurant?.state || "Rajasthan",
           zipCode: customerForm.pincode.trim(),
-          location: { coordinates: customerCoords },
+          location: customerCoords?.length === 2 ? { coordinates: customerCoords } : undefined,
         },
         note: orderNote.trim(),
         restaurantNote: restaurantNote.trim(),
@@ -496,7 +519,11 @@ export default function NewOfflineOrderPage() {
       const order = data.order || data
 
       setCreatedOrder(order)
-      toast.success("Offline order placed successfully!")
+      if (autoConfirmOrder) {
+        toast.success("Offline order placed & confirmed! Kitchen is preparing 🧑‍🍳")
+      } else {
+        toast.success("Offline order placed successfully!")
+      }
     } catch (err) {
       console.error("Failed to place offline order:", err)
       const msg = err?.response?.data?.message || err?.message || "Failed to place order"
@@ -1286,12 +1313,45 @@ export default function NewOfflineOrderPage() {
               </div>
             </div>
 
+            {/* Google Places Autocomplete Address Search */}
+            <div className="bg-orange-50/70 p-4 rounded-xl border border-orange-200/90 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-orange-950 uppercase tracking-wider flex items-center gap-1.5">
+                  <MapPin className="w-4 h-4 text-orange-600" />
+                  Search Delivery Address (Google Maps Suggestions)
+                </span>
+                {customerForm.lat && customerForm.lng && (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-100/90 px-2 py-0.5 rounded-full border border-emerald-300">
+                    <CheckCircle className="w-3 h-3 text-emerald-600" />
+                    GPS Coordinates Pinned
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-slate-500">
+                Type address, colony, street, or landmark to search live via Google Maps and auto-fill address details:
+              </p>
+              <LocationSearchInput
+                label=""
+                placeholder="Search street, locality, landmark (e.g. RK Colony, Nimbahera)..."
+                biasLocation={
+                  selectedRestaurant?.location?.coordinates?.length >= 2
+                    ? {
+                        latitude: selectedRestaurant.location.coordinates[1],
+                        longitude: selectedRestaurant.location.coordinates[0],
+                      }
+                    : { latitude: 24.6258, longitude: 74.6866 }
+                }
+                onLocationSelect={handleLocationSelected}
+                className="w-full"
+              />
+            </div>
+
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
                 House / Flat / Building No. <span className="text-rose-500">*</span>
               </label>
               <Input
-                placeholder="e.g. Flat 402, Sunshine Heights"
+                placeholder="e.g. House No. 4, Gali No. 3"
                 value={customerForm.houseFlat}
                 onChange={(e) => setCustomerForm({ ...customerForm, houseFlat: e.target.value })}
                 className="h-10 border-slate-200"
@@ -1302,7 +1362,7 @@ export default function NewOfflineOrderPage() {
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Area / Locality</label>
                 <Input
-                  placeholder="e.g. Shivaji Nagar"
+                  placeholder="e.g. RK Colony"
                   value={customerForm.area}
                   onChange={(e) => setCustomerForm({ ...customerForm, area: e.target.value })}
                   className="h-10 border-slate-200"
@@ -1312,7 +1372,7 @@ export default function NewOfflineOrderPage() {
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Landmark (Optional)</label>
                 <Input
-                  placeholder="e.g. Near Metro Station"
+                  placeholder="e.g. Near Bus Stand / Temple"
                   value={customerForm.landmark}
                   onChange={(e) => setCustomerForm({ ...customerForm, landmark: e.target.value })}
                   className="h-10 border-slate-200"
@@ -1326,7 +1386,7 @@ export default function NewOfflineOrderPage() {
                   City <span className="text-rose-500">*</span>
                 </label>
                 <Input
-                  placeholder="e.g. Pune"
+                  placeholder="e.g. Nimbahera"
                   value={customerForm.city}
                   onChange={(e) => setCustomerForm({ ...customerForm, city: e.target.value })}
                   className="h-10 border-slate-200"
@@ -1336,7 +1396,7 @@ export default function NewOfflineOrderPage() {
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">State</label>
                 <Input
-                  placeholder="e.g. Maharashtra"
+                  placeholder="e.g. Rajasthan"
                   value={customerForm.state}
                   onChange={(e) => setCustomerForm({ ...customerForm, state: e.target.value })}
                   className="h-10 border-slate-200"
@@ -1346,7 +1406,7 @@ export default function NewOfflineOrderPage() {
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Pincode</label>
                 <Input
-                  placeholder="6-digit pincode"
+                  placeholder="e.g. 312600"
                   value={customerForm.pincode}
                   onChange={(e) => setCustomerForm({ ...customerForm, pincode: e.target.value })}
                   className="h-10 border-slate-200"
@@ -1355,23 +1415,40 @@ export default function NewOfflineOrderPage() {
             </div>
 
             <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
-              <span className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 text-orange-600" />
-                Delivery Coordinates (Optional, used for driving distance)
-              </span>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-orange-600" />
+                  Delivery Coordinates (Auto-populated from Google Maps or manual)
+                </span>
+                {customerForm.lat && customerForm.lng ? (
+                  <span className="text-[11px] text-emerald-700 font-semibold">
+                    ✓ Coordinates set
+                  </span>
+                ) : (
+                  <span className="text-[11px] text-slate-400">
+                    Optional (Defaults to restaurant location)
+                  </span>
+                )}
+              </div>
               <div className="grid grid-cols-2 gap-3">
-                <Input
-                  placeholder="Latitude (e.g. 18.5204)"
-                  value={customerForm.lat}
-                  onChange={(e) => setCustomerForm({ ...customerForm, lat: e.target.value })}
-                  className="h-8 text-xs bg-white border-slate-200"
-                />
-                <Input
-                  placeholder="Longitude (e.g. 73.8567)"
-                  value={customerForm.lng}
-                  onChange={(e) => setCustomerForm({ ...customerForm, lng: e.target.value })}
-                  className="h-8 text-xs bg-white border-slate-200"
-                />
+                <div>
+                  <label className="block text-[11px] font-medium text-slate-500 mb-0.5">Latitude</label>
+                  <Input
+                    placeholder="e.g. 24.6258"
+                    value={customerForm.lat}
+                    onChange={(e) => setCustomerForm({ ...customerForm, lat: e.target.value })}
+                    className="h-8 text-xs bg-white border-slate-200"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-slate-500 mb-0.5">Longitude</label>
+                  <Input
+                    placeholder="e.g. 74.6866"
+                    value={customerForm.lng}
+                    onChange={(e) => setCustomerForm({ ...customerForm, lng: e.target.value })}
+                    className="h-8 text-xs bg-white border-slate-200"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -1753,6 +1830,30 @@ export default function NewOfflineOrderPage() {
                   className="h-9 text-xs border-slate-200"
                 />
               </div>
+            </div>
+
+            {/* Auto-Confirm & Kitchen Notification Toggle */}
+            <div className="p-4 rounded-xl bg-emerald-50/90 border border-emerald-200 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm text-lg">
+                  🧑‍🍳
+                </div>
+                <div>
+                  <label htmlFor="auto-confirm-toggle" className="text-sm font-bold text-slate-900 cursor-pointer">
+                    Auto-Confirm & Send Directly to Kitchen (Preparing)
+                  </label>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Order will be immediately confirmed and restaurant kitchen will receive real-time preparation alert.
+                  </p>
+                </div>
+              </div>
+              <input
+                id="auto-confirm-toggle"
+                type="checkbox"
+                checked={autoConfirmOrder}
+                onChange={(e) => setAutoConfirmOrder(e.target.checked)}
+                className="w-5 h-5 accent-emerald-600 cursor-pointer shrink-0"
+              />
             </div>
           </div>
 

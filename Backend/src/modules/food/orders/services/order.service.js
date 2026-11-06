@@ -3515,6 +3515,8 @@ export async function createOfflineOrderAdmin(adminId, dto) {
     items,
     restaurantId,
     orderType: "delivery",
+    isOfflineAdmin: true,
+    skipDistanceCheck: true,
     deliveryAddress: dto.deliveryAddress?.location?.coordinates
       ? { location: { coordinates: dto.deliveryAddress.location.coordinates } }
       : undefined,
@@ -3639,7 +3641,8 @@ export async function createOfflineOrderAdmin(adminId, dto) {
       status: "cod_pending",
       amountDue: normalizedPricing.total ?? 0,
     },
-    orderStatus: "created",
+    orderStatus: (dto.autoAccept || dto.confirmImmediately) ? "preparing" : "created",
+    acceptedAt: (dto.autoAccept || dto.confirmImmediately) ? new Date() : undefined,
     dispatch: { modeAtCreation: dispatchMode, status: "unassigned" },
     statusHistory: [
       {
@@ -3647,8 +3650,10 @@ export async function createOfflineOrderAdmin(adminId, dto) {
         byRole: "ADMIN",
         byId: new mongoose.Types.ObjectId(adminId),
         from: "",
-        to: "created",
-        note: "Offline order placed by admin",
+        to: (dto.autoAccept || dto.confirmImmediately) ? "preparing" : "created",
+        note: (dto.autoAccept || dto.confirmImmediately)
+          ? "Offline order placed & confirmed by admin"
+          : "Offline order placed by admin",
       },
     ],
     note: dto.note || "",
@@ -3671,6 +3676,27 @@ export async function createOfflineOrderAdmin(adminId, dto) {
   // Notify restaurant — exactly like an online order
   try {
     await notifyRestaurantNewOrder(order);
+    if (dto.autoAccept || dto.confirmImmediately) {
+      const io = getIO();
+      if (io) {
+        const restaurantPayload = {
+          orderMongoId: order._id?.toString?.(),
+          orderId: order.orderId || order._id.toString(),
+          _id: order._id.toString(),
+          orderStatus: "preparing",
+          status: "preparing",
+          acceptedBy: "admin",
+          title: "Order Accepted! 🧑‍🍳",
+          message: "Offline order placed & confirmed by admin",
+        };
+        io.to(rooms.restaurant(order.restaurantId)).emit("order_status_update", restaurantPayload);
+        io.to(rooms.admin()).emit("admin_order_status_update", {
+          orderId: order._id.toString(),
+          orderStatus: "preparing",
+        });
+      }
+      enqueueOrderEvent("admin_dispatched", { orderId: order._id.toString() });
+    }
   } catch (err) {
     logger.warn(`[OfflineOrder] Restaurant notification failed for ${order._id}: ${err?.message || err}`);
   }
@@ -3783,6 +3809,8 @@ export async function calculateDeliveryFeeAdmin(dto) {
         items: dto.items,
         restaurantId,
         orderType: "delivery",
+        isOfflineAdmin: true,
+        skipDistanceCheck: true,
         deliveryAddress: dto.deliveryAddress?.location?.coordinates
           ? { location: { coordinates: dto.deliveryAddress.location.coordinates } }
           : undefined,
