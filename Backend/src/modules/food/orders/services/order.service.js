@@ -3085,7 +3085,7 @@ export async function acceptOrderAdmin(orderId, adminId) {
     throw new ValidationError(`Order already cancelled (${from}). Cannot accept.`);
   }
   // Already accepted/further — idempotent return
-  if (from === "confirmed" || from === "preparing" || (STATUS_PRIORITY[from] > STATUS_PRIORITY["preparing"])) {
+  if (from === "preparing" || (STATUS_PRIORITY[from] > STATUS_PRIORITY["preparing"])) {
     return normalizeOrderForClient(order);
   }
 

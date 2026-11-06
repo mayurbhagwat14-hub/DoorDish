@@ -126,6 +126,7 @@ export default function NewOfflineOrderPage() {
   const [createdOrder, setCreatedOrder] = useState(null)
   const [viewDialogOpen, setViewDialogOpen] = useState(false)
   const [assignModalOpen, setAssignModalOpen] = useState(false)
+  const [isAcceptingCreated, setIsAcceptingCreated] = useState(false)
 
   // Load restaurants on mount
   useEffect(() => {
@@ -505,6 +506,30 @@ export default function NewOfflineOrderPage() {
     }
   }
 
+  const handleAcceptCreatedOrder = async () => {
+    const orderId = createdOrder?._id || createdOrder?.id || createdOrder?.orderId
+    if (!orderId) return
+    setIsAcceptingCreated(true)
+    try {
+      const res = await adminAPI.acceptOrder(orderId)
+      if (res?.data?.success || res?.status === 200) {
+        toast.success("Order accepted! Restaurant notified to start cooking 🧑‍🍳")
+        setCreatedOrder((prev) => ({
+          ...prev,
+          orderStatus: "preparing",
+          status: "preparing",
+        }))
+      } else {
+        toast.error(res?.data?.message || "Failed to accept order")
+      }
+    } catch (err) {
+      console.error("Accept created order error:", err)
+      toast.error(err?.response?.data?.message || err?.message || "Failed to accept order")
+    } finally {
+      setIsAcceptingCreated(false)
+    }
+  }
+
   // If order is created successfully, display success screen
   if (createdOrder) {
     const orderId = createdOrder.orderId || String(createdOrder._id || "").slice(-6).toUpperCase()
@@ -557,6 +582,30 @@ export default function NewOfflineOrderPage() {
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+            {/* Quick 1-Click Accept Button */}
+            {(!createdOrder.orderStatus ||
+              createdOrder.orderStatus === "created" ||
+              createdOrder.orderStatus === "pending" ||
+              createdOrder.orderStatus === "placed") ? (
+              <Button
+                onClick={handleAcceptCreatedOrder}
+                disabled={isAcceptingCreated}
+                className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-semibold flex items-center gap-1.5 shadow-sm"
+              >
+                {isAcceptingCreated ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Check className="w-4 h-4" />
+                )}
+                <span>{isAcceptingCreated ? "Accepting..." : "Accept Order & Notify Kitchen"}</span>
+              </Button>
+            ) : (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 text-sm font-semibold">
+                <CheckCircle className="w-4 h-4 text-emerald-600" />
+                <span>Accepted & In Kitchen (Preparing)</span>
+              </div>
+            )}
+
             {/* Quick Assign Delivery Partner Button */}
             <Button
               onClick={() => setAssignModalOpen(true)}

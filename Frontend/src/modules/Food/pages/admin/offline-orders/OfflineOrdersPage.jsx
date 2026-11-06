@@ -22,6 +22,9 @@ import {
   ChevronLeft,
   ChevronRight,
   ExternalLink,
+  Check,
+  X,
+  Loader2,
 } from "lucide-react"
 import { adminAPI } from "@food/api"
 import { getSocketUrl } from "@food/utils/socketConfig"
@@ -82,6 +85,10 @@ export default function OfflineOrdersPage() {
   // Delivery Partner Manual Assignment State
   const [assignModalOpen, setAssignModalOpen] = useState(false)
   const [selectedOrderForAssign, setSelectedOrderForAssign] = useState(null)
+
+  // Direct Accept/Reject action state
+  const [processingActionOrderId, setProcessingActionOrderId] = useState(null)
+  const [actionLoadingType, setActionLoadingType] = useState(null) // 'accept' | 'reject'
 
   const socketRef = useRef(null)
 
@@ -158,6 +165,76 @@ export default function OfflineOrdersPage() {
       }
     }
   }, [fetchOfflineOrders, selectedOrderForView])
+
+  const handleAcceptOrder = useCallback(
+    async (order) => {
+      const orderIdToUse = order._id || order.id || order.orderId
+      if (!orderIdToUse) {
+        toast.error("Order ID not found")
+        return
+      }
+
+      const displayId = order.orderId || String(orderIdToUse).slice(-6).toUpperCase()
+
+      try {
+        setProcessingActionOrderId(orderIdToUse)
+        setActionLoadingType("accept")
+        const response = await adminAPI.acceptOrder(orderIdToUse)
+        if (response?.data?.success || response?.status === 200) {
+          toast.success(
+            response?.data?.message ||
+              `Order #${displayId} accepted! Kitchen notified to start preparing.`
+          )
+          await fetchOfflineOrders(true)
+        } else {
+          toast.error(response?.data?.message || "Failed to accept order")
+        }
+      } catch (err) {
+        console.error("Failed to accept offline order:", err)
+        toast.error(err?.response?.data?.message || err?.message || "Failed to accept order")
+      } finally {
+        setProcessingActionOrderId(null)
+        setActionLoadingType(null)
+      }
+    },
+    [fetchOfflineOrders]
+  )
+
+  const handleRejectOrder = useCallback(
+    async (order) => {
+      const orderIdToUse = order._id || order.id || order.orderId
+      if (!orderIdToUse) {
+        toast.error("Order ID not found")
+        return
+      }
+
+      const displayId = order.orderId || String(orderIdToUse).slice(-6).toUpperCase()
+      const reason = window.prompt(
+        `Enter rejection reason for offline order #${displayId}:`,
+        "Order rejected by admin"
+      )
+      if (reason === null) return // cancelled by admin
+
+      try {
+        setProcessingActionOrderId(orderIdToUse)
+        setActionLoadingType("reject")
+        const response = await adminAPI.rejectOrder(orderIdToUse, reason)
+        if (response?.data?.success || response?.status === 200) {
+          toast.success(response?.data?.message || `Order #${displayId} rejected`)
+          await fetchOfflineOrders(true)
+        } else {
+          toast.error(response?.data?.message || "Failed to reject order")
+        }
+      } catch (err) {
+        console.error("Failed to reject offline order:", err)
+        toast.error(err?.response?.data?.message || err?.message || "Failed to reject order")
+      } finally {
+        setProcessingActionOrderId(null)
+        setActionLoadingType(null)
+      }
+    },
+    [fetchOfflineOrders]
+  )
 
   // Setup Real-time updates via Socket.IO
   useEffect(() => {
@@ -501,6 +578,18 @@ export default function OfflineOrdersPage() {
                     order.status === "delivered" ||
                     String(order.orderStatus || order.status || "").toLowerCase().includes("cancel")
 
+                  const orderStatusRaw = String(order.orderStatus || order.status || "").toLowerCase()
+                  const isPending =
+                    orderStatusRaw === "created" ||
+                    orderStatusRaw === "pending" ||
+                    orderStatusRaw === "placed" ||
+                    orderStatusRaw === "confirmed"
+
+                  const orderKey = order._id || order.id || order.orderId
+                  const isActionLoading = processingActionOrderId === orderKey
+                  const isAccepting = isActionLoading && actionLoadingType === "accept"
+                  const isRejecting = isActionLoading && actionLoadingType === "reject"
+
                   return (
                     <tr
                       key={order._id || order.id || orderId}
@@ -588,6 +677,43 @@ export default function OfflineOrdersPage() {
 
                       <td className="py-3.5 px-4 text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-1.5">
+                          {/* Quick 1-Click Accept for Kitchen */}
+                          {isPending && (
+                            <Button
+                              size="sm"
+                              onClick={() => handleAcceptOrder(order)}
+                              disabled={isActionLoading}
+                              className="h-8 px-2.5 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1 shadow-xs transition-all"
+                              title="Accept Order & Notify Kitchen"
+                            >
+                              {isAccepting ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <Check className="w-3.5 h-3.5" />
+                              )}
+                              <span>{isAccepting ? "Accepting..." : "Accept"}</span>
+                            </Button>
+                          )}
+
+                          {/* Quick 1-Click Reject */}
+                          {isPending && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleRejectOrder(order)}
+                              disabled={isActionLoading}
+                              className="h-8 px-2 text-xs font-semibold rounded-lg text-rose-700 bg-rose-50 hover:bg-rose-100 border-rose-200 hover:border-rose-300 flex items-center gap-1 shadow-xs transition-all"
+                              title="Reject / Cancel Order"
+                            >
+                              {isRejecting ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <X className="w-3.5 h-3.5" />
+                              )}
+                              <span>{isRejecting ? "Rejecting..." : "Reject"}</span>
+                            </Button>
+                          )}
+
                           {/* Assign Delivery Partner Button */}
                           {!isTerminal && (
                             <Button
