@@ -26,7 +26,7 @@ export default function Bonus() {
     { key: "en", label: "English(EN)" },
     { key: "bn", label: "Bengali - বাংলা(BN)" },
     { key: "ar", label: "Arabic - العربية (AR)" },
-    { key: "es", label: "Spanish - espa�ol(ES)" },
+    { key: "es", label: "Spanish - espa�ol(ES)" },
   ]
 
   const filteredBonuses = useMemo(() => {
@@ -142,14 +142,14 @@ export default function Bonus() {
                   className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                 >
                   <option value="Percentage (%)">Percentage (%)</option>
-                  <option value="Amount ($)">Amount ($)</option>
+                  <option value="Amount (₹)">Amount (₹)</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
                   <div className="flex items-center gap-2">
-                    <span>Bonus Amount ({formData.bonusType === "Percentage (%)" ? "%" : "$"})</span>
+                    <span>Bonus Amount ({formData.bonusType === "Percentage (%)" ? "%" : "₹"})</span>
                     <Info className="w-4 h-4 text-slate-400" />
                   </div>
                 </label>
@@ -165,7 +165,7 @@ export default function Bonus() {
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
                   <div className="flex items-center gap-2">
-                    <span>Minimum Add Money Amount ($)</span>
+                    <span>Minimum Add Money Amount (₹)</span>
                     <Info className="w-4 h-4 text-slate-400" />
                   </div>
                 </label>
@@ -181,7 +181,7 @@ export default function Bonus() {
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
                   <div className="flex items-center gap-2">
-                    <span>Maximum Bonus ($)</span>
+                    <span>Maximum Bonus (₹)</span>
                     <Info className="w-4 h-4 text-slate-400" />
                   </div>
                 </label>

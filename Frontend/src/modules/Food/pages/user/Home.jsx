@@ -1656,7 +1656,7 @@ export default function Home({ homeMode = null, isTabActive = true }) {
                 __topOrder: topOrder,
                 image: image,
                 images: allImages, // Array of cover images for carousel (separate from menu images)
-                priceRange: restaurant.priceRange || "$$", // Use from API or default
+                priceRange: (restaurant.priceRange && !restaurant.priceRange.includes('$')) ? restaurant.priceRange : null,
                 featuredDish:
                   restaurant.featuredDish ||
                   (Array.isArray(restaurant.recommendedDishes) && restaurant.recommendedDishes.length > 0
@@ -3368,7 +3368,10 @@ export default function Home({ homeMode = null, isTabActive = true }) {
 
                               {/* Cuisine & Cost */}
                               <p className="text-xs text-[#6B6B6B] font-medium line-clamp-1 mb-1.5">
-                                {[restaurant.cuisine, restaurant.priceRange || (restaurant.costForTwo ? `₹${restaurant.costForTwo} for one` : null)].filter(Boolean).join(" • ")}
+                                {[
+                                  restaurant.cuisine,
+                                  restaurant.costForTwo ? `₹${restaurant.costForTwo} for one` : (restaurant.priceRange && !restaurant.priceRange.includes('$') ? restaurant.priceRange : null)
+                                ].filter(Boolean).join(" • ")}
                               </p>
 
                               {/* Offline / Closed badge */}

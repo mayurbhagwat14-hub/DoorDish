@@ -936,7 +936,11 @@ function RestaurantDetailsContent() {
               || actualRestaurant?.image
               || apiRestaurant?.image
               || null,
-            priceRange: actualRestaurant?.priceRange || apiRestaurant?.priceRange || onboardingStep4?.priceRange || "$$",
+            priceRange: (actualRestaurant?.priceRange && !actualRestaurant?.priceRange.includes('$'))
+              ? actualRestaurant?.priceRange
+              : ((apiRestaurant?.priceRange && !apiRestaurant?.priceRange.includes('$'))
+                ? apiRestaurant?.priceRange
+                : ((onboardingStep4?.priceRange && !onboardingStep4?.priceRange.includes('$')) ? onboardingStep4?.priceRange : null)),
             offers: Array.isArray(actualRestaurant?.offers) ? actualRestaurant.offers : (Array.isArray(apiRestaurant?.offers) ? apiRestaurant.offers : []), // Will be populated from menu/offers API later
             offerText: actualRestaurant?.offer || apiRestaurant?.offer || onboardingStep4?.offer || "FLAT 50% OFF",
             offerCount: actualRestaurant?.offerCount || apiRestaurant?.offerCount || 0,

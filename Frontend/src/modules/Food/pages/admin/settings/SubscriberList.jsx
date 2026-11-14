@@ -24,7 +24,7 @@ const restaurantRows = [
     name: "Tasty Lunch",
     icon: leafIcon,
     packageName: "Standard",
-    price: "$ 799.00",
+    price: "₹ 799.00",
     expDate: "23 May 2023",
     subscriptionUsed: 1,
     isTrial: "No",
@@ -36,7 +36,7 @@ const restaurantRows = [
     name: "Cheese Burger",
     icon: burgerIcon,
     packageName: "Pro",
-    price: "$ 1,199.00",
+    price: "₹ 1,199.00",
     expDate: "19 Oct 2025",
     subscriptionUsed: 2,
     isTrial: "No",
@@ -48,7 +48,7 @@ const restaurantRows = [
     name: "Cheesy Restaurant",
     icon: chefIcon,
     packageName: "Pro",
-    price: "$ 1,199.00",
+    price: "₹ 1,199.00",
     expDate: "19 Oct 2025",
     subscriptionUsed: 1,
     isTrial: "No",
@@ -184,7 +184,7 @@ export default function SubscriberList() {
               <div>
                 <p className="font-semibold">TOTAL EARNING</p>
                 <p className="text-[11px] text-emerald-600 font-semibold">
-                  $ 4,795.00
+                  ₹ 4,795.00
                 </p>
               </div>
             </div>
@@ -197,7 +197,7 @@ export default function SubscriberList() {
               </span>
               <div>
                 <p className="font-semibold">EARNED THIS MONTH</p>
-                <p className="text-[11px] text-slate-500">$ 0.00</p>
+                <p className="text-[11px] text-slate-500">₹ 0.00</p>
               </div>
             </div>
           </div>

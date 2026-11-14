@@ -127,17 +127,18 @@ const RequireInitialAuth = ({ children }) => {
     return children;
   }
 
-  const isPolicyPage = 
+  const isPublicPage = 
     currentPath.includes('terms') || 
     currentPath.includes('privacy') || 
     currentPath.includes('support') ||
     currentPath.includes('refund') ||
     currentPath.includes('shipping') ||
-    currentPath.includes('cancellation');
+    currentPath.includes('cancellation') ||
+    currentPath.includes('address-selector');
 
-  // If user has NO explicit auth status and NO token, it means they are a first time visitor
-  // or a user who has completely logged out. Force them to the login screen first.
-  if (authStatus === null && !token && !isPolicyPage) {
+  // If user has NO explicit auth status and NO token, force them to the login screen first
+  // unless they are visiting public policy or address-selector routes.
+  if (authStatus === null && !token && !isPublicPage) {
     return <Navigate to="/user/auth/login" replace />;
   }
 

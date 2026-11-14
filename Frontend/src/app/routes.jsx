@@ -48,14 +48,15 @@ const FoodAppWrapper = () => {
                      location.pathname === '/food/' ||
                      location.pathname.startsWith('/food/user'));
 
-  const isPolicyPage = location.pathname.includes('terms') || 
-                       location.pathname.includes('privacy') || 
-                       location.pathname.includes('support') ||
-                       location.pathname.includes('refund') ||
-                       location.pathname.includes('shipping') ||
-                       location.pathname.includes('cancellation');
+  const isPublicUserPage = location.pathname.includes('terms') || 
+                           location.pathname.includes('privacy') || 
+                           location.pathname.includes('support') ||
+                           location.pathname.includes('refund') ||
+                           location.pathname.includes('shipping') ||
+                           location.pathname.includes('cancellation') ||
+                           location.pathname.includes('address-selector');
 
-  if (isUserPath && authStatus === null && !token && !isPolicyPage) {
+  if (isUserPath && authStatus === null && !token && !isPublicUserPage) {
     return <Navigate to="/user/auth/login" replace />;
   }
 

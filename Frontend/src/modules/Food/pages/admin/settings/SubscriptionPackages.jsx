@@ -8,9 +8,9 @@ const debugError = (...args) => {}
 
 
 const initialPackages = [
-  { id: 1, name: "Pro", price: "$ 1,199.00", duration: "365 Days", subscribers: 0, active: true },
-  { id: 2, name: "Standard", price: "$ 799.00", duration: "180 Days", subscribers: 0, active: true },
-  { id: 3, name: "Basic", price: "$ 399.00", duration: "120 Days", subscribers: 0, active: true },
+  { id: 1, name: "Pro", price: "₹ 1,199.00", duration: "365 Days", subscribers: 0, active: true },
+  { id: 2, name: "Standard", price: "₹ 799.00", duration: "180 Days", subscribers: 0, active: true },
+  { id: 3, name: "Basic", price: "₹ 399.00", duration: "120 Days", subscribers: 0, active: true },
 ];
 
 export default function SubscriptionPackages() {
@@ -123,20 +123,20 @@ export default function SubscriptionPackages() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 px-4 py-4">
           <OverviewCard
             title="Basic"
-            amount="$ 399.00"
-            previous="$ 399.00"
+            amount="₹ 399.00"
+            previous="₹ 399.00"
             bgColor="bg-sky-50"
           />
           <OverviewCard
             title="Standard"
-            amount="$ 1,598.00"
-            previous="$ 1,598.00"
+            amount="₹ 1,598.00"
+            previous="₹ 1,598.00"
             bgColor="bg-amber-50"
           />
           <OverviewCard
             title="Pro"
-            amount="$ 3,597.00"
-            previous="$ 3,597.00"
+            amount="₹ 3,597.00"
+            previous="₹ 3,597.00"
             bgColor="bg-sky-50"
           />
         </div>

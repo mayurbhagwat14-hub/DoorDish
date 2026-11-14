@@ -48,7 +48,7 @@ const helpCategories = [
       },
       {
         question: "What is the minimum order amount?",
-        answer: "The minimum order amount varies by restaurant, typically ranging from $10 to $15. This information is displayed on each restaurant's page."
+        answer: "The minimum order amount varies by restaurant, typically ranging from ₹100 to ₹150. This information is displayed on each restaurant's page."
       }
     ]
   },
@@ -92,7 +92,7 @@ const helpCategories = [
       },
       {
         question: "How much is the delivery fee?",
-        answer: "Delivery fees vary by restaurant and distance, typically ranging from $2.99 to $5.99. The exact fee is shown before you place your order."
+        answer: "Delivery fees vary by restaurant and distance, typically ranging from ₹20 to ₹50. The exact fee is shown before you place your order."
       },
       {
         question: "Can I schedule a delivery for later?",

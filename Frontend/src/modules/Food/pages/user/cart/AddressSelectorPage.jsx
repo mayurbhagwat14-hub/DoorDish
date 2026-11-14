@@ -10,7 +10,7 @@ import { useLocation as useGeoLocation } from "@food/hooks/useLocation"
 import { useProfile } from "@food/context/ProfileContext"
 import { toast } from "sonner"
 import { locationAPI, userAPI } from "@food/api"
-import { Loader } from '@googlemaps/js-api-loader'
+import { ensureGoogleMapsPlacesLoaded, fetchPlaceSuggestions, resolvePlaceSuggestion } from "@food/utils/googlePlaces"
 import AnimatedPage from "@food/components/user/AnimatedPage"
 import useAppBackNavigation from "@food/hooks/useAppBackNavigation"
 import { reverseGeocodeWithGoogle, geocodeGooglePlaceId, getFreshGpsCoordinates } from "@food/utils/googleGeocoding"
@@ -228,26 +228,18 @@ export default function AddressSelectorPage() {
       .map((x) => x.addr)
   }, [addresses, addressAutocompleteValue])
 
-  // Load Google Maps API key + Places library for search/geocoding
+  // Load Google Maps Places library
   useEffect(() => {
-    if (!MAPS_ENABLED) return
     let cancelled = false
-    import('@food/utils/googleMapsApiKey.js').then(({ getGoogleMapsApiKey }) => {
-      getGoogleMapsApiKey().then(async (key) => {
-        if (cancelled || !key) return
-        setGOOGLE_MAPS_API_KEY(key)
-        try {
-          const loader = new Loader({ apiKey: key, version: "weekly", libraries: ["places"] })
-          const google = await loader.load()
-          if (cancelled) return
-          googleMapsRef.current = google
-          autocompleteServiceRef.current = new google.maps.places.AutocompleteService()
-          setGoogleMapsLoaded(true)
-        } catch (err) {
-          debugError("Google Maps load error:", err)
-        }
+    ensureGoogleMapsPlacesLoaded()
+      .then((google) => {
+        if (cancelled) return
+        googleMapsRef.current = google
+        setGoogleMapsLoaded(true)
       })
-    })
+      .catch((err) => {
+        debugError("Google Maps load error:", err)
+      })
     return () => { cancelled = true }
   }, [])
 
@@ -282,46 +274,43 @@ export default function AddressSelectorPage() {
     if (cleanFormatted) setCurrentAddress(cleanFormatted)
   }, [location?.formattedAddress, location?.address, location?.latitude, location?.longitude])
 
-  // Google Places autocomplete search
+  const activeSearchRequestRef = useRef(0)
+
+  // Unified Google Places & text search autocomplete
   useEffect(() => {
     const q = String(addressAutocompleteValue || "").trim()
-    if (!googleMapsLoaded || !autocompleteServiceRef.current || q.length < 3) {
+    if (q.length < 2) {
       setKeywordAddressSuggestions([])
       setIsKeywordSearching(false)
       return
     }
 
-    const t = setTimeout(() => {
-      setIsKeywordSearching(true)
-      const google = googleMapsRef.current
-      const service = autocompleteServiceRef.current
-      const request = {
-        input: q,
-        componentRestrictions: { country: "in" },
-      }
-      if (Number.isFinite(location?.latitude) && Number.isFinite(location?.longitude)) {
-        request.location = new google.maps.LatLng(location.latitude, location.longitude)
-        request.radius = 50000
-      }
+    const requestId = ++activeSearchRequestRef.current
+    setIsKeywordSearching(true)
 
-      service.getPlacePredictions(request, (predictions, status) => {
-        setIsKeywordSearching(false)
-        if (status !== google.maps.places.PlacesServiceStatus.OK || !Array.isArray(predictions)) {
-          setKeywordAddressSuggestions([])
-          return
+    const t = setTimeout(async () => {
+      try {
+        const biasLat = Number(location?.latitude || mapPosition?.[0])
+        const biasLng = Number(location?.longitude || mapPosition?.[1])
+        const biasOptions = Number.isFinite(biasLat) && Number.isFinite(biasLng)
+          ? { latitude: biasLat, longitude: biasLng }
+          : {}
+
+        const results = await fetchPlaceSuggestions(q, biasOptions)
+        if (requestId !== activeSearchRequestRef.current) return
+        setKeywordAddressSuggestions(Array.isArray(results) ? results : [])
+      } catch (err) {
+        if (requestId !== activeSearchRequestRef.current) return
+        setKeywordAddressSuggestions([])
+      } finally {
+        if (requestId === activeSearchRequestRef.current) {
+          setIsKeywordSearching(false)
         }
-        setKeywordAddressSuggestions(
-          predictions.slice(0, 6).map((p) => ({
-            id: p.place_id,
-            placeId: p.place_id,
-            display: p.description,
-          }))
-        )
-      })
-    }, 350)
+      }
+    }, 280)
 
     return () => clearTimeout(t)
-  }, [addressAutocompleteValue, googleMapsLoaded, location?.latitude, location?.longitude])
+  }, [addressAutocompleteValue, location?.latitude, location?.longitude, mapPosition])
 
   const applyGeocodedAddressToForm = useCallback((parsed, formattedOverride) => {
     const formatted = formattedOverride || parsed?.formattedAddress || parsed?.address || ""
@@ -378,13 +367,9 @@ export default function AddressSelectorPage() {
           return
         }
 
-        const loader = new Loader({ apiKey: GOOGLE_MAPS_API_KEY, version: "weekly", libraries: ["places"] })
-        const google = await loader.load()
+        const google = await ensureGoogleMapsPlacesLoaded()
         if (!isMounted || !mapContainerRef.current) return
         googleMapsRef.current = google
-        if (!autocompleteServiceRef.current) {
-          autocompleteServiceRef.current = new google.maps.places.AutocompleteService()
-        }
 
         const initialPos = {
           lat: initialMapCenterRef.current[0],
@@ -520,22 +505,11 @@ export default function AddressSelectorPage() {
   const handleSelectOuterSuggestion = async (s) => {
     setIsFetchingLocationState(true)
     try {
-      let lat
-      let lng
-      let display
-      let parsed
+      const resolved = await resolvePlaceSuggestion(s)
+      const lat = Number(resolved?.latitude)
+      const lng = Number(resolved?.longitude)
 
-      if (s.placeId) {
-        parsed = await geocodeGooglePlaceId(s.placeId)
-        lat = parsed.latitude
-        lng = parsed.longitude
-        display = parsed.formattedAddress
-      } else if (s.lat && s.lng) {
-        lat = s.lat
-        lng = s.lng
-        display = s.display
-        parsed = await reverseGeocodeWithGoogle(lat, lng)
-      } else {
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
         toast.error("Could not resolve location coordinates")
         return
       }
@@ -543,13 +517,14 @@ export default function AddressSelectorPage() {
       const finalLoc = {
         latitude: lat,
         longitude: lng,
-        city: parsed.city || "",
-        state: parsed.state || "",
-        country: parsed.country || "India",
-        area: parsed.area || "",
-        address: parsed.address || display,
-        formattedAddress: display || parsed.formattedAddress,
-        pincode: parsed.pincode || "",
+        city: resolved.city || "",
+        state: resolved.state || "",
+        country: resolved.country || "India",
+        area: resolved.area || resolved.addressLine1 || "",
+        address: resolved.formattedAddress || resolved.addressLine1 || s.display,
+        formattedAddress: resolved.formattedAddress || s.display,
+        pincode: resolved.pincode || "",
+        landmark: resolved.landmark || "",
       }
 
       localStorage.setItem("userLocation", JSON.stringify(finalLoc))
@@ -567,16 +542,16 @@ export default function AddressSelectorPage() {
 
   const handleSelectMapSuggestion = async (s) => {
     try {
-      const parsed = await geocodeGooglePlaceId(s.placeId || s.id)
-      const lat = parsed.latitude
-      const lng = parsed.longitude
+      const resolved = await resolvePlaceSuggestion(s)
+      const lat = Number(resolved?.latitude)
+      const lng = Number(resolved?.longitude)
       if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
         toast.error("Could not resolve location coordinates")
         return
       }
       await panMapToCoordinates(lat, lng)
-      setAddressAutocompleteValue(parsed.formattedAddress || s.display || "")
-      applyGeocodedAddressToForm(parsed)
+      setAddressAutocompleteValue(resolved.formattedAddress || s.display || "")
+      applyGeocodedAddressToForm(resolved, resolved.formattedAddress)
       setKeywordAddressSuggestions([])
     } catch (err) {
       console.error("Error selecting map suggestion:", err)
@@ -932,13 +907,14 @@ export default function AddressSelectorPage() {
                     <p className="px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-gray-400 bg-gray-50 dark:bg-gray-800/50">Suggestions</p>
                     {keywordAddressSuggestions.map((s) => (
                       <button
-                        key={s.id}
+                        key={s.id || s.placeId}
                         onClick={() => handleSelectMapSuggestion(s)}
                         className="w-full px-4 py-3 flex items-start gap-3 hover:bg-[#FF5A1F]/5 dark:hover:bg-[#FF5A1F]/10 transition-colors text-left border-b border-gray-50 dark:border-gray-800 last:border-none"
                       >
-                        <MapPin className="h-4 w-4 text-gray-400 mt-1 flex-shrink-0" />
-                        <div className="min-w-0">
-                           <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{s.display}</p>
+                        <MapPin className="h-4 w-4 text-[#FF5A1F] mt-1 flex-shrink-0" />
+                        <div className="min-w-0 flex-1">
+                           <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{s.mainText || s.display}</p>
+                           {s.secondaryText && <p className="text-xs text-gray-400 truncate">{s.secondaryText}</p>}
                         </div>
                       </button>
                     ))}
@@ -1136,11 +1112,11 @@ export default function AddressSelectorPage() {
         {keywordAddressSuggestions.length > 0 && (
           <div className="mx-4 mt-2 mb-4 bg-white dark:bg-zinc-900 border border-zinc-150 dark:border-zinc-800 rounded-2xl shadow-xl overflow-hidden divide-y divide-zinc-100 dark:divide-zinc-850 z-50 animate-in fade-in duration-200">
             {keywordAddressSuggestions.map((s) => {
-              const title = s.display.split(",")[0] || s.display
-              const subtitle = s.display.split(",").slice(1).join(",").trim() || s.display
+              const title = s.mainText || s.display.split(",")[0] || s.display
+              const subtitle = s.secondaryText || s.display.split(",").slice(1).join(",").trim() || s.display
               return (
                 <button
-                  key={s.id}
+                  key={s.id || s.placeId}
                   onClick={() => handleSelectOuterSuggestion(s)}
                   className="w-full px-4 py-3.5 flex items-start gap-3.5 hover:bg-[#FF5A1F]/5 dark:hover:bg-[#FF5A1F]/10 transition-colors text-left"
                 >

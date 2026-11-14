@@ -326,7 +326,7 @@ function UserLayoutContent() {
     const timer = window.setTimeout(() => {
       setShowGlobalLoader(false)
       sessionStorage.removeItem("manual_location_update")
-    }, 8000)
+    }, 3500)
     return () => window.clearTimeout(timer)
   }, [showGlobalLoader, setShowGlobalLoader])
 
@@ -340,6 +340,15 @@ function UserLayoutContent() {
     const hasCachedZone = !!localStorage.getItem('userZoneId');
     return !(hasCachedLocation && hasCachedZone);
   })
+
+  // Safety fallback: Never keep isInitialChecking stuck for more than 2.5 seconds
+  useEffect(() => {
+    if (!isInitialChecking) return undefined
+    const timer = window.setTimeout(() => {
+      setIsInitialChecking(false)
+    }, 2500)
+    return () => window.clearTimeout(timer)
+  }, [isInitialChecking])
 
   useEffect(() => {
     // Skip location/zone check for auth, policy, support pages, or if not logged in
@@ -578,22 +587,65 @@ function UserLayoutContent() {
   )
 }
 
+import React from "react"
+
+class UserErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = { hasError: false, error: null }
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error }
+  }
+  componentDidCatch(error, errorInfo) {
+    console.error("UserLayout crashed:", error, errorInfo)
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 text-center">
+          <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mb-4">
+            <svg className="w-8 h-8 text-[#FF5A1F]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Something went wrong</h2>
+          <p className="text-sm text-gray-500 mb-6 max-w-sm">We ran into an unexpected issue rendering this page.</p>
+          <button
+            type="button"
+            onClick={() => {
+              sessionStorage.clear()
+              window.location.href = "/food/user"
+            }}
+            className="px-6 py-2.5 bg-[#FF5A1F] text-white rounded-full font-bold text-sm shadow-md active:scale-95 transition-all"
+          >
+            Reload Home
+          </button>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
+
 export default function UserLayout() {
   useUserNotifications()
 
   return (
-    <div className="min-h-screen bg-[#FFF7F2] transition-colors duration-200">
-      <ProfileProvider>
-        <CartProvider>
-          <OrdersProvider>
-            <SearchOverlayProvider>
-              <LocationSelectorProvider>
-                <UserLayoutContent />
-              </LocationSelectorProvider>
-            </SearchOverlayProvider>
-          </OrdersProvider>
-        </CartProvider>
-      </ProfileProvider>
-    </div>
+    <UserErrorBoundary>
+      <div className="min-h-screen bg-[#FFF7F2] transition-colors duration-200">
+        <ProfileProvider>
+          <CartProvider>
+            <OrdersProvider>
+              <SearchOverlayProvider>
+                <LocationSelectorProvider>
+                  <UserLayoutContent />
+                </LocationSelectorProvider>
+              </SearchOverlayProvider>
+            </OrdersProvider>
+          </CartProvider>
+        </ProfileProvider>
+      </div>
+    </UserErrorBoundary>
   )
 }

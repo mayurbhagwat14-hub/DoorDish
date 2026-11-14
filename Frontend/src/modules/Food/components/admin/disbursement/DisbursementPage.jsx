@@ -348,7 +348,7 @@ export default function DisbursementPage({
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">Min Amount ($)</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">Min Amount (₹)</label>
               <input
                 type="number"
                 value={filters.amountRange.min}
@@ -358,7 +358,7 @@ export default function DisbursementPage({
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">Max Amount ($)</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">Max Amount (₹)</label>
               <input
                 type="number"
                 value={filters.amountRange.max}

@@ -91,7 +91,7 @@ export default function FilterPanel({ isOpen, onClose, filters, setFilters, onAp
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Min Amount ($)
+                Min Amount (₹)
               </label>
               <input
                 type="number"
@@ -104,7 +104,7 @@ export default function FilterPanel({ isOpen, onClose, filters, setFilters, onAp
             </div>
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Max Amount ($)
+                Max Amount (₹)
               </label>
               <input
                 type="number"

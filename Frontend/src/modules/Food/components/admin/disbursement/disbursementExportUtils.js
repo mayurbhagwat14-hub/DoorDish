@@ -80,7 +80,7 @@ export const exportDisbursementsToPDF = (disbursements, filename = "disbursement
             <tr>
               <td>${disbursement.id}</td>
               <td>${disbursement.status}</td>
-              <td>$${disbursement.totalAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+              <td>₹${disbursement.totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
               <td>${disbursement.createdAt}</td>
             </tr>
           `).join("")}
