@@ -105,6 +105,17 @@ const AppRoutes = () => {
     <Suspense fallback={<AppShellSkeleton />}>
       <MaintenanceGate>
         <Routes>
+          {/* Direct Auth & Mis-navigation redirects */}
+          <Route path="/user/food/login" element={<Navigate to="/user/auth/login" replace />} />
+          <Route path="/user/food/*" element={<Navigate to="/food/user" replace />} />
+          <Route path="/user/food" element={<Navigate to="/food/user" replace />} />
+          <Route path="/user/login" element={<Navigate to="/user/auth/login" replace />} />
+          <Route path="/food/login" element={<Navigate to="/user/auth/login" replace />} />
+          <Route path="/food/user/login" element={<Navigate to="/user/auth/login" replace />} />
+          <Route path="/login" element={<Navigate to="/user/auth/login" replace />} />
+          <Route path="/signin" element={<Navigate to="/user/auth/login" replace />} />
+          <Route path="/sign-in" element={<Navigate to="/user/auth/login" replace />} />
+
           {/* Auth Module */}
           <Route path="/user/auth/*" element={
             <Suspense fallback={<AppShellSkeleton />}>

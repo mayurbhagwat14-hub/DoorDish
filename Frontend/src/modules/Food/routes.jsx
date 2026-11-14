@@ -355,8 +355,12 @@ export default function App() {
           />
 
           {/* User Module - Explicitly mapped to /user and the catch-all for /food/ and / */}
-          {/* NOTE: /user/food is a common mis-navigation - redirect to correct /food/user home */}
+          {/* NOTE: /user/food and /user/food/login are common mis-navigations */}
+          <Route path="user/food/login" element={<Navigate to="/user/auth/login" replace />} />
+          <Route path="user/food/*" element={<Navigate to="/food/user" replace />} />
           <Route path="user/food" element={<Navigate to="/food/user" replace />} />
+          <Route path="user/login" element={<Navigate to="/user/auth/login" replace />} />
+          <Route path="food/login" element={<Navigate to="/user/auth/login" replace />} />
           <Route
             path="user/*"
             element={<UserRouterWrapper />}

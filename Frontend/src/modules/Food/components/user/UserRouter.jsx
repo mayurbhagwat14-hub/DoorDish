@@ -195,6 +195,9 @@ export default function UserRouter() {
             </AuthRedirect>
           } />
           <Route path="auth/callback" element={<AuthCallback />} />
+          <Route path="food/login" element={<Navigate to="/user/auth/login" replace />} />
+          <Route path="food/*" element={<Navigate to="/food/user" replace />} />
+          <Route path="food" element={<Navigate to="/food/user" replace />} />
 
 
           {/* ========================================== */}
@@ -294,6 +297,9 @@ export default function UserRouter() {
             {/* Complaints */}
             <Route path="complaints/submit/:orderId" element={<SubmitComplaint />} />
           </Route>
+
+          {/* Catch-all fallback for any unrecognized User Route - prevents empty <Outlet /> blank screen */}
+          <Route path="*" element={<Navigate to="/food/user" replace />} />
         </Route>
       </Routes>
     </Suspense>
