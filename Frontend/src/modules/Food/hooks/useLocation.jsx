@@ -87,6 +87,8 @@ const setGlobalLocationLoading = (isLoading) => {
 const AUTO_START_LIVE_WATCH = false
 
 const SERVICE_CITIES = [
+  "Nimbahera",
+  "Chittorgarh",
   "Indore",
   "Bhopal",
   "Ujjain",
@@ -94,26 +96,43 @@ const SERVICE_CITIES = [
   "Mhow",
   "Pithampur",
   "Rau",
+  "Ratlam",
 ]
 
+const getDynamicServiceCities = () => {
+  const list = [...SERVICE_CITIES];
+  try {
+    const cachedZone = typeof localStorage !== "undefined" ? localStorage.getItem("userZone") : null;
+    if (cachedZone) {
+      const parsed = JSON.parse(cachedZone);
+      const zName = parsed?.name || parsed?.zoneName || parsed?.serviceLocation;
+      if (zName && !list.some((c) => c.toLowerCase() === zName.toLowerCase())) {
+        list.unshift(zName);
+      }
+    }
+  } catch {}
+  return list;
+};
+
 /**
- * Prefer metro/service city over village/locality (e.g. Dhabli → Indore)
- * so restaurant APIs filtered by city don't return empty lists.
+ * Prefer service city over micro-locality
+ * so restaurant APIs filtered by city or zone don't return empty lists.
  */
 export function resolveServiceCity({
   locality = "",
   adminArea2 = "",
   formattedAddress = "",
-  fallback = "Indore",
+  fallback = "",
 } = {}) {
+  const cities = getDynamicServiceCities();
   const findKnown = (text) => {
     const match = String(text || "").match(
-      new RegExp(`\\b(${SERVICE_CITIES.join("|")})\\b`, "i"),
+      new RegExp(`\\b(${cities.join("|")})\\b`, "i"),
     )
     if (!match) return ""
     const hit = match[1]
     return (
-      SERVICE_CITIES.find((city) => city.toLowerCase() === hit.toLowerCase()) ||
+      cities.find((city) => city.toLowerCase() === hit.toLowerCase()) ||
       hit
     )
   }
@@ -123,7 +142,7 @@ export function resolveServiceCity({
 
   const localityTrim = String(locality || "").trim()
   if (localityTrim) {
-    const knownLocality = SERVICE_CITIES.find(
+    const knownLocality = cities.find(
       (city) => city.toLowerCase() === localityTrim.toLowerCase(),
     )
     if (knownLocality) return knownLocality
@@ -132,7 +151,13 @@ export function resolveServiceCity({
   const fromAdmin = findKnown(adminArea2)
   if (fromAdmin) return fromAdmin
 
-  return localityTrim || fallback
+  let cachedZoneName = "";
+  try {
+    const z = typeof localStorage !== "undefined" ? localStorage.getItem("userZone") : null;
+    if (z) cachedZoneName = JSON.parse(z)?.name || "";
+  } catch {}
+
+  return localityTrim || cachedZoneName || adminArea2 || fallback || "Nimbahera"
 }
 
 const reverseGeocodeDirect = async (latitude, longitude) => {
@@ -621,12 +646,12 @@ export function useLocation() {
       const country = getComponent(["country"])
       const pincode = getComponent(["postal_code"])
 
-      // Prefer Indore (etc.) over village locality like Dhabli so restaurant city filter works
+      // Prefer service city over village locality so restaurant city/zone filter works
       const city = resolveServiceCity({
         locality,
         adminArea2,
         formattedAddress: result.formatted_address,
-        fallback: "Indore",
+        fallback: locality || "Nimbahera",
       })
       
       // Determine area - prioritize sublocality/neighborhood for "Exact" feel
@@ -2146,7 +2171,7 @@ export function useLocation() {
         city: resolveServiceCity({
           locality: addr?.city || "",
           formattedAddress: addr?.formattedAddress || addr?.address || "",
-          fallback: addr?.city || "Indore",
+          fallback: addr?.city || "Nimbahera",
         }),
         latitude,
         longitude,

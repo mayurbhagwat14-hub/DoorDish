@@ -1,26 +1,12 @@
 import { FoodZone } from '../../admin/models/zone.model.js';
+import { isPointInZonePolygon, distToPolygonKm } from '../../utils/zoneGeo.js';
 
 const toFinite = (v) => {
     const n = typeof v === 'number' ? v : parseFloat(String(v));
     return Number.isFinite(n) ? n : null;
 };
 
-// Ray-casting point-in-polygon for lat/lng polygons.
-const isPointInPolygon = (lat, lng, polygon) => {
-    if (!Array.isArray(polygon) || polygon.length < 3) return false;
-    let inside = false;
-    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-        const xi = polygon[i].longitude;
-        const yi = polygon[i].latitude;
-        const xj = polygon[j].longitude;
-        const yj = polygon[j].latitude;
-        const intersect =
-            yi > lat !== yj > lat &&
-            lng < ((xj - xi) * (lat - yi)) / (yj - yi + 0.0) + xi;
-        if (intersect) inside = !inside;
-    }
-    return inside;
-};
+const DEFAULT_ZONE_BUFFER_KM = 10;
 
 /** GET /zones/detect?lat=..&lng=.. */
 export const detectZonePublicController = async (req, res, next) => {
@@ -32,16 +18,39 @@ export const detectZonePublicController = async (req, res, next) => {
         }
 
         const zones = await FoodZone.find({ isActive: true }).lean();
+
+        // Pass 1: Exact polygon containment (zero buffer)
         for (const zone of zones) {
             const coords = Array.isArray(zone.coordinates) ? zone.coordinates : [];
             if (coords.length < 3) continue;
-            if (isPointInPolygon(lat, lng, coords)) {
+            if (isPointInZonePolygon(lat, lng, coords, 0)) {
                 return res.status(200).json({
                     success: true,
                     message: 'Zone detected',
                     data: { status: 'IN_SERVICE', zoneId: zone._id, zone }
                 });
             }
+        }
+
+        // Pass 2: Proximity boundary buffer tolerance (covers surrounding areas & boundary drift)
+        let closestZone = null;
+        let minDistance = Infinity;
+        for (const zone of zones) {
+            const coords = Array.isArray(zone.coordinates) ? zone.coordinates : [];
+            if (coords.length < 3) continue;
+            const dist = distToPolygonKm(lat, lng, coords);
+            if (dist <= DEFAULT_ZONE_BUFFER_KM && dist < minDistance) {
+                minDistance = dist;
+                closestZone = zone;
+            }
+        }
+
+        if (closestZone) {
+            return res.status(200).json({
+                success: true,
+                message: 'Zone detected (service coverage area)',
+                data: { status: 'IN_SERVICE', zoneId: closestZone._id, zone: closestZone }
+            });
         }
 
         return res.status(200).json({

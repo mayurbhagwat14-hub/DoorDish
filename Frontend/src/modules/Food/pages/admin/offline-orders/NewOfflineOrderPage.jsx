@@ -499,6 +499,7 @@ export default function NewOfflineOrderPage() {
         deliveryFee: effectiveDeliveryFee,
         autoAccept: autoConfirmOrder,
         confirmImmediately: autoConfirmOrder,
+        zoneId: selectedRestaurant?.zoneId || undefined,
         deliveryAddress: {
           name: customerForm.name.trim(),
           phone: customerForm.phone.trim(),

@@ -1446,13 +1446,30 @@ export const listApprovedRestaurants = async (query = {}) => {
 
     const filter = { status: 'approved' };
 
+    const zoneIdRaw = String(query.zoneId || '').trim();
+    const hasValidZoneId = Boolean(zoneIdRaw && mongoose.Types.ObjectId.isValid(zoneIdRaw));
 
-    if (query.city && String(query.city).trim()) {
+    // When zoneId is present, the zone itself defines the delivery boundary.
+    // Do NOT apply restrictive city or area matching that blocks restaurants
+    // for users residing in neighboring localities/villages inside the zone.
+    if (!hasValidZoneId && query.city && String(query.city).trim()) {
         const city = String(query.city).trim().slice(0, 80);
         const rx = { $regex: escapeRegex(city), $options: 'i' };
-        filter.$and = [...(filter.$and || []), { $or: [{ 'location.city': rx }, { city: rx }] }];
+        const cityZone = await FoodZone.findOne({
+            isActive: true,
+            $or: [
+                { name: { $regex: `^${escapeRegex(city)}$`, $options: 'i' } },
+                { zoneName: { $regex: `^${escapeRegex(city)}$`, $options: 'i' } }
+            ]
+        }).select('_id').lean();
+
+        const cityMatches = [{ 'location.city': rx }, { city: rx }];
+        if (cityZone?._id) {
+            cityMatches.push({ zoneId: cityZone._id });
+        }
+        filter.$and = [...(filter.$and || []), { $or: cityMatches }];
     }
-    if (query.area && String(query.area).trim()) {
+    if (!hasValidZoneId && query.area && String(query.area).trim()) {
         const area = String(query.area).trim().slice(0, 80);
         const rx = { $regex: escapeRegex(area), $options: 'i' };
         filter.$and = [...(filter.$and || []), { $or: [{ 'location.area': rx }, { area: rx }] }];
@@ -1486,7 +1503,7 @@ export const listApprovedRestaurants = async (query = {}) => {
         const raw = String(query.search).trim().slice(0, 80);
         const term = escapeRegex(raw);
         if (term.length >= 2) {
-            filter.$or = [
+            const searchOr = [
                 { restaurantName: { $regex: term, $options: 'i' } },
                 { area: { $regex: term, $options: 'i' } },
                 { city: { $regex: term, $options: 'i' } },
@@ -1494,6 +1511,7 @@ export const listApprovedRestaurants = async (query = {}) => {
                 { 'location.city': { $regex: term, $options: 'i' } },
                 { cuisines: { $in: [new RegExp(term, 'i')] } }
             ];
+            filter.$and = [...(filter.$and || []), { $or: searchOr }];
         }
     }
 
@@ -1503,16 +1521,16 @@ export const listApprovedRestaurants = async (query = {}) => {
         filter['diningSettings.isEnabled'] = true;
     }
 
-    const zoneIdRaw = String(query.zoneId || '').trim();
-    if (zoneIdRaw && mongoose.Types.ObjectId.isValid(zoneIdRaw)) {
-        filter.$or = [{ zoneId: new mongoose.Types.ObjectId(zoneIdRaw) }];
+    if (hasValidZoneId) {
+        const zoneFilter = [{ zoneId: new mongoose.Types.ObjectId(zoneIdRaw) }];
         const zoneDoc = await FoodZone.findById(zoneIdRaw).select('isActive coordinates location').lean();
         if (zoneDoc && zoneDoc.isActive) {
             const polygon = zoneToPolygon(zoneDoc);
             if (polygon) {
-                filter.$or.push({ location: { $geoWithin: { $geometry: polygon } } });
+                zoneFilter.push({ location: { $geoWithin: { $geometry: polygon } } });
             }
         }
+        filter.$and = [...(filter.$and || []), { $or: zoneFilter }];
     }
 
     const lat = toFiniteNumber(query.lat);
