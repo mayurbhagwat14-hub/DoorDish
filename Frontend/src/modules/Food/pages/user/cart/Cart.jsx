@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo, Fragment } from "react"
 import { createPortal } from "react-dom"
 import { Link, useNavigate, useLocation } from "react-router-dom"
-import { Plus, Minus, ArrowLeft, ChevronRight, Clock, MapPin, Phone, FileText, Utensils, Tag, Percent, Share2, Share, ChevronUp, ChevronDown, X, Check, Settings, CreditCard, Wallet, Building2, Sparkles, Banknote, Zap, CheckCircle2, MessageCircle, Send, Mail, Copy, ShoppingBag, AlertTriangle } from "lucide-react"
+import { Plus, Minus, ArrowLeft, ChevronRight, Clock, MapPin, Phone, FileText, Utensils, Tag, Percent, Share2, Share, ChevronUp, ChevronDown, X, Check, Settings, CreditCard, Wallet, Building2, Sparkles, Banknote, Zap, CheckCircle2, MessageCircle, Send, Mail, Copy, ShoppingBag, AlertTriangle, ShieldAlert } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import confetti from "canvas-confetti"
 
@@ -476,6 +476,7 @@ export default function Cart() {
   // Auto coupon popup state
   const hasShownPromoPopupRef = useRef({ delivery: false, takeaway: false, dining: false })
   const [showAutoCouponPopup, setShowAutoCouponPopup] = useState(false)
+  const [showOrderConfirmModal, setShowOrderConfirmModal] = useState(false)
   const [bestCoupon, setBestCoupon] = useState(null)
   const bestCouponDiscount = useMemo(() => {
     if (!bestCoupon) return 0
@@ -2027,8 +2028,54 @@ export default function Cart() {
   }
 
 
-  const handlePlaceOrder = async () => {
-    if (!hasSavedAddress) {
+  const handlePlaceOrder = () => {
+    if (isPlacingOrder || loadingPricing || isCartZoneMismatch || isRestaurantClosed) return
+
+    if (!hasSavedAddress && orderType !== "takeaway") {
+      toast.error("Please choose a delivery location to continue")
+      openLocationSelector()
+      return
+    }
+
+    if (isCartZoneMismatch) {
+      toast.error("This restaurant does not deliver to your selected location")
+      return
+    }
+
+    if (isScheduled) {
+      if (!scheduledDate || !scheduledTime) {
+        toast.error("Please select both date and time to schedule your order")
+        return
+      }
+      const scheduleString = `${scheduledDate}T${scheduledTime}:00`
+      const scheduleDateObj = new Date(scheduleString)
+      if (scheduleDateObj < new Date()) {
+        toast.error("Scheduled time must be in the future")
+        return
+      }
+    }
+
+    if (cart.length === 0) {
+      alert("Your cart is empty")
+      return
+    }
+
+    if (selectedPaymentMethod === "wallet" && walletBalance < total) {
+      toast.error(`Insufficient wallet balance. Required: ${RUPEE_SYMBOL}${total.toFixed(0)}, Available: ${RUPEE_SYMBOL}${walletBalance.toFixed(0)}`)
+      return
+    }
+
+    // Open confirmation modal with legal notice
+    setShowOrderConfirmModal(true)
+  }
+
+  const handleConfirmOrder = () => {
+    setShowOrderConfirmModal(false)
+    executePlaceOrder()
+  }
+
+  const executePlaceOrder = async () => {
+    if (!hasSavedAddress && orderType !== "takeaway") {
       toast.error("Please choose a delivery location to continue")
       openLocationSelector()
       return
@@ -4526,6 +4573,116 @@ export default function Cart() {
                   </motion.div>
                 </div>
               </>
+            )}
+          </AnimatePresence>,
+          document.body
+        )}
+
+        {/* Order Confirmation & Legal Warning Modal */}
+        {typeof window !== "undefined" && createPortal(
+          <AnimatePresence>
+            {showOrderConfirmModal && (
+              <div className="fixed inset-0 z-[100050] flex items-end sm:items-center justify-center p-0 sm:p-4">
+                {/* Backdrop Overlay */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="fixed inset-0 bg-black/60 backdrop-blur-sm cursor-pointer"
+                  onClick={() => setShowOrderConfirmModal(false)}
+                />
+
+                {/* Modal Sheet / Card */}
+                <motion.div
+                  initial={{ opacity: 0, y: 50, scale: 0.96 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 50, scale: 0.96 }}
+                  transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                  className="relative w-full sm:max-w-md bg-white dark:bg-[#18181b] rounded-t-3xl sm:rounded-3xl shadow-2xl p-6 sm:p-7 border border-gray-100 dark:border-gray-800 z-10 max-h-[90vh] overflow-y-auto"
+                >
+                  {/* Close Cross Button */}
+                  <button
+                    type="button"
+                    onClick={() => setShowOrderConfirmModal(false)}
+                    className="absolute top-4 right-4 p-2 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+
+                  {/* Header / Icon */}
+                  <div className="flex flex-col items-center text-center">
+                    <div className="w-16 h-16 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 flex items-center justify-center mb-3.5 shadow-inner">
+                      <ShieldAlert className="w-8 h-8 text-amber-600 dark:text-amber-400" />
+                    </div>
+
+                    <h3 className="text-xl font-black text-gray-900 dark:text-white tracking-tight">
+                      Confirm Your Order
+                    </h3>
+                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mt-1">
+                      {restaurantData?.restaurantName || restaurantData?.name || "Restaurant Order"}
+                    </p>
+                  </div>
+
+                  {/* Order Summary Snapshot */}
+                  <div className="mt-4 bg-gray-50 dark:bg-gray-900/60 rounded-2xl p-4 border border-gray-100 dark:border-gray-800 space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-semibold text-gray-600 dark:text-gray-400">Total Amount:</span>
+                      <span className="font-black text-gray-900 dark:text-white text-base">
+                        {RUPEE_SYMBOL}{total.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-semibold text-gray-600 dark:text-gray-400">Payment Method:</span>
+                      <span className="font-bold text-[#FF5A1F] uppercase text-[11px] tracking-wider bg-orange-50 dark:bg-orange-950/40 px-2.5 py-0.5 rounded-full border border-orange-200 dark:border-orange-800/50">
+                        {selectedPaymentMethod === "cash"
+                          ? "Cash on Delivery"
+                          : selectedPaymentMethod === "wallet"
+                          ? "Wallet Payment"
+                          : "Online Payment"}
+                      </span>
+                    </div>
+                    {defaultAddress?.formattedAddress && (
+                      <div className="pt-2 border-t border-gray-200/60 dark:border-gray-800 text-xs text-gray-500 dark:text-gray-400 truncate">
+                        <span className="font-semibold text-gray-700 dark:text-gray-300">Deliver to: </span>
+                        {defaultAddress.formattedAddress}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Legal Notice Box */}
+                  <div className="mt-4 p-3.5 bg-red-50/80 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 rounded-2xl">
+                    <div className="flex items-start gap-2.5">
+                      <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+                      <div className="text-[12px] leading-relaxed text-red-900 dark:text-red-200 font-medium">
+                        <p className="font-bold text-red-700 dark:text-red-400 mb-1">
+                          Notice & Confirmation:
+                        </p>
+                        Are you sure you want to place this order? Please note that placing fake orders, providing incorrect details, or unjustified refusal to accept delivery is strictly prohibited under consumer protection laws. Unlawful cancellation or refusal may result in legal action, permanent account termination, and recovery of costs.
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Buttons */}
+                  <div className="mt-6 flex flex-col sm:flex-row gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => setShowOrderConfirmModal(false)}
+                      className="w-full sm:w-1/2 py-3 px-4 rounded-xl border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-bold text-sm hover:bg-gray-50 dark:hover:bg-gray-800 active:scale-95 transition-all order-2 sm:order-1"
+                    >
+                      Cancel / Go Back
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleConfirmOrder}
+                      className="w-full sm:w-1/2 py-3 px-4 rounded-xl bg-gradient-to-r from-[#FF5A1F] to-[#E64A0F] hover:from-[#E64A0F] hover:to-[#7F1D1D] text-white font-black text-sm shadow-lg shadow-orange-500/25 active:scale-95 transition-all order-1 sm:order-2 flex items-center justify-center gap-1.5"
+                    >
+                      <Check className="w-4 h-4" />
+                      Confirm & Place
+                    </button>
+                  </div>
+                </motion.div>
+              </div>
             )}
           </AnimatePresence>,
           document.body
