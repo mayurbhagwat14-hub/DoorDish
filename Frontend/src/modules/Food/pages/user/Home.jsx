@@ -327,7 +327,11 @@ export default function Home({ homeMode = null, isTabActive = true }) {
   const routerLocation = useRouterLocation();
   const hasRestoredBrowseScrollRef = useRef(false);
   const HERO_BANNER_AUTO_SLIDE_MS = 3500;
-  const BACKEND_ORIGIN = API_BASE_URL.replace(/\/api\/?$/, "");
+  // Strip "/api/v1" or "/api" so uploads resolve to <origin>/uploads/... (not <origin>/api/v1/uploads/...)
+  const BACKEND_ORIGIN = (API_BASE_URL || "")
+    .replace(/\/api\/v1\/?$/i, "")
+    .replace(/\/api\/?$/i, "")
+    .replace(/\/+$/, "");
   const [searchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
   const [heroSearch, setHeroSearch] = useState("");
