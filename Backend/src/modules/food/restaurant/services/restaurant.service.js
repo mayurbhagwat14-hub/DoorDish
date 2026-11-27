@@ -1605,14 +1605,54 @@ export const listApprovedRestaurants = async (query = {}) => {
                 maxDistance: radiusKm !== null ? Math.max(0.1, radiusKm) * 1000 : 10000000 // Default 10000km if no radius
             }
         });
+        // $geoNear silently drops restaurants that have no saved map location.
+        // Inside a known zone (and with no distance filter) still list them, after
+        // the geo-sorted ones, so zone restaurants are never invisible to users.
+        if (hasValidZoneId && radiusKm === null) {
+            pipeline.push({
+                $unionWith: {
+                    coll: FoodRestaurant.collection.name,
+                    pipeline: [
+                        {
+                            $match: {
+                                $and: [
+                                    filter,
+                                    {
+                                        $or: [
+                                            { location: { $exists: false } },
+                                            { location: null },
+                                            { 'location.coordinates': { $exists: false } },
+                                            { 'location.coordinates': { $size: 0 } }
+                                        ]
+                                    }
+                                ]
+                            }
+                        },
+                        { $addFields: { distanceMeters: Number.MAX_SAFE_INTEGER, __noLocation: true } }
+                    ]
+                }
+            });
+        }
         pipeline.push({
             $addFields: {
-                distanceInKm: { $round: [{ $divide: ['$distanceMeters', 1000] }, 2] },
+                distanceInKm: {
+                    $cond: [
+                        { $eq: ['$__noLocation', true] },
+                        null,
+                        { $round: [{ $divide: ['$distanceMeters', 1000] }, 2] }
+                    ]
+                },
                 distance: {
                     $cond: [
-                        { $gte: ['$distanceMeters', 1000] },
-                        { $concat: [{ $toString: { $round: [{ $divide: ['$distanceMeters', 1000] }, 1] } }, ' km'] },
-                        { $concat: [{ $toString: { $round: ['$distanceMeters', 0] } }, ' m'] }
+                        { $eq: ['$__noLocation', true] },
+                        null,
+                        {
+                            $cond: [
+                                { $gte: ['$distanceMeters', 1000] },
+                                { $concat: [{ $toString: { $round: [{ $divide: ['$distanceMeters', 1000] }, 1] } }, ' km'] },
+                                { $concat: [{ $toString: { $round: ['$distanceMeters', 0] } }, ' m'] }
+                            ]
+                        }
                     ]
                 }
             }

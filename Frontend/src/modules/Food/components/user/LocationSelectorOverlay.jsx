@@ -1938,9 +1938,26 @@ export default function LocationSelectorOverlay({ isOpen, onClose }) {
     e.preventDefault()
     let addressToSave = null
 
+    // Villages often reverse-geocode without city/state (only a plus code).
+    // The map pin is what matters for delivery, so fill sensible defaults instead of
+    // blocking the user: city → detected zone name, state → "India".
+    let zoneNameFallback = ""
+    try {
+      const z = JSON.parse(localStorage.getItem("userZone") || "null")
+      zoneNameFallback = String(z?.serviceLocation || z?.zoneName || z?.name || "").trim()
+      if (zoneNameFallback) {
+        zoneNameFallback = zoneNameFallback.charAt(0).toUpperCase() + zoneNameFallback.slice(1)
+      }
+    } catch {}
+    const filledCity = String(addressFormData.city || "").trim() || zoneNameFallback
+    const filledState = String(addressFormData.state || "").trim() || "India"
+    if (filledCity !== addressFormData.city || filledState !== addressFormData.state) {
+      setAddressFormData((prev) => ({ ...prev, city: filledCity, state: filledState }))
+    }
+
     // Validate required fields (zipCode is optional)
-    if (!addressFormData.street || !addressFormData.city || !addressFormData.state) {
-      toast.error("Please fill in all required fields (Street, City, State)")
+    if (!String(addressFormData.street || "").trim() || !filledCity || !filledState) {
+      toast.error("Please fill in House / Street and City")
       return
     }
 
@@ -1968,8 +1985,8 @@ export default function LocationSelectorOverlay({ isOpen, onClose }) {
 
       // Validate that trimmed fields are not empty
       const trimmedStreet = addressFormData.street.trim()
-      const trimmedCity = addressFormData.city.trim()
-      const trimmedState = addressFormData.state.trim()
+      const trimmedCity = filledCity
+      const trimmedState = filledState
 
       if (!trimmedStreet || !trimmedCity || !trimmedState) {
         toast.error("Street, City, and State cannot be empty")

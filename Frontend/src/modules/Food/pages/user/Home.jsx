@@ -1593,9 +1593,11 @@ export default function Home({ homeMode = null, isTabActive = true }) {
 
               // Use pre-calculated distance from backend
               const distance = restaurant.distance || null;
-              const distanceInKm = Number.isFinite(Number(restaurant.distanceInKm))
-                ? Number(restaurant.distanceInKm)
-                : null;
+              // null (restaurant without a saved map location) must stay null, not 0 km
+              const distanceInKm =
+                restaurant.distanceInKm != null && Number.isFinite(Number(restaurant.distanceInKm))
+                  ? Number(restaurant.distanceInKm)
+                  : null;
               const topOrder = Number.isFinite(Number(restaurant.__topOrder ?? restaurant.topOrder))
                 ? Number(restaurant.__topOrder ?? restaurant.topOrder)
                 : 1000000;
