@@ -73,6 +73,28 @@ let globalReverseGeocodeLastStartAt = 0
 let globalReverseGeocodeLastCoords = { latitude: null, longitude: null }
 let globalReverseGeocodeLastSuccess = null
 
+/**
+ * Address for a GPS pin when reverse geocoding fails or times out (common on slow
+ * rural networks). Keeps the real coordinates usable for zone detection and
+ * checkout instead of falling back to a hard-coded city or a "Select location" placeholder.
+ */
+export function buildPinnedLocationAddress(latitude, longitude) {
+  const lat = Number(latitude)
+  const lng = Number(longitude)
+  const label = Number.isFinite(lat) && Number.isFinite(lng)
+    ? `Pinned location (${lat.toFixed(5)}, ${lng.toFixed(5)})`
+    : "Pinned location"
+  return {
+    city: "",
+    state: "",
+    country: "India",
+    area: "Pinned location",
+    mainTitle: "Pinned location",
+    address: label,
+    formattedAddress: label,
+  }
+}
+
 // --- Global Loading State Management ---
 let globalLocationLoading = false
 const loadingListeners = new Set()
@@ -202,7 +224,7 @@ const reverseGeocodeDirect = async (latitude, longitude) => {
   const run = (async () => {
     try {
       const controller = new AbortController()
-      setTimeout(() => controller.abort(), 3000) // Faster timeout
+      setTimeout(() => controller.abort(), 6000) // Allow slow rural networks
 
       const res = await fetch(
         `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`,
@@ -258,7 +280,7 @@ const reverseGeocodeDirect = async (latitude, longitude) => {
             })?.name || ""
           : "",
         formattedAddress,
-        fallback: addrParts.length > 1 ? addrParts[addrParts.length - 2] : "Indore",
+        fallback: addrParts.length > 1 ? addrParts[addrParts.length - 2] : "",
       })
 
       // Keep village/locality as area when city was upgraded to metro name
@@ -610,7 +632,8 @@ export function useLocation() {
 
       const { geocodeAPI } = await import("@food/api")
       const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 3000)
+      // Rural mobile networks (2G/3G) often need >3s for backend → Google round trip.
+      const timeoutId = setTimeout(() => controller.abort(), 8000)
 
       let response
       try {
@@ -678,7 +701,7 @@ export function useLocation() {
       const displayAddress = addressParts.join(", ") || result.formatted_address.split(",")[0]
 
       const value = {
-        city: city || "Indore",
+        city: city || adminArea2 || locality || "",
         state: state,
         country: country,
         area: area,
@@ -1257,28 +1280,23 @@ export function useLocation() {
                   debugLog("? Fallback geocoding successful:", addr)
 
                   // Validate fallback result - if it still has placeholder values, don't use it
-                  if (addr.city === "Current Location" || addr.address.includes(finalLat.toFixed(4))) {
-                    debugWarn("?? Fallback geocoding returned placeholder, will use Vijay Nagar default")
-                    addr = {
-                      city: "Indore",
-                      state: "Madhya Pradesh",
-                      country: "India",
-                      area: "Vijay Nagar",
-                      address: "Vijay Nagar, Indore, Madhya Pradesh",
-                      formattedAddress: "Vijay Nagar, Indore, Madhya Pradesh",
-                    }
+                  // Never substitute a hard-coded city (was "Vijay Nagar, Indore"):
+                  // the GPS coordinates are real, so describe the pin itself.
+                  if (addr.city === "Current Location" || String(addr.address || "").includes(finalLat.toFixed(4))) {
+                    debugWarn("?? Fallback geocoding returned placeholder, using pinned coordinates")
+                    addr = buildPinnedLocationAddress(finalLat, finalLng)
                   }
                 } catch (fallbackErr) {
                   debugError("? All geocoding methods failed:", fallbackErr.message)
-                  addr = {
-                    city: "Indore",
-                    state: "Madhya Pradesh",
-                    country: "India",
-                    area: "Vijay Nagar",
-                    address: "Vijay Nagar, Indore, Madhya Pradesh",
-                    formattedAddress: "Vijay Nagar, Indore, Madhya Pradesh",
-                  }
+                  addr = buildPinnedLocationAddress(finalLat, finalLng)
                 }
+              }
+
+              // Slow/failed geocoding (common in villages) returns a "Current Location"
+              // placeholder. Use a pinned-coordinates address instead so the location is
+              // persisted and checkout is not blocked with "choose a delivery location".
+              if (!addr || addr.city === "Current Location" || !addr.formattedAddress || addr.formattedAddress === "Select location") {
+                addr = buildPinnedLocationAddress(finalLat, finalLng)
               }
 
               // Update coordinates in original variables for consistency
@@ -1392,19 +1410,15 @@ export function useLocation() {
                 debugError("? Last resort geocoding also failed:", lastErr.message)
               }
 
-              // If all geocoding fails, use placeholder but don't save
+              // If all geocoding fails, keep the real GPS pin so the user can still order.
               const fallbackLoc = {
+                ...buildPinnedLocationAddress(latitude, longitude),
                 latitude,
                 longitude,
-                city: "Current Location",
-                area: "",
-                state: "",
-                address: "Select location", // Don't show coordinates
-                formattedAddress: "Select location", // Don't show coordinates
+                accuracy: pos.coords.accuracy || null,
               }
-              // Don't save placeholder values to localStorage
-              // Only set in state for display
-              debugWarn("?? Skipping save - all geocoding failed, using placeholder")
+              debugWarn("?? All geocoding failed, using pinned GPS coordinates")
+              try { localStorage.setItem("userLocation", JSON.stringify(fallbackLoc)) } catch {}
               setLocation(fallbackLoc)
               setPermissionGranted(true)
               if (showLoading) setLoading(false)

@@ -778,15 +778,20 @@ export default function Cart() {
     const loc = currentLocation?.latitude && currentLocation?.longitude ? currentLocation : locFromStorage
     if (!loc?.latitude || !loc?.longitude) return null
 
-    const formattedAddress = loc?.formattedAddress || loc?.address || ""
-    if (!formattedAddress || formattedAddress === "Select location") return null
+    // Valid GPS coordinates are enough to deliver. If reverse geocoding failed
+    // (slow rural network / no street data), use a pinned-location label instead of
+    // blocking checkout with "Please choose a delivery location".
+    const rawFormatted = loc?.formattedAddress || loc?.address || ""
+    const formattedAddress = (!rawFormatted || rawFormatted === "Select location")
+      ? `Pinned location (${Number(loc.latitude).toFixed(5)}, ${Number(loc.longitude).toFixed(5)})`
+      : rawFormatted
 
     return {
       // Backend deliveryAddressSchema expects label in ['Home','Office','Other'].
       label: "Home",
       formattedAddress,
       address: formattedAddress,
-      street: loc?.street || loc?.address || loc?.area || "Current Location",
+      street: loc?.street || (loc?.address && loc.address !== "Select location" ? loc.address : "") || loc?.area || formattedAddress,
       additionalDetails: loc?.area || "",
       city: loc?.city || loc?.area || "Current City",
       state: loc?.state || loc?.city || "Current State",
